@@ -4,7 +4,7 @@ Copyright (c) 2025, Shure Incorporated
 
 Nicholas Dietz (dietzn@shure.com)
 
-Proton Pack software is licensed under the BSD 3-Clause License found in the LICENSE file.
+Proton Pack software is licensed according to the [LICENSE](./LICENSE) file.
 
 ## About
 
@@ -17,7 +17,7 @@ The system is composed of hardware and software components and a protocol for se
 The software is split between two components: live, real-time visualization software and post processing software.
 
 ## Proton Pack Hardware
-Proton Pack hardware is described under the [hardware/REDAME.md] file
+Proton Pack hardware is described under the [hardware/REDAME.md](hardware/README.md) file
 
 ## Live Visualization Software
 
