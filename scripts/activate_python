@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# use:
+#  source scripts/activate_python
+# running this directly without source will not effect the active environment
+#
+# https://stackoverflow.com/questions/496702/can-a-shell-script-set-environment-variables-of-the-calling-shell
+
+# note: jenkins sources this environment only when the agent is started!
+# restart the agent if you need to pull in fresh environment settings
+
+# https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
+# the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
+# space before to prevent them from ending on the command line
+OLDOPTS="$(set +o | sed -e 's/^/ /')"
+case $- in
+  *e*) OLDOPTS="$OLDOPTS; set -e";;
+  *) OLDOPTS="$OLDOPTS; set +e";;
+esac
+set +eu
+
+REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
+source virtualenvwrapper.sh
+deactivate
+workon $REPONAME || true
+
+
+# set this so breakpoint() calls ipdb
+#export PYTHONBREAKPOINT=ipdb.set_trace
+
+#restore settings
+eval "${OLDOPTS}"

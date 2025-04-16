@@ -1,0 +1,7 @@
+h5py
+typer
+matplotlib
+pyqt5
+pandas
+datashader==0.17.0rc0
+pyarrow

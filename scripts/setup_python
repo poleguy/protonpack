@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+# setup_python is designed to leave you with an environment that matches requirements.txt or error out.
+
+
+# For Jenkins specifically:
+# 
+# uses setup_jenkins: which always creates the same environment name so conflicts won't be an issue.
+# the location will always be in /home/secbuild/.virtualenvs/ ...
+# jenkins can only run 1 pipeline on a system at a time, only 1 executor so this isn't
+# an issue either
+# name used in scripts/setup_jenkins out of sync issue is a quick fix, just need to fix
+# the typo in one location
+#  
+# 
+# For typical users, the setup_python script is handling these concerns also.
+# 
+# Specifically for users of dpsm_rx_hw_test only:
+# setup_python creates a unique environment name based off of the path to the workspace.
+# Bryan requested this as he has multiple environments and branches checked out at once,
+# so he did not want all of them to be linked to the same virtualenv
+# We cannot have the virtualenv be placed inside the workspace like it was with conda
+# inside .cenv; we tried and it does not allow for this function.
+# race conditions: unless the user is also running setup_python as part of the job, I
+# don't know how this could even occur. if we are talking about slurm, then we may need
+# to just create a setup_slurm script (cc Andrew Sinnett )
+# out of sync issue: the name of the environment is actually a variable in setup_python
+# and called through the whole script, nothing to worry about
+ 
+
+
+# allow this to be sourced without messing up calling environment by running in a subshell
+(
+    
+# can't set -u because virtualenv wrapper uses extensive undefined variables
+# can't set -o pipefail because of virtualenv wrapper as well?
+set -eo pipefail
+   
+# https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
+REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
+
+#echo $REPONAME
+
+# give help for unexpected failure if virtualenvwrapper.sh isn't in the path
+# todo: can we even get here? we don't call this from the path. does it matter if it's in the path for this script
+# since this script is not sourced?
+if [ ! command -v virtualenvwrapper.sh &> /dev/null && ! command -v virtualenvwrapper &> /dev/null ]; then
+    echo "virtualenvwrapper is not in your path."
+    echo "Try source ~/.bashrc"
+    echo ""
+    echo "You can install it independently using:"
+    echo "/usr/bin/python3 -m pip install virtualenvwrapper"
+    echo "============"
+    echo "See for more details: https://confluence.shure.com/display/WFD/Python+Virtual+Environment+Setup"
+    exit 1
+fi
+
+
+# prefer sourcing .local version of virtualenvwrapper.sh if it exists
+if [ -f ~/.local/bin/virtualenvwrapper.sh ]; then
+    source ~/.local/bin/virtualenvwrapper.sh
+elif [ -f /usr/local/bin/virtualenvwrapper.sh ]; then
+    set +e
+    source /usr/local/bin/virtualenvwrapper.sh
+    set -e
+else
+    echo "Can't find virtualenvwrapper.sh"
+        exit 1
+fi
+
+# don't build this fresh. Reuse the old environment if it already exists.
+if [ ! -d ~/.virtualenvs/${REPONAME} ]; then
+    (mkvirtualenv -p python3.13 ${REPONAME} && workon ${REPONAME} && pip install -r requirements.txt)
+    # link to src so hard coded stuff doesn't break (e.g. compile_iq_telemetr.txt calling out shurc_assembler
+    ln -fs ~/.virtualenvs/${REPONAME}/src ./src
+else
+    echo "Virtualenv already exists at ~/.virtualenvs/${REPONAME}."
+    echo "If requirements.txt has changed, you must delete it before re-running setup_jenkins:"
+    echo "source scripts/cleanup_python"
+    echo "Otherwise activate your existing environment with the following commands rather than setup_jenkins:"
+    echo "source scripts/activate_python"
+    
+    # setup_python is designed to leave you with an environment that matches requirements.txt or error out.
+    # setup_python must be run exactly once on new machines or if requirements.txt has changed.
+    # If the environment already exists it errors out to prevent a potential mismatch between a stale environment
+    # and an updated requirements.txt.
+    # re-running it should be considered an error and stop subsequent steps. This will prevent
+    # running in a stale environment and wasting time trying to determine why it doesn't work.
+    exit 1
+fi
+
+
+# to allow us to know what was in an environment that worked
+# so when it inevitably fails we can do a diff
+# for now put it on the screen so at least it shows up in the jenkins log
+#pip freeze --local
+# todo: this should also go to the log file and/or back to bitbucket
+(
+    source scripts/activate_python
+    pip freeze > requirements-export.txt
+)
+# also for debug when things go sideways
+apt list --installed > apt-list-installed.txt
+
+echo "======================================================="
+echo "Existing virtualenvs:"
+lsvirtualenv
+echo "To remove your virtualenvironment use the following command:"
+echo "source scripts/cleanup_python"
+echo "======================================================="
+echo "Use the following commands to activate your environment:"
+echo "source scripts/activate_python"
+
+# end subshell
+)

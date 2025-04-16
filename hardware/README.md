@@ -2,7 +2,7 @@
 
 Copyright (c) 2025, Shure Incorporated
 
-Proton Pack Hardware is licensed under the CERN-OHL-P-2.0 license found in the LICENSE file.
+Proton Pack Hardware is licensed under the CERN-OHL-P-2.0 license found in the [LICENSE](./LICENSE) file.
 
 # Hardware
 
@@ -36,3 +36,9 @@ https://0x04.net/~mwk/xidocs/ug/ug476_7Series_Transceivers.pdf
 
 ## The Proton Pack Is Not A Toy
 https://www.youtube.com/@TheProtonPackIsNotAToy
+
+
+
+![UI](../doc/Proton_Pack_UI.drawio.svg)
+
+![Sytem Block Diagram](../doc/System_Block_Diagram.drawio.svg)
