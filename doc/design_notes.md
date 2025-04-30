@@ -121,6 +121,21 @@ and then, once we get the data into the pc,
 we can align the data from different sources, using those real time clocks.
 the key there, of course, is to keep the real time clocks synchronized.
 
+bring in multiple pcap's convert to one hdf5.
+presents them as a bundle.
+
+portable will have a tunable reference. 
+tunes to the overall signal in the down link.
+
+
+what is the slew rate of the pull in?
+Timestamp all packets.
+todo: consider that the portable clock is being pulled. that clock will drive a counter that timestamps into the fifo.
+When they get to the snickerdoodle they will be delayed by a variable amount. Can the time through the fifo be modeled?
+Then subtracted off?
+Is it close enough to just use time of arrival of the latest timestamp? An hdl model would be useful here.
+todo: resurrect hdl model of full telemetry.
+
 * but that's sort of a solved problem already.
 ptp. ntp. gps, there's lots of different ways of doing that.
 

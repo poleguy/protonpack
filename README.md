@@ -31,6 +31,11 @@ Proton Pack hardware is described under the [hardware/REDAME.md](hardware/README
 This software will read in a recorded telemetry stream and produce live visualizations with low latency to aid in
 providing rapid feedback during walk testing.
 
+## Capture Scripting
+
+Time synchronization.
+Pairing (telemetry pack to a portable)
+
 ## Post processing software
 
 The post processing software takes the captured telemetry and prepares it for analysis in python and for rapid visualization of a given time period of the capture. It converts the format to hdf5 and is in charge of aligning all of the data from multiple DUT's capturing simultaneous telemetry.
