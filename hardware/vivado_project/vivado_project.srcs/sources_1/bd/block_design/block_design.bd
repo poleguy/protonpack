@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xFB778E3F11BCB0B0",
+      "boundary_crc": "0xA4305D39454391BB",
       "device": "xc7z020clg400-3",
       "gen_directory": "../../../../vivado_project.gen/sources_1/bd/block_design",
       "name": "block_design",
@@ -12,7 +12,9 @@
     },
     "design_tree": {
       "processing_system7_0": "",
-      "blink_0": ""
+      "blink_0": "",
+      "telem_0": "",
+      "clk_wiz_0": ""
     },
     "interface_ports": {
       "DDR": {
@@ -190,6 +192,15 @@
       },
       "Y12": {
         "direction": "O"
+      },
+      "serial_in_p": {
+        "direction": "I"
+      },
+      "serial_in_n": {
+        "direction": "I"
+      },
+      "okay_led_out": {
+        "direction": "O"
       }
     },
     "components": {
@@ -216,7 +227,7 @@
             "value": "10.000000"
           },
           "PCW_ACT_FPGA0_PERIPHERAL_FREQMHZ": {
-            "value": "49.999947"
+            "value": "51.282001"
           },
           "PCW_ACT_FPGA1_PERIPHERAL_FREQMHZ": {
             "value": "10.000000"
@@ -276,7 +287,7 @@
             "value": "867"
           },
           "PCW_CLK0_FREQ": {
-            "value": "49999947"
+            "value": "51282001"
           },
           "PCW_CLK1_FREQ": {
             "value": "10000000"
@@ -393,13 +404,13 @@
             "value": "TRUE"
           },
           "PCW_FPGA0_PERIPHERAL_FREQMHZ": {
-            "value": "50"
+            "value": "51.2"
           },
           "PCW_FPGA1_PERIPHERAL_FREQMHZ": {
-            "value": "100"
+            "value": "51.2"
           },
           "PCW_FPGA2_PERIPHERAL_FREQMHZ": {
-            "value": "150"
+            "value": "250"
           },
           "PCW_FPGA3_PERIPHERAL_FREQMHZ": {
             "value": "200"
@@ -908,6 +919,9 @@
           "PCW_MIO_TREE_SIGNALS": {
             "value": "gpio[0]#qspi0_ss_b#qspi0_io[0]#qspi0_io[1]#qspi0_io[2]#qspi0_io[3]/HOLD_B#qspi0_sclk#gpio[7]#qspi_fbclk#gpio[9]#data[0]#cmd#clk#data[1]#data[2]#data[3]#gpio[16]#gpio[17]#gpio[18]#gpio[19]#gpio[20]#gpio[21]#gpio[22]#gpio[23]#gpio[24]#gpio[25]#gpio[26]#gpio[27]#gpio[28]#gpio[29]#gpio[30]#gpio[31]#gpio[32]#gpio[33]#gpio[34]#gpio[35]#gpio[36]#gpio[37]#gpio[38]#gpio[39]#clk#cmd#data[0]#data[1]#data[2]#data[3]#mosi#miso#sclk#ss[0]#rx#tx#gpio[52]#gpio[53]"
           },
+          "PCW_OVERRIDE_BASIC_CLOCK": {
+            "value": "0"
+          },
           "PCW_PACKAGE_NAME": {
             "value": "clg400"
           },
@@ -942,7 +956,7 @@
             "value": "1"
           },
           "PCW_QSPI_PERIPHERAL_FREQMHZ": {
-            "value": "200.000000"
+            "value": "200"
           },
           "PCW_QSPI_QSPI_IO": {
             "value": "MIO 1 .. 6"
@@ -1285,7 +1299,7 @@
             "direction": "I",
             "parameters": {
               "FREQ_HZ": {
-                "value": "49999947",
+                "value": "51282001",
                 "value_src": "user_prop"
               },
               "CLK_DOMAIN": {
@@ -1299,6 +1313,97 @@
           },
           "outy": {
             "direction": "O"
+          },
+          "reset_blink": {
+            "type": "rst",
+            "direction": "O",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_HIGH"
+              }
+            }
+          }
+        }
+      },
+      "telem_0": {
+        "vlnv": "xilinx.com:module_ref:telem:1.0",
+        "ip_revision": "1",
+        "xci_name": "block_design_telem_0_1",
+        "xci_path": "ip/block_design_telem_0_1/block_design_telem_0_1.xci",
+        "inst_hier_path": "telem_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "telem",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk_102M4": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "102358873",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "serial_in_p": {
+            "direction": "I"
+          },
+          "serial_in_n": {
+            "direction": "I"
+          },
+          "okay_led_out": {
+            "direction": "O"
+          },
+          "rst_102M4": {
+            "direction": "O"
+          }
+        }
+      },
+      "clk_wiz_0": {
+        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
+        "ip_revision": "15",
+        "xci_name": "block_design_clk_wiz_0_0",
+        "xci_path": "ip/block_design_clk_wiz_0_0/block_design_clk_wiz_0_0.xci",
+        "inst_hier_path": "clk_wiz_0",
+        "parameters": {
+          "CLKIN1_JITTER_PS": {
+            "value": "195.0"
+          },
+          "CLKOUT1_JITTER": {
+            "value": "131.069"
+          },
+          "CLKOUT1_PHASE_ERROR": {
+            "value": "215.410"
+          },
+          "CLKOUT1_REQUESTED_OUT_FREQ": {
+            "value": "102.4"
+          },
+          "MMCM_CLKFBOUT_MULT_F": {
+            "value": "62.375"
+          },
+          "MMCM_CLKIN1_PERIOD": {
+            "value": "19.500"
+          },
+          "MMCM_CLKIN2_PERIOD": {
+            "value": "10.0"
+          },
+          "MMCM_CLKOUT0_DIVIDE_F": {
+            "value": "15.625"
+          },
+          "MMCM_DIVCLK_DIVIDE": {
+            "value": "2"
+          },
+          "PRIM_IN_FREQ": {
+            "value": "51.282001"
           }
         }
       }
@@ -1322,6 +1427,7 @@
         "ports": [
           "processing_system7_0/FCLK_CLK0",
           "processing_system7_0/M_AXI_GP0_ACLK",
+          "clk_wiz_0/clk_in1",
           "blink_0/clk"
         ]
       },
@@ -1335,6 +1441,36 @@
         "ports": [
           "blink_0/outy",
           "Y12"
+        ]
+      },
+      "blink_0_reset_blink": {
+        "ports": [
+          "blink_0/reset_blink",
+          "clk_wiz_0/reset"
+        ]
+      },
+      "clk_wiz_0_clk_out1": {
+        "ports": [
+          "clk_wiz_0/clk_out1",
+          "telem_0/clk_102M4"
+        ]
+      },
+      "serial_in_n_1": {
+        "ports": [
+          "serial_in_n",
+          "telem_0/serial_in_n"
+        ]
+      },
+      "serial_in_p_1": {
+        "ports": [
+          "serial_in_p",
+          "telem_0/serial_in_p"
+        ]
+      },
+      "telem_0_okay_led_out": {
+        "ports": [
+          "telem_0/okay_led_out",
+          "okay_led_out"
         ]
       }
     }

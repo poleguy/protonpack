@@ -75,7 +75,6 @@ Next
 ![Default Part dialog](image-6.png)
 
 Finish
-![New Project Summary](TBD.png)
 
 ## Create Block Design
 
@@ -311,6 +310,7 @@ copy into temporary spot and then in to place
 ```
 cp ./hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit ~/snickerdoodle/home/proton/system.bit
 poleguy@elgar:~/fpga-data/2025/protonpack$ ssh -t proton@192.168.1.209 sudo cp system.bit /boot
+ssh -t proton@192.168.1.209 sudo reboot now
 ```
 
 inny and outy

@@ -6,6 +6,7 @@ https://forums.raspberrypi.com/viewtopic.php?t=363027
 https://www.youtube.com/watch?v=sbrCiN6HGrI
 
 1455 series enclosures
+![alt text](Proton_Pack_UI.drawio.svg)
 
 https://en.wikipedia.org/wiki/Eurocard_(printed_circuit_board)
 

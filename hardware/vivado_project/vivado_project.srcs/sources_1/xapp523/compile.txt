@@ -1,0 +1,37 @@
+# yikes! had to be copied from here:
+# /opt/Xilinx/Vivado/2018.2/data/verilog/src/glbl.v
+# compile.txt flow doesn't allow absolute paths
+glbl.v
+
+Libraries/Common/Vhdl/Fdcr.vhd -library common
+Libraries/Common/Vhdl/LocalRstEna.vhd -library common
+
+#Libraries/Common/Vhdl/GenPulse_Testbench.vhd -library common
+#Libraries/Common/Vhdl/AppsRstEna_Tester.vhd -library common
+Libraries/Common/Vhdl/AppsRst.vhd -library common
+#Libraries/Common/Vhdl/TimeTickCnt_Tester.vhd -library common
+Libraries/Common/Vhdl/GenPulse.vhd -library common
+#Libraries/Common/Vhdl/LocalRstEna_Testbench.vhd -library common
+Libraries/Common/Vhdl/LifeIndicator.vhd -library common
+#Libraries/Common/Vhdl/GenPulse_Tester.vhd -library common
+#Libraries/Common/Vhdl/TimeTickCnt_Testbench.vhd -library common
+#Libraries/Common/Vhdl/LocalRstEna_Tester.vhd -library common
+#Libraries/Common/Vhdl/GenPulse_Org.vhd -library common
+
+Libraries/Common/Vhdl/AppsRstEna.vhd -library common
+#Libraries/Common/Vhdl/AppsRstEna_Testbench.vhd -library common
+Libraries/Common/Vhdl/TimeTickCnt.vhd -library common
+
+
+Libraries/DataRecoverUnit_Lib/Vhdl/Dru.vhd -library datarecoverunit_lib
+
+Libraries/MmcmAlignment_Lib/Vhdl/MmcmAlignIo.Vhd -library mmcmalignment_lib
+Libraries/MmcmAlignment_Lib/Vhdl/MmcmAlignSm.vhd -library mmcmalignment_lib
+Libraries/MmcmAlignment_Lib/Vhdl/MmcmAlign.vhd -library mmcmalignment_lib
+Libraries/SgmiiRxClock_Lib/Vhdl/RxGenClockMod.vhd -library sgmiirxclock_lib
+Libraries/SgmiiRxData_Lib/Vhdl/SgmiiRxData.vhd -library sgmiirxdata_lib
+Libraries/SgmiiRxPrbs_Lib/Vhdl/SgmiiRxPrbs.vhd -library sgmiirxprbs_lib
+Receiver.vhd
+#Receiver_Toplevel.vhd
+
+`XIL_SIM_LIB_FOR_MSIM  -family artix7 -language all -library all 

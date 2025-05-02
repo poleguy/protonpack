@@ -1,23 +1,33 @@
 {
    "ActiveEmotionalView":"Default View",
    "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"-385,-876",
+   "Default View_TopLeft":"-214,-878",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.8.0 2024-04-26 e1825d835c VDI=44 GEI=38 GUI=JA:21.0 TLS
 #  -string -flagsOSRD
-preplace port DDR -pg 1 -lvl 2 -x 420 -y -390 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -lvl 2 -x 420 -y -360 -defaultsOSRD
-preplace port port-id_T9 -pg 1 -lvl 0 -x -30 -y -660 -defaultsOSRD
-preplace port port-id_Y12 -pg 1 -lvl 2 -x 420 -y -670 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 1 -x 190 -y -290 -defaultsOSRD
-preplace inst blink_0 -pg 1 -lvl 1 -x 190 -y -670 -defaultsOSRD
-preplace netloc Net 1 0 2 0 -430 380
-preplace netloc T9_1 1 0 1 N -660
-preplace netloc blink_0_outy 1 1 1 N -670
-preplace netloc processing_system7_0_DDR 1 1 1 390J -390n
-preplace netloc processing_system7_0_FIXED_IO 1 1 1 400J -360n
-levelinfo -pg 1 -30 190 420
-pagesize -pg 1 -db -bbox -sgen -100 -740 530 200
+preplace port DDR -pg 1 -lvl 3 -x 770 -y -390 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -lvl 3 -x 770 -y -360 -defaultsOSRD
+preplace port port-id_T9 -pg 1 -lvl 0 -x -60 -y -660 -defaultsOSRD
+preplace port port-id_Y12 -pg 1 -lvl 3 -x 770 -y -670 -defaultsOSRD
+preplace port port-id_serial_in_p -pg 1 -lvl 0 -x -60 -y -540 -defaultsOSRD
+preplace port port-id_serial_in_n -pg 1 -lvl 0 -x -60 -y -510 -defaultsOSRD
+preplace port port-id_okay_led_out -pg 1 -lvl 3 -x 770 -y -560 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 2 -x 530 -y -260 -defaultsOSRD
+preplace inst blink_0 -pg 1 -lvl 2 -x 530 -y -700 -defaultsOSRD
+preplace inst telem_0 -pg 1 -lvl 2 -x 530 -y -560 -defaultsOSRD
+preplace inst clk_wiz_0 -pg 1 -lvl 1 -x 140 -y -370 -defaultsOSRD
+preplace netloc Net 1 0 3 50 -440 300 -430 730
+preplace netloc T9_1 1 0 2 N -660 230
+preplace netloc blink_0_outy 1 2 1 750 -710n
+preplace netloc serial_in_n_1 1 0 2 N -510 330
+preplace netloc serial_in_p_1 1 0 2 N -540 310
+preplace netloc telem_0_okay_led_out 1 2 1 750 -570n
+preplace netloc clk_wiz_0_clk_out1 1 1 1 320 -580n
+preplace netloc blink_0_reset_blink 1 0 3 40 -450 NJ -450 730
+preplace netloc processing_system7_0_DDR 1 2 1 740J -390n
+preplace netloc processing_system7_0_FIXED_IO 1 2 1 750J -360n
+levelinfo -pg 1 -60 140 530 770
+pagesize -pg 1 -db -bbox -sgen -200 -770 910 430
 "
 }
 {

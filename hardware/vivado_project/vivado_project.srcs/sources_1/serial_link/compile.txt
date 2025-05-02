@@ -1,0 +1,44 @@
+###############################
+## actual code
+###############################
+
+# the serial link depends on xapp523
+../xapp523/compile.txt
+
+oserdes8x.vhd
+buffer_10bit_to_8bit.vhd
+pack_10x.vhd
+pack_10x_11byte.vhd
+
+framer.vhd
+
+encode.v
+enc_8b10b.vhd
+
+decode.vhd
+dec_8b10b.vhd
+
+pack.vhd
+unpack.vhd
+unpack_telemetry.vhd
+
+ser.vhd
+ser_8x.vhd
+des.vhd
+
+gen.vhd
+gen_byte.vhd
+gen_telemetry_1x.vhd
+
+check.vhd
+check_byte.vhd
+check_telemetry.vhd
+
+serial_link.vhd
+serial_link_rx.vhd
+
+
+# framework documentation: Modem DSP/FPGA Build
+# https://confluence.shure.com/pages/viewpage.action?pageId=61179651
+
+# note: if ila's are included they must be added to compile.txt separately
