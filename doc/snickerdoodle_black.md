@@ -308,8 +308,8 @@ sshfs proton@192.168.1.209:/ ~/snickerdoodle
 
 copy into temporary spot and then in to place
 ```
-cp ./hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit ~/snickerdoodle/home/proton/system.bit
-poleguy@elgar:~/fpga-data/2025/protonpack$ ssh -t proton@192.168.1.209 sudo cp system.bit /boot
+cp ~/fpga-data/2025/protonpack/hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit ~/snickerdoodle/home/proton/system.bit
+ssh -t proton@192.168.1.209 sudo cp system.bit /boot
 ssh -t proton@192.168.1.209 sudo reboot now
 ```
 
@@ -326,6 +326,14 @@ JC1
 PC1
 8 and 14
 
+W6 and V6 are n and p inputs
+JC1 18 and 20
+https://krtkl.com/uploads/pinout-r4.1.pdf
+
+todo: wire up from sma.
+need two sma to header pin connectors.
+look at output V8 using bench scope.
+v8: on pin 
 
 
 
@@ -351,6 +359,8 @@ git checkout 0.0.99.146.20240104103112
 ## working dir
 ~/fpga-data/2024/protonpack/hardware/
 
+## Version Control
+https://adaptivesupport.amd.com/s/article/Revision-Control-with-a-Vivado-Project?language=en_US
 
 # Troubleshooting
 

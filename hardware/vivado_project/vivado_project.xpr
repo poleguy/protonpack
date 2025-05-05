@@ -47,6 +47,7 @@
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="ProjectType" Val="Default"/>
+    <Option Name="IPRepoPath" Val="$PPRDIR/../ip_repo/myip_1_0"/>
     <Option Name="IPOutputRepo" Val="$PCACHEDIR/ip"/>
     <Option Name="IPDefaultOutputPath" Val="$PGENDIR/sources_1"/>
     <Option Name="IPCachePermission" Val="read"/>
@@ -91,6 +92,13 @@
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
       <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sources_1/new/blink.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/afifo.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -218,12 +226,21 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/dma_control/axi_to_sbus.vhd">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/bd/block_design/block_design.bd">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
+        <CompFileExtendedInfo CompFileName="block_design.bd" FileRelPathName="ip/block_design_axi_to_sb_0_0/block_design_axi_to_sb_0_0.xci">
+          <Proxy FileSetName="block_design_axi_to_sb_0_0"/>
+        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="block_design.bd" FileRelPathName="ip/block_design_blink_0_1/block_design_blink_0_1.xci">
           <Proxy FileSetName="block_design_blink_0_1"/>
         </CompFileExtendedInfo>
@@ -233,12 +250,23 @@
         <CompFileExtendedInfo CompFileName="block_design.bd" FileRelPathName="ip/block_design_processing_system7_0_0/block_design_processing_system7_0_0.xci">
           <Proxy FileSetName="block_design_processing_system7_0_0"/>
         </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="block_design.bd" FileRelPathName="ip/block_design_rst_ps7_0_51M_0/block_design_rst_ps7_0_51M_0.xci">
+          <Proxy FileSetName="block_design_rst_ps7_0_51M_0"/>
+        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="block_design.bd" FileRelPathName="ip/block_design_telem_0_1/block_design_telem_0_1.xci">
           <Proxy FileSetName="block_design_telem_0_1"/>
         </CompFileExtendedInfo>
       </File>
       <File Path="$PGENDIR/sources_1/bd/block_design/hdl/block_design_wrapper.v">
         <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/new/fifo_8x88.v">
+        <FileInfo>
+          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -322,15 +350,27 @@
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
-    <FileSet Name="block_design_telem_0_1" Type="BlockSrcs" RelSrcDir="$PSRCDIR/block_design_telem_0_1" RelGenDir="$PGENDIR/block_design_telem_0_1">
+    <FileSet Name="block_design_rst_ps7_0_51M_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/block_design_rst_ps7_0_51M_0" RelGenDir="$PGENDIR/block_design_rst_ps7_0_51M_0">
       <Config>
-        <Option Name="TopModule" Val="block_design_telem_0_1"/>
+        <Option Name="TopModule" Val="block_design_rst_ps7_0_51M_0"/>
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
     <FileSet Name="block_design_blink_0_1" Type="BlockSrcs" RelSrcDir="$PSRCDIR/block_design_blink_0_1" RelGenDir="$PGENDIR/block_design_blink_0_1">
       <Config>
         <Option Name="TopModule" Val="block_design_blink_0_1"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="block_design_axi_to_sb_0_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/block_design_axi_to_sb_0_0" RelGenDir="$PGENDIR/block_design_axi_to_sb_0_0">
+      <Config>
+        <Option Name="TopModule" Val="block_design_axi_to_sb_0_0"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="block_design_telem_0_1" Type="BlockSrcs" RelSrcDir="$PSRCDIR/block_design_telem_0_1" RelGenDir="$PGENDIR/block_design_telem_0_1">
+      <Config>
+        <Option Name="TopModule" Val="block_design_telem_0_1"/>
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
@@ -379,9 +419,7 @@
     </Run>
     <Run Id="block_design_clk_wiz_0_0_synth_1" Type="Ft3:Synth" SrcSet="block_design_clk_wiz_0_0" Part="xc7z020clg400-3" ConstrsSet="block_design_clk_wiz_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/block_design_clk_wiz_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_clk_wiz_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_clk_wiz_0_0_synth_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2024">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2024"/>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -389,7 +427,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="block_design_telem_0_1_synth_1" Type="Ft3:Synth" SrcSet="block_design_telem_0_1" Part="xc7z020clg400-3" ConstrsSet="block_design_telem_0_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/block_design_telem_0_1_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_synth_1" ParallelReportGen="true">
+    <Run Id="block_design_rst_ps7_0_51M_0_synth_1" Type="Ft3:Synth" SrcSet="block_design_rst_ps7_0_51M_0" Part="xc7z020clg400-3" ConstrsSet="block_design_rst_ps7_0_51M_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/block_design_rst_ps7_0_51M_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_rst_ps7_0_51M_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_rst_ps7_0_51M_0_synth_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2024">
           <Desc>Vivado Synthesis Defaults</Desc>
@@ -402,6 +440,30 @@
       <RQSFiles/>
     </Run>
     <Run Id="block_design_blink_0_1_synth_1" Type="Ft3:Synth" SrcSet="block_design_blink_0_1" Part="xc7z020clg400-3" ConstrsSet="block_design_blink_0_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/block_design_blink_0_1_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_blink_0_1_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_blink_0_1_synth_1" ParallelReportGen="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2024">
+          <Desc>Vivado Synthesis Defaults</Desc>
+        </StratHandle>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2024"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="block_design_axi_to_sb_0_0_synth_1" Type="Ft3:Synth" SrcSet="block_design_axi_to_sb_0_0" Part="xc7z020clg400-3" ConstrsSet="block_design_axi_to_sb_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/block_design_axi_to_sb_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_axi_to_sb_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_axi_to_sb_0_0_synth_1" ParallelReportGen="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2024">
+          <Desc>Vivado Synthesis Defaults</Desc>
+        </StratHandle>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2024"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="block_design_telem_0_1_synth_1" Type="Ft3:Synth" SrcSet="block_design_telem_0_1" Part="xc7z020clg400-3" ConstrsSet="block_design_telem_0_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/block_design_telem_0_1_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_synth_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2024">
           <Desc>Vivado Synthesis Defaults</Desc>
@@ -450,9 +512,7 @@
     </Run>
     <Run Id="block_design_clk_wiz_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg400-3" ConstrsSet="block_design_clk_wiz_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="block_design_clk_wiz_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_clk_wiz_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_clk_wiz_0_0_impl_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2024">
-          <Desc>Default settings for Implementation.</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2024"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
@@ -467,7 +527,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="block_design_telem_0_1_impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg400-3" ConstrsSet="block_design_telem_0_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="block_design_telem_0_1_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_impl_1" ParallelReportGen="true">
+    <Run Id="block_design_rst_ps7_0_51M_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg400-3" ConstrsSet="block_design_rst_ps7_0_51M_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="block_design_rst_ps7_0_51M_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_rst_ps7_0_51M_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_rst_ps7_0_51M_0_impl_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2024">
           <Desc>Default settings for Implementation.</Desc>
@@ -487,6 +547,44 @@
       <RQSFiles/>
     </Run>
     <Run Id="block_design_blink_0_1_impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg400-3" ConstrsSet="block_design_blink_0_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="block_design_blink_0_1_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_blink_0_1_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_blink_0_1_impl_1" ParallelReportGen="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2024">
+          <Desc>Default settings for Implementation.</Desc>
+        </StratHandle>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2024"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="block_design_axi_to_sb_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg400-3" ConstrsSet="block_design_axi_to_sb_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="block_design_axi_to_sb_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_axi_to_sb_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_axi_to_sb_0_0_impl_1" ParallelReportGen="true">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2024">
+          <Desc>Default settings for Implementation.</Desc>
+        </StratHandle>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2024"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="block_design_telem_0_1_impl_1" Type="Ft2:EntireDesign" Part="xc7z020clg400-3" ConstrsSet="block_design_telem_0_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="block_design_telem_0_1_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/block_design_telem_0_1_impl_1" ParallelReportGen="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2024">
           <Desc>Default settings for Implementation.</Desc>

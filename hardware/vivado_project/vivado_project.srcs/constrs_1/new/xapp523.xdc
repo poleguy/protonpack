@@ -26,7 +26,7 @@ set_property LOC OLOGIC_X0Y11 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_
 #NET "Clk_p_pin" CLOCK_DEDICATED_ROUTE = BACKBONE;
 #PIN "*/Receiver_I_RxGenClockMod/RxGenClockMod_I_Mmcm_Adv.CLKIN1" CLOCK_DEDICATED_ROUTE = BACKBONE;
 #set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_pins -hier -filter {name =~ */Receiver_I_RxGenClockMod/RxGenClockMod_I_Mmcm_Adv/CLKIN1}]
-set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets clk_102M4_IBUF]
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets clk_102M4_IBUF]
 #
 #INST "*/Gen_1[1].Receiver_I_Dru" AREA_GROUP = "Gen_1[1].Rcvr_I_Dru";
 #AREA_GROUP "Gen_1[1].Rcvr_I_Dru" RANGE=SLICE_X0Y25:SLICE_X9Y26;
