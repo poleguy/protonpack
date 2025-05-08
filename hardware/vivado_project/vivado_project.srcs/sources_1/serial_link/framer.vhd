@@ -33,6 +33,7 @@ entity framer is
       valid_in    : in  std_logic;
       -- parallel output
       data_out    : out std_logic_vector(9 downto 0);
+      alignment_out : out std_logic_vector(3 downto 0);
       valid_out   : out std_logic;
       aligned_out : out std_logic
       );
@@ -206,6 +207,7 @@ begin
     end if;
   end process;
 
+  alignment_out <= std_logic_vector(r_alignment);
 
   -- 
   process(clk)

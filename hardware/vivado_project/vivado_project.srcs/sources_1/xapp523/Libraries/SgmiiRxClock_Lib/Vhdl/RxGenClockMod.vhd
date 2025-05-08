@@ -311,7 +311,16 @@ RxGenClockMod_I_Mmcm_Adv : MMCME2_ADV
         -- 1024/310 = 3.3032
         -- 1024/390 = 2.6256 (Must be in sync with settings in Receiver generic
         -- C_IdlyCntVal_M/S and C_RefClkFreq) see check_byte.vhd
-        CLKOUT0_DIVIDE_F        => 2.6256,      -- real  -- [ -1: => 3.125, ]
+        -- switched to traget 290 because 390 is used and it's not clear what the requirement is.
+        -- xapp523 claims "ideally running at 312.5 MHz"
+        -- if that's for 1250 then maybe we should be at targeting 256 for 1024 MHz?
+        -- then 290 is closest?
+
+        -- [DRC AVAL-139] MMCME2_ADV Phase shift and divide attr checks: The MMCME2_ADV cell block_design_i/telem_0/inst/check_telemetry_1/Receiver_0/Receiver_I_RxGenClockMod/RxGenClockMod_I_Mmcm_Adv has a fractional CLKOUT0_DIVIDE_F value (3.531) which is not a multiple of the hardware granularity (0.125) and will be adjusted to the nearest supportable value. Please update the design to use a valid value.
+
+        -- targeting 3.5310 will hit 292MHz
+        CLKOUT0_DIVIDE_F        => 3.5000,      -- real  -- [ -1: => 3.125, ]
+        --CLKOUT0_DIVIDE_F        => 2.6256,      -- real  -- [ -1: => 3.125, ]
         CLKOUT0_DUTY_CYCLE      => 0.5,         -- real
         CLKOUT0_PHASE           => 0.0,         -- real
         CLKOUT0_USE_FINE_PS     => FALSE,       -- boolean

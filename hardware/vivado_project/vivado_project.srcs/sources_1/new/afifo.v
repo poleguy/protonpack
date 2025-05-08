@@ -65,7 +65,7 @@
 //
 module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 		i_rclk, i_rrst_n, i_rd, o_rdata, o_rempty);
-	parameter	DSIZE = 88,
+	parameter	DSIZE = 96,
 			ASIZE = 4;
 	localparam	DW = DSIZE,
 			AW = ASIZE;

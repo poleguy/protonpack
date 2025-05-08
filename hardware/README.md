@@ -1,9 +1,5 @@
 # Proton Pack Hardware
 
-Copyright (c) 2025, Shure Incorporated
-
-Proton Pack Hardware is licensed under the CERN-OHL-P-2.0 license found in the [LICENSE](./LICENSE) file.
-
 # Hardware
 
 The hardware consists of a capture system that records a data stream provided from a device under test (DUT) via a pair of coaxial cables.
@@ -18,6 +14,13 @@ No termination is needed on the DUT. The transmission pair lines are wired simpl
 On the receiving device the termination should be AC coupled into an MGT transceiver that is internally terminated.
 
 It could also be directly connected as on the AC701 board.
+
+
+# FPGA Board
+
+Snickerdoodle Black
+
+[snickerdoodle_black.md](../doc/snickerdoodle_black.md)
 
 # Reference
 
@@ -37,8 +40,22 @@ https://0x04.net/~mwk/xidocs/ug/ug476_7Series_Transceivers.pdf
 ## The Proton Pack Is Not A Toy
 https://www.youtube.com/@TheProtonPackIsNotAToy
 
+## XAPP523
+
+https://docs.amd.com/v/u/en-US/xapp523-lvds-4x-asynchronous-oversampling
+
+Alternative, PG047:
+
+https://docs.amd.com/r/en-US/pg047-gig-eth-pcs-pma/LVDS-Transceiver-for-7-Series-and-Zynq-7000-Devices
+
 
 
 ![UI](../doc/Proton_Pack_UI.drawio.svg)
 
 ![Sytem Block Diagram](../doc/System_Block_Diagram.drawio.svg)
+
+# Copyright
+
+Copyright (c) 2025, Shure Incorporated
+
+Proton Pack Hardware is licensed under the CERN-OHL-P-2.0 license found in the [LICENSE](./LICENSE) file.

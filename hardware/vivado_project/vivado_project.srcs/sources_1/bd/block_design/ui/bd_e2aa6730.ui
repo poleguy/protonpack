@@ -5,48 +5,53 @@
    "Addressing View_TopLeft":"-1069,-507",
    "Default View_Layers":"/Net:true|/clk_wiz_0_clk_out1:true|/blink_0_reset_blink:true|/rst_ps7_0_51M_peripheral_aresetn:true|/processing_system7_0_FCLK_RESET0_N:true|",
    "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"-611,-1033",
+   "Default View_TopLeft":"-230,-1343",
    "Display-PortTypeClock":"true",
    "Display-PortTypeOthers":"true",
    "Display-PortTypeReset":"true",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.8.0 2024-04-26 e1825d835c VDI=44 GEI=38 GUI=JA:21.0 TLS
 #  -string -flagsOSRD
-preplace port DDR -pg 1 -lvl 6 -x 1900 -y -390 -defaultsOSRD
-preplace port FIXED_IO -pg 1 -lvl 6 -x 1900 -y -360 -defaultsOSRD
-preplace port port-id_T9 -pg 1 -lvl 0 -x 0 -y -660 -defaultsOSRD
-preplace port port-id_Y12 -pg 1 -lvl 6 -x 1900 -y -670 -defaultsOSRD
-preplace port port-id_serial_in_p -pg 1 -lvl 0 -x 0 -y -540 -defaultsOSRD
-preplace port port-id_serial_in_n -pg 1 -lvl 0 -x 0 -y -510 -defaultsOSRD
-preplace port port-id_okay_led_out -pg 1 -lvl 6 -x 1900 -y -560 -defaultsOSRD
-preplace inst processing_system7_0 -pg 1 -lvl 2 -x 470 -y -260 -defaultsOSRD
-preplace inst blink_0 -pg 1 -lvl 2 -x 470 -y -700 -defaultsOSRD
-preplace inst telem_0 -pg 1 -lvl 2 -x 470 -y -520 -defaultsOSRD
+preplace port DDR -pg 1 -lvl 6 -x 1950 -y -390 -defaultsOSRD
+preplace port FIXED_IO -pg 1 -lvl 6 -x 1950 -y -360 -defaultsOSRD
+preplace port port-id_T9 -pg 1 -lvl 0 -x -110 -y -660 -defaultsOSRD
+preplace port port-id_Y12 -pg 1 -lvl 6 -x 1950 -y -670 -defaultsOSRD
+preplace port port-id_serial_in_p -pg 1 -lvl 0 -x -110 -y -540 -defaultsOSRD
+preplace port port-id_serial_in_n -pg 1 -lvl 0 -x -110 -y -510 -defaultsOSRD
+preplace port port-id_okay_led_out -pg 1 -lvl 6 -x 1950 -y -560 -defaultsOSRD
+preplace port port-id_pll_locked -pg 1 -lvl 6 -x 1950 -y -510 -defaultsOSRD
+preplace port port-id_rx_dat_aligned -pg 1 -lvl 6 -x 1950 -y -480 -defaultsOSRD
+preplace inst processing_system7_0 -pg 1 -lvl 2 -x 550 -y -260 -defaultsOSRD
+preplace inst blink_0 -pg 1 -lvl 2 -x 550 -y -700 -defaultsOSRD
+preplace inst telem_0 -pg 1 -lvl 2 -x 550 -y -520 -defaultsOSRD
 preplace inst clk_wiz_0 -pg 1 -lvl 1 -x 120 -y -340 -defaultsOSRD
-preplace inst axi_to_sb_0 -pg 1 -lvl 5 -x 1670 -y -400 -defaultsOSRD
-preplace inst rst_ps7_0_51M -pg 1 -lvl 3 -x 920 -y -550 -defaultsOSRD
-preplace inst axi_smc -pg 1 -lvl 4 -x 1310 -y -400 -defaultsOSRD
-preplace netloc Net 1 0 5 30 -270 220 -120 690 -430 1170 -490 1470
-preplace netloc T9_1 1 0 2 N -660 210
-preplace netloc blink_0_outy 1 2 4 700 -670 N -670 N -670 N
-preplace netloc blink_0_reset_blink 1 0 3 20 -110 NJ -110 660
-preplace netloc clk_wiz_0_clk_out1 1 1 1 240 -590n
-preplace netloc serial_in_n_1 1 0 2 N -510 250
-preplace netloc serial_in_p_1 1 0 2 N -540 230
-preplace netloc telem_0_okay_led_out 1 2 4 680 -450 1100 -560 N -560 N
-preplace netloc processing_system7_0_FCLK_RESET0_N 1 2 1 700 -570n
-preplace netloc rst_ps7_0_51M_peripheral_aresetn 1 3 2 1150 -320 1470
-preplace netloc axi_to_sb_0_sb_data_wr 1 1 5 260 -80 NJ -80 NJ -80 NJ -80 1860
-preplace netloc axi_to_sb_0_sb_addr 1 1 5 280 -100 NJ -100 NJ -100 NJ -100 1850
-preplace netloc axi_to_sb_0_sb_wea 1 1 5 270 -90 NJ -90 NJ -90 NJ -90 1830
-preplace netloc axi_to_sb_0_sb_rea 1 1 5 230 -70 NJ -70 NJ -70 NJ -70 1840
-preplace netloc telem_0_sb_data_rd 1 2 3 670J -440 1160J -480 1450
-preplace netloc processing_system7_0_DDR 1 2 4 NJ -320 1100 -310 N -310 1870
-preplace netloc processing_system7_0_FIXED_IO 1 2 4 NJ -300 N -300 N -300 1880
-preplace netloc axi_smc_M00_AXI 1 4 1 1460 -430n
-preplace netloc processing_system7_0_M_AXI_GP0 1 2 2 710 -420 NJ
-levelinfo -pg 1 0 120 470 920 1310 1670 1900
-pagesize -pg 1 -db -bbox -sgen -200 -770 2210 700
+preplace inst axi_to_sb_0 -pg 1 -lvl 5 -x 1720 -y -400 -defaultsOSRD
+preplace inst rst_ps7_0_51M -pg 1 -lvl 3 -x 980 -y -530 -defaultsOSRD
+preplace inst axi_smc -pg 1 -lvl 4 -x 1380 -y -400 -defaultsOSRD
+preplace netloc Net 1 1 4 320 -780 770 -410 1240 -480 1520
+preplace netloc T9_1 1 0 2 -90 -690 N
+preplace netloc axi_to_sb_0_sb_addr 1 1 5 330 -830 NJ -830 NJ -830 NJ -830 1910
+preplace netloc axi_to_sb_0_sb_data_wr 1 1 5 340 -820 NJ -820 NJ -820 NJ -820 1900
+preplace netloc axi_to_sb_0_sb_rea 1 1 5 350 -810 NJ -810 NJ -810 NJ -810 1890
+preplace netloc axi_to_sb_0_sb_wea 1 1 5 360 -800 NJ -800 NJ -800 NJ -800 1880
+preplace netloc blink_0_outy 1 2 4 N -710 N -710 N -710 1930
+preplace netloc blink_0_reset_blink 1 0 3 30 -790 NJ -790 750
+preplace netloc clk_wiz_0_clk_out1 1 1 1 220 -590n
+preplace netloc processing_system7_0_FCLK_CLK1 1 0 3 20 -710 290J -770 740
+preplace netloc processing_system7_0_FCLK_RESET0_N 1 2 1 800 -550n
+preplace netloc rst_ps7_0_51M_peripheral_aresetn 1 3 2 1230 -490 1530
+preplace netloc serial_in_n_1 1 0 2 N -510 230
+preplace netloc serial_in_p_1 1 0 2 N -540 210
+preplace netloc telem_0_okay_led_out 1 2 4 760 -650 N -650 N -650 1930
+preplace netloc telem_0_pll_locked 1 2 4 780 -640 NJ -640 NJ -640 1920J
+preplace netloc telem_0_rx_dat_aligned 1 2 4 790 -430 1160J -500 NJ -500 1930J
+preplace netloc telem_0_sb_data_rd 1 2 3 790J -630 NJ -630 1540
+preplace netloc axi_smc_M00_AXI 1 4 1 1560 -430n
+preplace netloc processing_system7_0_DDR 1 2 4 NJ -330 1160 -320 1550 -490 1920
+preplace netloc processing_system7_0_FIXED_IO 1 2 4 NJ -310 N -310 N -310 1930
+preplace netloc processing_system7_0_M_AXI_GP0 1 2 2 790 -420 NJ
+levelinfo -pg 1 -110 120 550 980 1380 1720 1950
+pagesize -pg 1 -db -bbox -sgen -240 -1230 2210 700
 "
 }
 {

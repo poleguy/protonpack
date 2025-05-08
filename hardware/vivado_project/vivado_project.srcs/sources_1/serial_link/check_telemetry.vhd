@@ -52,7 +52,11 @@ entity check_telemetry is
       okay_led_out   : out std_logic;
       cnt_led_out    : out std_logic;
       data_out       : out std_logic_vector(87 downto 0);
-      valid_out      : out std_logic
+      valid_out      : out std_logic;
+      rx_dat_aligned : out std_logic;
+      alignment_out  : out std_logic_vector(3 downto 0);
+      rx_data_ready  : out std_logic;
+      rx_data_raw    : out std_logic_vector(9 downto 0)
       );
 
 end check_telemetry;
@@ -158,7 +162,7 @@ begin
       C_IdlyCntVal_S    => "00110",
       -- mmcm must also be adjusted inside to make this right
       -- period is +/- 10 MHz
-      C_RefClkFreq      => 390.00,
+      C_RefClkFreq      => 292.571,
       C_IoSrdsDataWidth => 4,
       C_ClockPattern    => "1010"
       )
@@ -175,7 +179,7 @@ begin
       RxClkDiv     => RxClkDiv,   -- out RxClkIn * 5/2 (e.g. 102.4 -> 256)
       RxMmcmLocked => pll_locked,
       RxMmcmAlive  => open,       -- out
-      RxDatAlignd  => open,       -- out
+      RxDatAlignd  => rx_dat_aligned,       -- out
       RxDataRdy    => RxDataRdy,  -- out [C_DataWidth-1:0]
       RxRawData    => open,       -- out [(C_DataWidth*8)-1:0]
       RxData       => RxData      -- out [(C_DataWidth*10)-1:0]
@@ -191,6 +195,10 @@ begin
 
   IntRxD_p(0) <= SERIAL_IN_N;
   IntRxD_n(0) <= SERIAL_IN_P;
+
+  -- output data to debug low-level trouble with functionality
+  rx_data_ready <= RxDataRdy(0);
+  rx_data_raw <= RxDataRev;
 
   probe2 <= "0000" & r_okay_led_out & r_data_match & aligned & valid_framed & RxDataRdy & pll_locked;
   probe3 <= "0" & k_dec_out & data_dec_out;
@@ -261,9 +269,12 @@ begin
       data_in     => RxDataRev,
       valid_in    => RxDataRdy(0),
       data_out    => data_framed,
+      alignment_out => alignment_out,
       aligned_out => aligned,
       valid_out   => valid_framed
       );
+  
+
 
   RxDataRev <= RxData(0) & RxData(1) & RxData(2) & RxData(3) & RxData(4) & RxData(5) &
                RxData(6) & RxData(7) & RxData(8) & RxData(9);

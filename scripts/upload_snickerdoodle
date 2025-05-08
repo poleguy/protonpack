@@ -1,0 +1,9 @@
+#/usr/bin/env bash
+set -e
+source /tools/Xilinx/Vivado/2024.2/settings64.sh
+cd ~/fpga-data/2025/protonpack/hardware/vivado_project
+bootgen -w -arch zynq -image bit_to_bin.bif -process_bitstream bin
+cp ~/fpga-data/2025/protonpack/hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit ~/snickerdoodle/home/proton/system.bit
+cp ~/fpga-data/2025/protonpack/hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit.bin ~/snickerdoodle/home/proton/system.bin
+
+ssh -t proton@192.168.1.209 "sudo cp system.bit /boot; sudo cp system.bin /lib/firmware/system.bin; sudo bash -c 'echo system.bin > /sys/class/fpga_manager/fpga0/firmware'"

@@ -1,11 +1,5 @@
 # Proton Pack Telemetry Capture System
 
-Copyright (c) 2025, Shure Incorporated
-
-Nicholas Dietz (dietzn@shure.com)
-
-Proton Pack software is licensed according to the [LICENSE](./LICENSE) file.
-
 ## About
 
 The Proton Pack is a portable telemetry system designed to capture and display real time visualizations and record data for analysis from embedded FPGA systems.
@@ -43,3 +37,12 @@ The post processing software takes the captured telemetry and prepares it for an
 # Design Notes
 
 design notes are left out of this document to avoid [clutter](doc/design_notes.md)
+
+
+# Copyright
+
+Copyright (c) 2025, Shure Incorporated
+
+Nicholas Dietz (dietzn@shure.com)
+
+Proton Pack software is licensed according to the [LICENSE](./LICENSE) file.

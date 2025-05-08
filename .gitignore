@@ -173,6 +173,12 @@ cython_debug/
 *.bkp
 *~
 vivado_pid*.str
-vivado.jou
+vivado*.jou
 .Xil/
 src
+
+
+# reference repos
+telem_mobile_ac701
+telem_eval_ax7a035
+snickerdoodle

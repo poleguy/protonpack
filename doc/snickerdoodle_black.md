@@ -308,9 +308,11 @@ sshfs proton@192.168.1.209:/ ~/snickerdoodle
 
 copy into temporary spot and then in to place
 ```
+bootgen -w -arch zynq -image bit_to_bin.bif -process_bitstream bin
 cp ~/fpga-data/2025/protonpack/hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit ~/snickerdoodle/home/proton/system.bit
-ssh -t proton@192.168.1.209 sudo cp system.bit /boot
-ssh -t proton@192.168.1.209 sudo reboot now
+cp ~/fpga-data/2025/protonpack/hardware/vivado_project/vivado_project.runs/impl_1/block_design_wrapper.bit.bin ~/snickerdoodle/home/proton/system.bin
+
+ssh -t proton@192.168.1.209 "sudo cp system.bit /boot; sudo cp system.bin /lib/firmware/system.bin; sudo bash -c 'echo system.bin > /sys/class/fpga_manager/fpga0/firmware'"
 ```
 
 inny and outy
@@ -334,6 +336,10 @@ todo: wire up from sma.
 need two sma to header pin connectors.
 look at output V8 using bench scope.
 v8: on pin 
+
+
+JC1 pin 17 V11 pll_locked
+JC1 pin 19 V10 rx_dat_aligned
 
 
 
@@ -374,3 +380,34 @@ how many transceivers do we have?
 0.
 uhoh.
 big goof.
+
+
+## notes on telemetry
+
+Looking at delta read times. Worst case single reads seem to be about 13 microseconds.
+1/52e6*0x2b1
+13.25e-6
+
+Average reads about 365 nsec.
+
+If we need to read 4 words that amounts to 53 microseconds to read each 11 byte data transfer.
+
+At the maximum line rate that's 88*1/1.024e6 
+85.9 us. for one telemetry element.
+
+So it seems we should be able to keep up so long as we can write to disk in a timely manner.
+Even without a fifo.
+
+Unfortunately I don't see a clear counter in the data I'm seeing coming out of the fifo.
+
+Possibly the reception is busted.
+
+
+measured counter with command line. It seems accurate:
+
+proton@snickerdoodle:~/devmem2$ sudo ./fpgapeek 0x1; sleep 1.0; sudo ./fpgapeek 0x1
+
+>>> (0xe51a3790-0xe1c00f5e)*1/52e6
+1.0815418846153846
+>>> (0x4e5569af-0x4afbd16b)*1/52e6
+1.0808333076923078

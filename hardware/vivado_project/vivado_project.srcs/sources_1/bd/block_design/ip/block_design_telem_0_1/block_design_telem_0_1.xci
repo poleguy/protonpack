@@ -54,7 +54,9 @@
         "sb_data_wr": [ { "direction": "in", "size_left": "31", "size_right": "0" } ],
         "sb_addr": [ { "direction": "in", "size_left": "23", "size_right": "0" } ],
         "sb_wea": [ { "direction": "in" } ],
-        "sb_rea": [ { "direction": "in" } ]
+        "sb_rea": [ { "direction": "in" } ],
+        "pll_locked": [ { "direction": "out" } ],
+        "rx_dat_aligned": [ { "direction": "out" } ]
       }
     }
   }
