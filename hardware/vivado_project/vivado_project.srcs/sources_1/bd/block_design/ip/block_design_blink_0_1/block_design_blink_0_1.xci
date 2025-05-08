@@ -9,10 +9,12 @@
     "parameters": {
       "component_parameters": {
         "CLK_DIV": [ { "value": "100000000", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "CLK_DIV_10": [ { "value": "10", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Component_Name": [ { "value": "block_design_blink_0_1", "resolve_type": "user", "usage": "all" } ]
       },
       "model_parameters": {
-        "CLK_DIV": [ { "value": "100000000", "resolve_type": "generated", "format": "long", "usage": "all" } ]
+        "CLK_DIV": [ { "value": "100000000", "resolve_type": "generated", "format": "long", "usage": "all" } ],
+        "CLK_DIV_10": [ { "value": "10", "resolve_type": "generated", "format": "long", "usage": "all" } ]
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "zynq" } ],

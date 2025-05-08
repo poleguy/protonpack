@@ -190,7 +190,7 @@ module telem
       // ignore bottom two bits of sb_addr which are byte addresses
       case (sb_addr[10:2])
         9'h0:
-          r_sb_regs_rd <= 32'h00000008; // version
+          r_sb_regs_rd <= 32'h0000000a; // version
         9'h1:
           r_sb_regs_rd <= rd_count;
         9'h2:

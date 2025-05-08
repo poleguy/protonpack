@@ -5,7 +5,7 @@
    "Addressing View_TopLeft":"-1069,-507",
    "Default View_Layers":"/Net:true|/clk_wiz_0_clk_out1:true|/blink_0_reset_blink:true|/rst_ps7_0_51M_peripheral_aresetn:true|/processing_system7_0_FCLK_RESET0_N:true|",
    "Default View_ScaleFactor":"1.0",
-   "Default View_TopLeft":"-230,-1343",
+   "Default View_TopLeft":"-230,-1131",
    "Display-PortTypeClock":"true",
    "Display-PortTypeOthers":"true",
    "Display-PortTypeReset":"true",
