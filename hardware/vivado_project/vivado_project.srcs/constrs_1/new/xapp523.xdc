@@ -7,10 +7,10 @@
 #set_property LOC ILOGIC_X0Y23 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Isrdse2_Clk}]
 #set_property LOC OLOGIC_X0Y23 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Osrdse2_Clk}]
 
-# this must match setting of BUFIO in hdl
+# this must match setting of C_bufioClk0Loc and C_bufioClk90Loc in Receiver instance of hdl?
 
-set_property LOC ILOGIC_X0Y11 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Isrdse2_Clk}]
-set_property LOC OLOGIC_X0Y11 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Osrdse2_Clk}]
+set_property LOC ILOGIC_X0Y9 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Isrdse2_Clk}]
+set_property LOC OLOGIC_X0Y9 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Osrdse2_Clk}]
 #set_property LOC ILOGIC_X0Y124 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Isrdse2_Clk}]
 #set_property LOC OLOGIC_X0Y124 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_Osrdse2_Clk}]
 
@@ -77,13 +77,13 @@ set_property LOC OLOGIC_X0Y11 [get_cells -hier -filter {name =~ */MmcmAlignIo_I_
 # Dru misses timing easily, so straddle it across the middle to try to get clock delay down
 create_pblock {pblock_Gn_1[1].Rcvr_I_Dr}
 add_cells_to_pblock [get_pblocks {pblock_Gn_1[1].Rcvr_I_Dr}] [get_cells -hier -filter {name =~ *block_design_i/telem_0/inst/check_telemetry_1/Receiver_0/Gen_1[1].Receiver_I_Dru}]
-resize_pblock [get_pblocks {pblock_Gn_1[1].Rcvr_I_Dr}] -add {SLICE_X0Y14:SLICE_X9Y16}
+resize_pblock [get_pblocks {pblock_Gn_1[1].Rcvr_I_Dr}] -add {SLICE_X0Y7:SLICE_X9Y9}
 create_pblock pblock_RxGnClckMd_I_ApsRstEn
 add_cells_to_pblock [get_pblocks pblock_RxGnClckMd_I_ApsRstEn] [get_cells -hier -filter {name =~ *check_telemetry_1/Receiver_0/Receiver_I_RxGenClockMod/RxGenClockMod_I_AppsRstEna}]
-resize_pblock [get_pblocks pblock_RxGnClckMd_I_ApsRstEn] -add {SLICE_X6Y14:SLICE_X9Y15}
+resize_pblock [get_pblocks pblock_RxGnClckMd_I_ApsRstEn] -add {SLICE_X6Y7:SLICE_X9Y8}
 create_pblock pblock_Receiver_I_MmcmAlign
 add_cells_to_pblock [get_pblocks pblock_Receiver_I_MmcmAlign] [get_cells -hier -filter {name =~ *check_telemetry_1/Receiver_0/Receiver_I_MmcmAlign}]
-resize_pblock [get_pblocks pblock_Receiver_I_MmcmAlign] -add {SLICE_X0Y14:SLICE_X5Y15}
+resize_pblock [get_pblocks pblock_Receiver_I_MmcmAlign] -add {SLICE_X0Y7:SLICE_X5Y8}
 
 
 # shifted to center of X0Y2, Bigger DRU slice to meet timing.

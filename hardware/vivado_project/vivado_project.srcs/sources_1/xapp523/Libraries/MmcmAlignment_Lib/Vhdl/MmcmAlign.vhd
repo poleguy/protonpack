@@ -150,7 +150,7 @@ MmcmAlign_I_MmcmAlignSm : entity MmcmAlignment_Lib.MmcmAlignSm
 -- This hierarchical block contains an OSERDES and ISERDES, both in NETWORKING-DDR mode.
 -- The OSERDES transmits a clock pattern that is received by the ISERDES per the internal
 -- OFB net. This way it is possible to tune the MMCM, per phase shift, so that the clocks
--- used for the data capturing ISERDES are running in phase with teh internal logic of the
+-- used for the data capturing ISERDES are running in phase with the internal logic of the
 -- PHY and DRU. 
 -- Reason for doing this:
 --      ISERDES used in oversampling mode require fast bit clocks (CLK and OCLK).
@@ -159,7 +159,7 @@ MmcmAlign_I_MmcmAlignSm : entity MmcmAlignment_Lib.MmcmAlignSm
 --      This buffer can only clock the IOI (ISERDES, OSERDES), thus for clocking of the FPGA
 --      logic other outputs of the MMCM need to be used. because these clocks take other
 --      routing resources in the FPGA (are no longer phase aligned) a state machine must make
---      sure all clocks get again phase aligned. 
+--      sure all clocks get phase aligned agan. 
 MmcmAlign_I_MmcmAlignIo : entity MmcmAlignment_Lib.MmcmAlignIo
     generic map (
         C_IoSrdsDataWidth => C_IoSrdsDataWidth, --

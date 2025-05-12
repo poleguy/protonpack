@@ -70,6 +70,66 @@ module telem
   reg [31:0] integrated_wr_count = 32'h0;
   reg fifo_valid = 1'h0;
 
+
+// Abandoned approach:
+//  Ugh: after spending all morning working on the designed based on pg047 I think I'm coming to the conclusion that the data and clocks are required to be strictly synchronous between tx and rx, which won't work for ar rx only solution.
+// https://docs.amd.com/r/en-US/pg047-gig-eth-pcs-pma/LVDS-Transceiver-for-7-Series-and-Zynq-7000-Devices
+// AMD Technical Information Portal
+// I'd love for someone to tell me I'm wrong, but in their verilog the output of the final 6b_10b gearbox has only a 125MHz clock (exactly 1/10th the line rate) and the rxdata_10b output data with no valid signal. So that's a non-starter. 
+ 
+//   // Signals for Transceiver Receiver Interface
+//   wire          my_rxchariscomma;
+//   wire          my_rxcharisk;
+//   wire [7:0]    my_rxdata;
+//   wire          my_rxdisperr;
+//   wire          my_rxnotintable;
+//   wire          my_rxrundisp;
+//   wire          my_rxbuferr;
+
+//   // Signals for Clocks and Reset
+//   wire          my_phy_cdr_lock;
+//   wire          my_soft_rx_reset;
+//   wire          my_reset;
+
+//   // Signals for Margin Control and Eye Monitor
+//   wire [4:0]    my_o_r_margin;
+//   wire [4:0]    my_o_l_margin;
+//   wire [11:0]   my_eye_mon_wait_time;
+
+//   // Signals for Serial Differential Pairs
+//   wire          my_pin_sgmii_rxn;
+//   wire          my_pin_sgmii_rxp;
+
+
+//   assign my_reset = ~r_rst_self_102M4_n;
+//   assign my_soft_rx_reset = 1`b0;
+//   // Instance of the block_design_gig_ethernet_pcs_pma_0_0_lvds_transceiver_k7 module
+//   rx_lvds rx_lvds_0 (
+//     .rxchariscomma       (my_rxchariscomma),
+//     .rxcharisk           (my_rxcharisk),
+//     .rxdata              (data_out),
+//     .rxdisperr           (my_rxdisperr),
+//     .rxnotintable        (my_rxnotintable),
+//     .rxrundisp           (my_rxrundisp),
+//     .rxbuferr            (my_rxbuferr),
+
+//     .phy_cdr_lock        (my_phy_cdr_lock),
+//     .clk512              (my_clk512),
+//     .clk170p3936              (clk170p3936),
+//     .clk85p1968              (clk85p1968),
+//     .clk102p4              (my_clk102p4),
+//     .soft_rx_reset       (my_soft_rx_reset),
+//     .reset               (my_reset),
+
+//     .o_r_margin          (my_o_r_margin),
+//     .o_l_margin          (my_o_l_margin),
+
+//     .eye_mon_wait_time   (my_eye_mon_wait_time),
+
+//     .pin_sgmii_rxn       (serial_in_buf_n),
+//     .pin_sgmii_rxp       (serial_in_buf_p)
+//   );
+
   always @(posedge clk_102M4)
   begin
     // Check if reset counter has reached its max value
@@ -190,7 +250,7 @@ module telem
       // ignore bottom two bits of sb_addr which are byte addresses
       case (sb_addr[10:2])
         9'h0:
-          r_sb_regs_rd <= 32'h0000000a; // version
+          r_sb_regs_rd <= 32'h0000000e; // version
         9'h1:
           r_sb_regs_rd <= rd_count;
         9'h2:

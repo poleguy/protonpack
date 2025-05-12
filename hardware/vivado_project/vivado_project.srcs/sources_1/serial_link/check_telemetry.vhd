@@ -161,8 +161,9 @@ begin
       C_IdlyCntVal_M    => "00000",
       C_IdlyCntVal_S    => "00110",
       -- mmcm must also be adjusted inside to make this right
+      -- see RxGenClockMod.vhd CLKOUT0_DIVIDE_F setting
       -- period is +/- 10 MHz
-      C_RefClkFreq      => 292.571,
+      C_RefClkFreq      => 204.800,
       C_IoSrdsDataWidth => 4,
       C_ClockPattern    => "1010"
       )

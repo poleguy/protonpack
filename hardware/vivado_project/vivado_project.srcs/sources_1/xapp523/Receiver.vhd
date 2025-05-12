@@ -115,9 +115,9 @@ library SgmiiRxClock_Lib;
 -- C_UseFbBufg     -- Use a BUFG in the MMCM feedback loop. 0 = no.
 -- C_UseBufg       -- Use a BUFG in the clock outputs of the MMCM. 0 = no
 --                 --   example: [5:0] "0011000", only CLKOUT3 and CLKOUT4 get a BUFG 
--- C_RstOutDly     -- Set the delay, in raw clock cycles, to relase the reset. 
+-- C_RstOutDly     -- Set the delay, in raw clock cycles, to release the reset. 
 -- C_EnaOutDly     -- Set the delay, in MMCM clcok cycles, to activate the enable.
--- C_Width         -- Number of inputs for the "MmcmAlive" circuit. = Numer of LED.
+-- C_Width         -- Number of inputs for the "MmcmAlive" circuit. = Number of LED.
 -- C_AlifeFactor   -- Blinking rate. 
 -- C_AlifeOn       -- What input, set by C_Width, must have a blink circuit? 1 = blink.
 -- C_DataWidth     -- Number of LVDS data input channels
@@ -126,14 +126,14 @@ library SgmiiRxClock_Lib;
 -- C_IdlyCtrlLoc   -- Where goes the IDLEAYCTRL component
 -- C_IdlyCntVal_M  -- Set the delay on the LVDS_p input (IDELAY value).
 -- C_IdlyCntVal_S  -- Set the delay on the LVDS_n input (IDELAY value).
--- C_RefClkFreq    -- Set the reference frequency of the IDLEAY components, precission.
+-- C_RefClkFreq    -- Set the reference frequency of the IDLEAY components, precision.
 --                 -- Clock Alignment, Clock Domain Crossing, settings 
 -- C_IoSrdsDataWidth   -- Number of OSERDES inputs and ISERDES outputs. (4 or 8)
 -- C_ClockPattern      -- Clock pattern to generate. Depend the C_IoSerdesDataWidth.
 ---------------------------------------------------------------------------------------------
 entity Receiver is
     generic (
-        C_MmcmLoc           : string := "MMCME2_ADV_X0Y2"; -- must be conistent
+        C_MmcmLoc           : string := "MMCME2_ADV_X0Y2"; -- must be consistent
                                                            -- with LOC's
                                                            -- in constraint file
         C_UseFbBufg         : integer := 0;
@@ -144,9 +144,9 @@ entity Receiver is
         C_AlifeFactor       : integer := 5;
         C_AlifeOn           : std_logic_vector(7 downto 0) := "00000001";
         C_DataWidth         : integer := 2;
-        C_BufioClk0Loc      : string := "BUFIO_X1Y0"; -- must be consistent withother LOC's
-        C_BufioClk90Loc     : string := "BUFIO_X1Y1"; -- must be consistent withother LOC's
-        C_IdlyCtrlLoc       : string := "IDELAYCTRL_X0Y2"; -- must be consistent withother LOC's
+        C_BufioClk0Loc      : string := "BUFIO_X1Y0"; -- must be consistent with other LOC's
+        C_BufioClk90Loc     : string := "BUFIO_X1Y1"; -- must be consistent with other LOC's
+        C_IdlyCtrlLoc       : string := "IDELAYCTRL_X0Y2"; -- must be consistent with other LOC's
         C_IdlyCntVal_M      : std_logic_vector(4 downto 0) := "00000";
         C_IdlyCntVal_S      : std_logic_vector(4 downto 0) := "00011";
         C_RefClkFreq        : real := 310.00;

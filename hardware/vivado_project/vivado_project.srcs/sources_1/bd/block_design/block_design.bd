@@ -13,11 +13,12 @@
     "design_tree": {
       "processing_system7_0": "",
       "blink_0": "",
-      "telem_0": "",
       "clk_wiz_0": "",
       "axi_to_sb_0": "",
       "rst_ps7_0_51M": "",
-      "axi_smc": ""
+      "axi_smc": "",
+      "blink_1": "",
+      "telem_0": ""
     },
     "interface_ports": {
       "DDR": {
@@ -1340,93 +1341,6 @@
           }
         }
       },
-      "telem_0": {
-        "vlnv": "xilinx.com:module_ref:telem:1.0",
-        "ip_revision": "1",
-        "xci_name": "block_design_telem_0_1",
-        "xci_path": "ip/block_design_telem_0_1/block_design_telem_0_1.xci",
-        "inst_hier_path": "telem_0",
-        "reference_info": {
-          "ref_type": "hdl",
-          "ref_name": "telem",
-          "boundary_crc": "0x0"
-        },
-        "ports": {
-          "clk_102M4": {
-            "direction": "I",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "102400000",
-                "value_src": "ip_prop"
-              },
-              "PHASE": {
-                "value": "0.0",
-                "value_src": "ip_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "/clk_wiz_0_clk_out1",
-                "value_src": "ip_prop"
-              }
-            }
-          },
-          "clk_52M": {
-            "direction": "I",
-            "parameters": {
-              "FREQ_HZ": {
-                "value": "51282001",
-                "value_src": "user_prop"
-              },
-              "PHASE": {
-                "value": "0.0",
-                "value_src": "default_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "block_design_processing_system7_0_0_FCLK_CLK0",
-                "value_src": "default_prop"
-              }
-            }
-          },
-          "serial_in_p": {
-            "direction": "I"
-          },
-          "serial_in_n": {
-            "direction": "I"
-          },
-          "okay_led_out": {
-            "direction": "O"
-          },
-          "rst_102M4": {
-            "direction": "O"
-          },
-          "sb_data_rd": {
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          },
-          "sb_data_wr": {
-            "direction": "I",
-            "left": "31",
-            "right": "0"
-          },
-          "sb_addr": {
-            "direction": "I",
-            "left": "23",
-            "right": "0"
-          },
-          "sb_wea": {
-            "direction": "I"
-          },
-          "sb_rea": {
-            "direction": "I"
-          },
-          "pll_locked": {
-            "direction": "O"
-          },
-          "rx_dat_aligned": {
-            "direction": "O"
-          }
-        }
-      },
       "clk_wiz_0": {
         "vlnv": "xilinx.com:ip:clk_wiz:6.0",
         "ip_revision": "15",
@@ -1460,6 +1374,9 @@
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "5"
+          },
+          "PRIM_SOURCE": {
+            "value": "Global_buffer"
           }
         }
       },
@@ -1878,6 +1795,140 @@
             }
           }
         }
+      },
+      "blink_1": {
+        "vlnv": "xilinx.com:module_ref:blink:1.0",
+        "ip_revision": "1",
+        "xci_name": "block_design_blink_0_2",
+        "xci_path": "ip/block_design_blink_0_2/block_design_blink_0_2.xci",
+        "inst_hier_path": "blink_1",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "blink",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "102400000",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "inny": {
+            "direction": "I"
+          },
+          "outy": {
+            "direction": "O"
+          },
+          "reset_blink": {
+            "type": "rst",
+            "direction": "O",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_HIGH"
+              }
+            }
+          }
+        }
+      },
+      "telem_0": {
+        "vlnv": "xilinx.com:module_ref:telem:1.0",
+        "ip_revision": "1",
+        "xci_name": "block_design_telem_0_0",
+        "xci_path": "ip/block_design_telem_0_0/block_design_telem_0_0.xci",
+        "inst_hier_path": "telem_0",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "telem",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "clk_102M4": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "102400000",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/clk_wiz_0_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "clk_52M": {
+            "direction": "I",
+            "parameters": {
+              "FREQ_HZ": {
+                "value": "51282001",
+                "value_src": "user_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "default_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "block_design_processing_system7_0_0_FCLK_CLK0",
+                "value_src": "default_prop"
+              }
+            }
+          },
+          "serial_in_p": {
+            "direction": "I"
+          },
+          "serial_in_n": {
+            "direction": "I"
+          },
+          "okay_led_out": {
+            "direction": "O"
+          },
+          "rst_102M4": {
+            "direction": "O"
+          },
+          "sb_data_rd": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "sb_data_wr": {
+            "direction": "I",
+            "left": "31",
+            "right": "0"
+          },
+          "sb_addr": {
+            "direction": "I",
+            "left": "23",
+            "right": "0"
+          },
+          "sb_wea": {
+            "direction": "I"
+          },
+          "sb_rea": {
+            "direction": "I"
+          },
+          "pll_locked": {
+            "direction": "O"
+          },
+          "rx_dat_aligned": {
+            "direction": "O"
+          }
+        }
       }
     },
     "interface_nets": {
@@ -1920,7 +1971,8 @@
       "T9_1": {
         "ports": [
           "T9",
-          "blink_0/inny"
+          "blink_0/inny",
+          "blink_1/inny"
         ]
       },
       "axi_to_sb_0_sb_addr": {
@@ -1947,21 +1999,22 @@
           "telem_0/sb_wea"
         ]
       },
-      "blink_0_outy": {
-        "ports": [
-          "blink_0/outy",
-          "Y12"
-        ]
-      },
       "blink_0_reset_blink": {
         "ports": [
           "blink_0/reset_blink",
           "clk_wiz_0/reset"
         ]
       },
+      "blink_1_outy": {
+        "ports": [
+          "blink_1/outy",
+          "Y12"
+        ]
+      },
       "clk_wiz_0_clk_out1": {
         "ports": [
           "clk_wiz_0/clk_out1",
+          "blink_1/clk",
           "telem_0/clk_102M4"
         ]
       },

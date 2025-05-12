@@ -32,8 +32,8 @@ module blink(
   // Parameters to calculate clock division factor
   // 100 MHz is 100,000,000 cycles per second, to get 1 second period we divide by 100,000,000
   parameter CLK_DIV = 100_000_000;
-  // divide by ten will turn a 100 MHz clock into a 10 MHz output
-  parameter CLK_DIV_10 = 10;
+  // divide by five will turn a 100 MHz clock into a 10 MHz data output
+  parameter CLK_DIV_10 = 5;
 
   reg [31:0] counter;  // 32-bit counter for clock division
   reg output_clock;  // 1 Hz signal generated
