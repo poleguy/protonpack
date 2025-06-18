@@ -14,15 +14,15 @@ module telem
    )
    (
      //input push_rst,
-     input wire clk_102M4,
+     input wire clk_80M,
      input wire clk_52M,
-     //input wire clk_256M,
+     //input wire clk_200M,
 
      input wire serial_in_p,
      input wire serial_in_n,
 
      output wire okay_led_out,
-     output wire rst_102M4,
+     output wire rst_80M,
 
      output wire [31:0] sb_data_rd,
      input wire [31:0] sb_data_wr,
@@ -43,14 +43,14 @@ module telem
 
   wire serial_in_buf_p;
   wire serial_in_buf_n;
-  reg r_rst_self_102M4_n = 0;
-  reg [4:0] r_rst_self_cnt_102M4 = 0;
+  reg r_rst_self_80M_n = 0;
+  reg [4:0] r_rst_self_cnt_80M = 0;
   wire okay_led;
   wire cnt_led_out;
   wire [87:0] data_out;
   wire [95:0] fifo_data_out;
   wire valid_out;
-  wire clk_256M;
+  wire clk_200M;
   wire empty;
   wire full;
   reg fifo_read_en = 1'b0;
@@ -101,7 +101,7 @@ module telem
 //   wire          my_pin_sgmii_rxp;
 
 
-//   assign my_reset = ~r_rst_self_102M4_n;
+//   assign my_reset = ~r_rst_self_80M_n;
 //   assign my_soft_rx_reset = 1`b0;
 //   // Instance of the block_design_gig_ethernet_pcs_pma_0_0_lvds_transceiver_k7 module
 //   rx_lvds rx_lvds_0 (
@@ -130,20 +130,20 @@ module telem
 //     .pin_sgmii_rxp       (serial_in_buf_p)
 //   );
 
-  always @(posedge clk_102M4)
+  always @(posedge clk_80M)
   begin
     // Check if reset counter has reached its max value
-    if (r_rst_self_cnt_102M4 == 5'b11111)
+    if (r_rst_self_cnt_80M == 5'b11111)
     begin
-      r_rst_self_102M4_n <= 1'b1;
+      r_rst_self_80M_n <= 1'b1;
     end
     else
     begin
-      r_rst_self_cnt_102M4 <= r_rst_self_cnt_102M4 + 5'b00001;
+      r_rst_self_cnt_80M <= r_rst_self_cnt_80M + 5'b00001;
     end
   end
 
-  assign rst_102M4 = ~r_rst_self_102M4_n;
+  assign rst_80M = ~r_rst_self_80M_n;
 
   assign okay_led_out = okay_led;
 
@@ -167,16 +167,16 @@ module telem
                     .g_match_cnt(g_match_cnt),
                     .g_timeout_cnt(g_timeout_cnt)
                   ) check_telemetry_1 (
-                    .clk_102M4(clk_102M4),
-                    .rst_102M4(rst_102M4),
-                    .clk_256M_out(clk_256M),
+                    .clk_80M(clk_80M),
+                    .rst_80M(rst_80M),
+                    .clk_200M_out(clk_200M),
                     .pll_locked_out(pll_locked),
                     .serial_in_n(serial_in_buf_n),
                     .serial_in_p(serial_in_buf_p),
-                    .okay_led_out(okay_led), // Internal 256 MHz clock domain
-                    .cnt_led_out(cnt_led_out), // Internal 256 MHz clock domain
-                    .data_out(data_out), // Internal 256 MHz clock domain
-                    .valid_out(valid_out), // Internal 256 MHz clock domain
+                    .okay_led_out(okay_led), // Internal 200 MHz clock domain
+                    .cnt_led_out(cnt_led_out), // Internal 200 MHz clock domain
+                    .data_out(data_out), // Internal 200 MHz clock domain
+                    .valid_out(valid_out), // Internal 200 MHz clock domain
                     .rx_dat_aligned(rx_dat_aligned),
                     .alignment_out(alignment_out),
                     .rx_data_ready(rx_data_ready),
@@ -184,7 +184,7 @@ module telem
                   );
 
 
-  always @(posedge clk_256M)
+  always @(posedge clk_200M)
   begin
     if (valid_out)
     begin
@@ -193,7 +193,7 @@ module telem
   end
 
 
-  always @(posedge clk_256M)
+  always @(posedge clk_200M)
   begin
     if (valid_out)
     begin
@@ -214,7 +214,7 @@ module telem
 
   // Instance of the FIFO module
   afifo fifo_inst (
-          .i_wclk(clk_256M),
+          .i_wclk(clk_200M),
           .i_wrst_n(one),
           .i_rclk(clk_52M),
           .i_rrst_n(one),
@@ -297,7 +297,7 @@ module telem
 
 
   ila_logger ila_logger_inst (
-               .clk_fast(clk_256M),
+               .clk_fast(clk_200M),
                .valid(rx_data_ready),
                .data(logger_data_in),
                .clk(clk_52M),

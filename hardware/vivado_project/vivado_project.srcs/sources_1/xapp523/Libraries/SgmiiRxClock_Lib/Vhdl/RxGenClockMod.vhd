@@ -294,12 +294,12 @@ begin
 RxGenClockMod_I_Mmcm_Adv : MMCME2_ADV
     generic map (
         BANDWIDTH               => "OPTIMIZED", -- string
-        CLKIN1_PERIOD           => 9.765625,         -- real -- was 125 MHz (8), is now 102.4 MHz
+        CLKIN1_PERIOD           => 10.000,         -- real -- was 125 MHz (8), is now 100.0 MHz
         CLKIN2_PERIOD           => 0.0,         -- real
         REF_JITTER1             => 0.010,       -- real --
         REF_JITTER2             => 0.0,         -- real
         DIVCLK_DIVIDE           => 1,           -- integer  --
-        CLKFBOUT_MULT_F         => 10.0,        -- real  -- [ -1: => 5.0, ]
+        CLKFBOUT_MULT_F         => 8.0,        -- real  -- [ -1: => 5.0, ]
         CLKFBOUT_PHASE          => 0.0,         -- real
         CLKFBOUT_USE_FINE_PS    => FALSE,       -- boolean
         -- refclk_frequency must be 190-210, 290-310, or 390-410 MHz
@@ -320,9 +320,9 @@ RxGenClockMod_I_Mmcm_Adv : MMCME2_ADV
         -- when trying 4.8750: [DRC AVAL-29] IODELAY_RefClkFreq_alt: Invalid configuration. IDELAYE2 block_design_i/telem_0/inst/check_telemetry_1/Receiver_0/Gen_1[1].Receiver_I_SgmiiRxData/SgmiiRxData_I_Idlye2_M has an invalid REFCLK_FREQUENCY value (210.051000). Only values from 190-210, 290-310, or 390-410 are allowed. Resolution: Change the timing requirements.
         -- can't do that, so slow it down.
 
-        -- targeting 210MHz (close enough to 256 (1/4 of line rate))???       
+        -- targeting 200MHz (close enough to 1/4 of line rate)
         -- must match check_telemetry.vhd Receiver setting for C_RefClkFreq
-        CLKOUT0_DIVIDE_F        => 5.000,      -- real  -- [ -1: => 3.125, ]
+        CLKOUT0_DIVIDE_F        => 4.000,      -- real  -- [ -1: => 3.125, ]
         --CLKOUT0_DIVIDE_F        => 2.6256,      -- real  -- [ -1: => 3.125, ]
         CLKOUT0_DUTY_CYCLE      => 0.5,         -- real
         CLKOUT0_PHASE           => 0.0,         -- real

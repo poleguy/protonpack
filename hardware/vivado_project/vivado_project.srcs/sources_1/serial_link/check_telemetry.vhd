@@ -38,16 +38,16 @@ entity check_telemetry is
   port
     (
 
-      clk_102M4      : in  std_logic;  -- 102.4 MHz
+      clk_80M      : in  std_logic;  -- 80 MHz
       -- will be multiplied up to generate
-      -- 1024 mbit data stream
-      -- 512 MHz clock for DDR output
-      -- 256 MHz clock for data processing at 10bit or 8bit with valid 
-      rst_102M4      : in  std_logic;
+      -- 800 mbit data stream
+      -- 400 MHz clock for DDR output
+      -- 200 MHz clock for data processing at 10bit or 8bit with valid 
+      rst_80M      : in  std_logic;
       -- serial input
       serial_in_n    : in  std_logic;
       serial_in_p    : in  std_logic;
-      clk_256M_out   : out std_logic;
+      clk_200M_out   : out std_logic;
       pll_locked_out : out std_logic;
       okay_led_out   : out std_logic;
       cnt_led_out    : out std_logic;
@@ -63,7 +63,7 @@ end check_telemetry;
 
 architecture rtl of check_telemetry is
 
-  signal clk_256M : std_logic;
+  signal clk_200M : std_logic;
 
 
 
@@ -106,7 +106,7 @@ architecture rtl of check_telemetry is
   signal data_framed      : std_logic_vector(9 downto 0);
   signal valid_framed     : std_logic;
   signal aligned          : std_logic;
---  signal clk_102M4       : std_logic;
+--  signal clk_80M       : std_logic;
   -- count up to ten bits set
   signal r_cnt_rising     : unsigned(3 downto 0)         := (others => '0');
   signal r_cnt            : unsigned(27 downto 0)        := (others => '0');
@@ -163,28 +163,31 @@ begin
       -- mmcm must also be adjusted inside to make this right
       -- see RxGenClockMod.vhd CLKOUT0_DIVIDE_F setting
       -- period is +/- 10 MHz
-      C_RefClkFreq      => 204.800,
+      C_RefClkFreq      => 200.000,
       C_IoSrdsDataWidth => 4,
       C_ClockPattern    => "1010"
       )
     port map (
       RxD_p        => IntRxD_p,   -- in [C_DataWidth-1:0]
       RxD_n        => IntRxD_n,   -- in [C_DataWidth-1:0]
-      RxClkIn      => clk_102M4,  -- in 102.4MHz
+      RxClkIn      => clk_80M,  -- in 80MHz
       -- should be 125M to run data at 1250Mbit
       -- reference clock to generate clock used for data
       --this will create: a 25mhz clock (1/2 data rate)
       --an inverted 25mhz clock
-      RxRst        => rst_102M4,  -- in
+      RxRst        => rst_80M,  -- in
       RxClk        => open,       -- out
-      RxClkDiv     => RxClkDiv,   -- out RxClkIn * 5/2 (e.g. 102.4 -> 256)
+
+      -- Why is this 5/2? 
+      -- the input clock ratio to the output be 10x: 102.4Mhz->1.024 Gbps, 125-> 1250, 80->800
+      RxClkDiv     => RxClkDiv,   -- out RxClkIn * 5/2 (e.g. 102.4 -> 256, 80 -> 200)
       RxMmcmLocked => pll_locked,
       RxMmcmAlive  => open,       -- out
       RxDatAlignd  => rx_dat_aligned,       -- out
       RxDataRdy    => RxDataRdy,  -- out [C_DataWidth-1:0]
       RxRawData    => open,       -- out [(C_DataWidth*8)-1:0]
       RxData       => RxData      -- out [(C_DataWidth*10)-1:0]
-     -- RxData comes out at RxClkDiv 256 MHz, 10 bits at a time.
+     -- RxData comes out at RxClkDiv 200 MHz, 10 bits at a time.
       );
 
 -- for testing of no data case
@@ -217,9 +220,9 @@ begin
 
 
   -- count rising transitions in input stream
-  proc_edge_detect : process(clk_256M)
+  proc_edge_detect : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (RxDataRdy(0) = '1') then
         r_rx_data        <= RxData(0);
         r_rx_data_rising <= RxData and not (r_rx_data & RxData(9 downto 1));
@@ -227,9 +230,9 @@ begin
     end if;
   end process;
 
-  proc_cnt_input : process(clk_256M)
+  proc_cnt_input : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (RxDataRdy(0) = '1') then
         r_cnt_rising <= resize(unsigned(r_rx_data_rising(9 downto 9)), 4) + resize(unsigned(r_rx_data_rising(8 downto 8)), 4) +
                         resize(unsigned(r_rx_data_rising(7 downto 7)), 4) + resize(unsigned(r_rx_data_rising(6 downto 6)), 4) +
@@ -241,9 +244,9 @@ begin
   end process;
 
   -- count rising edges in input stream
-  proc_cnt : process(clk_256M)
+  proc_cnt : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (RxDataRdy(0) = '1') then
         r_cnt <= r_cnt + r_cnt_rising;
       end if;
@@ -252,7 +255,7 @@ begin
 
 -- expecting 50% ones if the data is good.
 -- so we will get an average of 5 ones every valid
--- each valid comes at 102.4 Mhz
+-- each valid comes at 80 Mhz
 -- so 2**28 bits should give a 1/2 second toggle
   cnt_led_out <= r_cnt(27);
 
@@ -279,11 +282,11 @@ begin
 
   RxDataRev <= RxData(0) & RxData(1) & RxData(2) & RxData(3) & RxData(4) & RxData(5) &
                RxData(6) & RxData(7) & RxData(8) & RxData(9);
-  clk_256M <= RxClkDiv;
+  clk_200M <= RxClkDiv;
 
   dec_8b10b_1 : entity work.dec_8b10b
     port map (
-      clk        => clk_256M,
+      clk        => clk_200M,
       datain_10b => data_framed,
       rdispin    => rdisp_dec,
       en         => valid_framed,
@@ -301,7 +304,7 @@ begin
 
   unpack_1 : entity work.unpack_telemetry
     port map(
-      clk       => clk_256M,
+      clk       => clk_200M,
       en        => valid_framed,
       -- using valid from previous block, so first input will be invalid and missed
       k_in      => k_dec_out,
@@ -316,9 +319,9 @@ begin
 -- grab the last data and increment it, to check next data
 -- only checking class_id = E for now
 -- only checking count
-  proc_data_sync_E : process(clk_256M)
+  proc_data_sync_E : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (valid_unpack_out = '1') then
         if data_unpack_out(83 downto 80) = x"E" then
           -- counter is only for the lower 9 bits, and wraps
@@ -328,9 +331,9 @@ begin
     end if;
   end process;
 
-  proc_data_sync_F : process(clk_256M)
+  proc_data_sync_F : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (valid_unpack_out = '1') then
         if data_unpack_out(83 downto 80) = x"F" then
           r_data_F(8 downto 0) <= unsigned(data_unpack_out(8 downto 0)) + 1;
@@ -342,9 +345,9 @@ begin
 
 
 
-  proc_data_check_E : process(clk_256M)
+  proc_data_check_E : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (valid_unpack_out = '1') then
         if data_unpack_out(83 downto 80) = x"E" then
           if (data_unpack_out(31 downto 0) = std_logic_vector(r_data_E)) then
@@ -367,9 +370,9 @@ begin
 
 
   -- generate led that goes on if data is good for > 500 msec
-  proc_led : process(clk_256M)
+  proc_led : process(clk_200M)
   begin
-    if rising_edge(clk_256M) then
+    if rising_edge(clk_200M) then
       if (valid_unpack_out = '1') then
         r_timeout_cnt <= x"0000";
         if (r_data_match = '1') then
@@ -398,7 +401,7 @@ begin
   -- outputs 
 
   okay_led_out   <= r_okay_led_out;
-  clk_256M_out   <= clk_256M;
+  clk_200M_out   <= clk_200M;
   pll_locked_out <= pll_locked;
   data_out       <= data_unpack_out;
   valid_out      <= valid_unpack_out;

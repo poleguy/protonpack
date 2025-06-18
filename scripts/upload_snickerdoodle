@@ -1,5 +1,6 @@
 #/usr/bin/env bash
 set -e
+sshfs proton@192.168.1.209:/ ~/snickerdoodle
 source /tools/Xilinx/Vivado/2024.2/settings64.sh
 cd ~/fpga-data/2025/protonpack/hardware/vivado_project
 bootgen -w -arch zynq -image bit_to_bin.bif -process_bitstream bin

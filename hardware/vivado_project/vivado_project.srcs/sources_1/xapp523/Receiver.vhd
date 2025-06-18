@@ -283,14 +283,14 @@ Receiver_I_RxGenClockMod : entity SgmiiRxClock_Lib.RxGenClockMod
         Mmcm_ClkFbIn        => IntFbIn,     -- in
         Mmcm_RstIn          => RxRst,       -- in
 --        Mmcm_EnaIn          => High,        -- in
-        Mmcm_SysClk0        => IntRefClk,   -- out -- 310 MHz for IDELAYCTRL, BUFG
+        Mmcm_SysClk0        => IntRefClk,   -- out -- 310 MHz (now 200) for IDELAYCTRL, BUFG
         
-        Mmcm_SysClk1        => IntClk0,     -- out -- 625 MHz, 00 phase, needs BUFIO
-        Mmcm_SysClk2        => IntClk90,    -- out -- 625 MHz, 90 phase, needs BUFIO 
-        Mmcm_SysClk3        => IntClkDiv,   -- out -- 312.5 MHz, adjustable, BUFG
+        Mmcm_SysClk1        => IntClk0,     -- out -- 625 MHz (now 400), 00 phase, needs BUFIO
+        Mmcm_SysClk2        => IntClk90,    -- out -- 625 MHz (now 400), 90 phase, needs BUFIO 
+        Mmcm_SysClk3        => IntClkDiv,   -- out -- 312.5 MHz (now 200), adjustable, BUFG
 -- output doesn't seem to come out if psclk is not clocked
-        Mmcm_SysClk4        => IntClk,      -- out -- 625 MHz, adjustable, BUFG
-        Mmcm_SysClk5        => IntClk0Div,  -- out -- not adjustable 312.5 MHz
+        Mmcm_SysClk4        => IntClk,      -- out -- 625 MHz (now 400), adjustable, BUFG
+        Mmcm_SysClk5        => IntClk0Div,  -- out -- not adjustable 312.5 MHz (now 200)
         Mmcm_SysClk6        => open,        -- out
         Mmcm_Locked         => IntLocked,   -- Out
         Mmcm_AliveOut       => RxMmcmAlive, -- out
