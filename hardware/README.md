@@ -15,6 +15,33 @@ On the receiving device the termination should be AC coupled into an MGT transce
 
 It could also be directly connected as on the AC701 board.
 
+# HDL 
+
+The core design is in verilog. It's job is to serialize data and then deserialize the data and push it to memory and then to disk via the microprocessor system.
+
+## Simulation
+
+CVC64 is used for simulation.
+
+### Setup
+
+install prerequisites: 
+
+Ubuntu 22.04 or 24.04
+
+Vivado version (e.g. 2022.1) as specified in  scripts/setup_vivado
+
+CVC64
+
+http://www.tachyon-da.com/home/how-to-purchase-cvc-enterprise-support/
+
+or from here with no login:
+
+https://github.com/cambridgehackers/open-src-cvc
+
+### Run sim
+
+`./run_sim`
 
 # FPGA Board
 
