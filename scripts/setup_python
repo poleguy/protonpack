@@ -28,7 +28,8 @@
  
 
 
-# allow this to be sourced without messing up calling environment by running in a subshell
+# run script in a subshell to prevent set -e from causing trouble if this is sourced instead of run directly
+# start subshell:
 (
     
 # can't set -u because virtualenv wrapper uses extensive undefined variables
@@ -69,7 +70,7 @@ fi
 
 # don't build this fresh. Reuse the old environment if it already exists.
 if [ ! -d ~/.virtualenvs/${REPONAME} ]; then
-    (mkvirtualenv -p python3.13 ${REPONAME} && workon ${REPONAME} && pip install -r requirements.txt)
+    (mkvirtualenv -p python3.11 --pip 25.1.1 --setuptools 80.0.1 ${REPONAME} && workon ${REPONAME} && pip install -r requirements.txt)
     # link to src so hard coded stuff doesn't break (e.g. compile_iq_telemetr.txt calling out shurc_assembler
     ln -fs ~/.virtualenvs/${REPONAME}/src ./src
 else
@@ -110,5 +111,5 @@ echo "======================================================="
 echo "Use the following commands to activate your environment:"
 echo "source scripts/activate_python"
 
-# end subshell
+# end subshell:
 )

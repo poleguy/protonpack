@@ -9,17 +9,33 @@
 # note: jenkins sources this environment only when the agent is started!
 # restart the agent if you need to pull in fresh environment settings
 
-# https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
-# the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
-# space before to prevent them from ending on the command line
-OLDOPTS="$(set +o | sed -e 's/^/ /')"
-case $- in
-  *e*) OLDOPTS="$OLDOPTS; set -e";;
-  *) OLDOPTS="$OLDOPTS; set +e";;
-esac
-set +eu
+# How to get shell to self-detect using zsh or bash - Stack Overflow (https://stackoverflow.com/questions/9910966/how-to-get-shell-to-self-detect-using-zsh-or-bash)
+# https://unix.stackexchange.com/questions/463034/bash-throws-error-line-8-1-unbound-variable
+
+if [ -n "${ZSH_VERSION:-}" ]; then
+    # assume Zsh
+    # not sure how to fix the virtualenvwrapper.sh problems with error and unset variable handling under zsh
+    # do nothing
+    :
+elif [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    # https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
+    # the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
+    # space before to prevent them from ending on the command line
+    OLDOPTS="$(set +o | sed -e 's/^/ /')"
+    case $- in
+      *e*) OLDOPTS="$OLDOPTS; set -e";;
+      *) OLDOPTS="$OLDOPTS; set +e";;
+    esac
+
+else
+    # assume something else?
+    :
+fi
+
 
 REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
+set +eu  # virtualenvwrapper.sh does not work well with -e or -u
 source virtualenvwrapper.sh
 deactivate
 workon $REPONAME || true
@@ -29,4 +45,8 @@ workon $REPONAME || true
 #export PYTHONBREAKPOINT=ipdb.set_trace
 
 #restore settings
-eval "${OLDOPTS}"
+if [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    eval "${OLDOPTS}"
+fi
+

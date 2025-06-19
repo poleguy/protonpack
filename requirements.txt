@@ -1,7 +1,12 @@
-h5py
-typer
-matplotlib
-pyqt5
-pandas
+cocotb==1.9.2
 datashader==0.17.0rc0
+h5py
+matplotlib
+pandas
 pyarrow
+pyqt5
+typer
+
+
+
+
