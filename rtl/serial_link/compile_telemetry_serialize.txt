@@ -1,0 +1,38 @@
+########################
+# tb_telemetry_serialize.v test bench
+########################
+
+
+###############################
+## actual code
+###############################
+
+# the serial link depends on xapp523
+#../xapp523/compile.txt
+
+# oserdes8x.v works in aldec, but must be dummied out for CVC
+oserdes8x_dummy.v
+buffer_10bit_to_8bit.v
+pack_10x_11byte.v
+
+encode.v
+enc_8b10b.v
+
+unpack_telemetry.v
+
+telemetry_serialize.v
+
+# top level testbench
+tb_telemetry_serialize.v
+
+
+# note: if ila's are included they must be added to compile.txt separately
+# ila_4x10
+#`IF SIM
+#../debug/ila_4x10/sim/ila_4x10.v
+#`END
+
+
+# framework documentation: Modem DSP/FPGA Build
+# https://confluence.shure.com/pages/viewpage.action?pageId=61179651
+
