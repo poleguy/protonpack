@@ -11,15 +11,26 @@ if [ $sourced -eq 0 ]; then
     exit 1    
 fi
 
-# https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
-# the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
-# space before to prevent them from ending on the command line
-OLDOPTS="$(set +o | sed -e 's/^/ /')"
-case $- in
-  *e*) OLDOPTS="$OLDOPTS; set -e";;
-  *) OLDOPTS="$OLDOPTS; set +e";;
-esac
-set +eu
+if [ -n "${ZSH_VERSION:-}" ]; then
+    # assume Zsh
+    # not sure how to fix the virtualenvwrapper.sh problems with error and unset variable handling under zsh
+    # do nothing
+    :
+elif [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    # https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
+    # the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
+    # space before to prevent them from ending on the command line
+    OLDOPTS="$(set +o | sed -e 's/^/ /')"
+    case $- in
+      *e*) OLDOPTS="$OLDOPTS; set -e";;
+      *) OLDOPTS="$OLDOPTS; set +e";;
+    esac
+
+else
+    # assume something else?
+    :
+fi
 
 # https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
 REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
@@ -33,13 +44,17 @@ fi
 # go ahead and remove all the modules
 echo "Cleanup seems likely to be safe"
 
-source virtualenvwrapper.sh || true
+set +eu  # virtualenvwrapper.sh does not work well with -e or -u
+source $(locate virtualenvwrapper.sh | tail -n 1)
 
-echo "virtualenvwrapper.sh complete"
-# deactivate sometimes finds the conda version
+# deactivate sometimes warns about it finding the conda version. This seems to not be an issue.
 deactivate
 
 rmvirtualenv $REPONAME
 
 #restore settings
-eval "${OLDOPTS}"
+if [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    eval "${OLDOPTS}"
+fi
+

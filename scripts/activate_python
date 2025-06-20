@@ -36,7 +36,7 @@ fi
 
 REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
 set +eu  # virtualenvwrapper.sh does not work well with -e or -u
-source virtualenvwrapper.sh
+source $(locate virtualenvwrapper.sh | tail -n 1)
 deactivate
 workon $REPONAME || true
 
