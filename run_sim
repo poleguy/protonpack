@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+# start from scratch
+source scripts/cleanup_python
+rm -rf modules
+
+# non iq telemetry sim
+
+# run cvc cocotb 64bit python pytest models here.
+# at the end run legacy 32bit stuff
+
+# These are the steps to set up a simulation environment and run a sim. Run this as ./run_sim, not with 'source run_sim'
+# because this calls  'set -e.' which will cause trouble on the next error.
+# The idea of run_sim would be for an automated run.
+
+# You can manually run these steps if you want to do it interactively. Just skip the set -e step.
+
+# fail on any error
+set -e
+set -x
+
+# https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
+echo 1>&2 "Usage: $0 [--force]"
+echo 1>&2 "add --force to run in an existing environment"
+FORCE=$1
+
+
+# spit this out so we can re-run this sim from just a saved console output
+git --no-pager log -n 4
+
+if [ "$FORCE" != "--force" ]; then
+    ## checkout the external modules
+    ## want to do source here instead of bash otherwise the telem_mobile_ac701 setup_python doesn't run properly    
+    time ./checkout_modules
+    
+    # setup fresh conda environment
+    time source scripts/cleanup_python
+    set -e
+    time scripts/setup_python
+
+fi
+
+
+# add modules to path
+source scripts/activate_python
+set -e
+which python
+
+# pick the right version of vivado
+source scripts/setup_vivado
+set -e
+# can't sim with the latest vivado one because library can't be built in 32bit cocotb
+#source /opt/Xilinx/Vivado/2018.2/settings64.sh
+which vivado
+
+### generate the register package to be sure it is in sync
+#scripts/make_regs
+
+## collect the pyttest tests and display them
+#echo "Pytest --co to collect and display tests."
+# don't call this, because if it errors out, say due to a missing python include on a test we're not
+# even running, it will stop the script.
+#pytest --co
+
+# if running these commands interactively, run something like  'pytest tests/test_multicore_audio.py' for one test file or 'pytest' to run all tests.
+
+# try pytest --help and look under "custom options"
+# try pytest --no_compile to save time if only changing cocotb
+
+
+# running all the tests together like this causes all the CVC tests to fail with:
+# 'VPI: Couldn't find root handle tb_telem_boards'
+#pytest --log-cli-level=WARNING tests/test_telemetry_system.py tests/test_data_sampler.py tests/test_async_rm_fifo.py tests/test_async_rm_fifo_overflow.py tests/test_async_rm_fifo_underflow.py tests/test_spi_word_write_dual_le.py
+
+# this test crashes... using the test_iq_telemetry_system.py to test telemetry as best I can until we find the bug.
+# for now we'll keep this running just to check top level syntax, etc. It won't be self checking
+pytest --log-cli-level=WARNING tests/test_telemetry_serialize.py
+
+

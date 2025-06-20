@@ -1,0 +1,23 @@
+# DPSM RX Design modules
+# This shell script checks out all the external modules from version control needed to build or simulate this design.
+# It should be executed in the parent directory using "source ./checkout_modules" or by other scripts such as build_fpga.
+
+# stop on errors
+set -e
+
+# create the folder where all the modules will be checked out to
+#mkdir modules
+
+# no external git or svn modules needed for this project. this is a placeholder
+
+
+##############################################################################
+##############################################################################
+
+# notes:
+# to check actual most recent version
+# https://stackoverflow.com/questions/56227/how-do-you-determine-the-latest-svn-revision-number-rooted-in-a-directory
+# svnversion -c Framework/. | sed -e 's/[MS]//g' -e 's/^[[:digit:]]*://'
+
+# to check latest version in repo:
+# svn info http://subversion.shure.com/Common/FPGA/IP/DataConverters/gigadac2/trunk | grep "Last Changed Rev"
