@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import time
+import subprocess
+
+keycode_map = { 'a': 'KEY_A', 'b': 'KEY_B', 'c': 'KEY_C', 'd': 'KEY_D', 'e': 'KEY_E', 'f': 'KEY_F', 
+    'g': 'KEY_G', 'h': 'KEY_H', 'i': 'KEY_I', 'j': 'KEY_J', 'k': 'KEY_K', 'l': 'KEY_L', 'm': 'KEY_M', 
+    'n': 'KEY_N', 'o': 'KEY_O', 'p': 'KEY_P', 'q': 'KEY_Q', 'r': 'KEY_R', 's': 'KEY_S', 't': 'KEY_T', 
+    'u': 'KEY_U', 'v': 'KEY_V', 'w': 'KEY_W', 'x': 'KEY_X', 'y': 'KEY_Y', 'z': 'KEY_Z', '-' : 'KEY_MINUS', 
+                '_': 'KEY_MINUS', ' ': 'KEY_SPACE',
+                'L': 'KEY_LEFTSHIFT KEY_L',
+                'O': 'KEY_LEFTSHIFT KEY_O',
+                'S': 'KEY_LEFTSHIFT KEY_S',
+                ':': 'KEY_LEFTSHIFT KEY_SEMICOLON',
+                '/': 'KEY_SLASH',
+                '.': 'KEY_DOT',
+                '|': 'KEY_LEFTSHIFT KEY_BACKSLASH',
+               }
+
+def send_key(machine, keycodes):
+    # keycodes are space separated
+    keycodes = keycodes.split(" ")
+    subprocess.run(['virsh', 'send-key', machine, '--codeset', 'linux',
+                    '--holdtime', '2', '--keycode', *keycodes])
+
+def send_command(machine, command):
+    for char in command:
+        send_key(machine, keycode_map[char])
+    send_key(machine, 'KEY_ENTER')
+
+def main():
+    machine = 'ubuntu-live-protonpack'
+    time.sleep(0.5)
+    for _ in range(3):
+        send_key(machine, 'KEY_ESC')
+    time.sleep(0.5)
+    send_key(machine, 'KEY_LEFTALT KEY_F2')
+    time.sleep(0.5)
+    send_command(machine, 'gnome-terminal')
+    time.sleep(0.5)
+    send_command(machine, 'wget -q -O - https://raw.githubusercontent.com/poleguy/protonpack/master/install.sh | bash')
+
+if __name__ == '__main__':
+    main()
+# https://manpages.ubuntu.com/manpages/focal/man7/virkeycode-linux.7.html
