@@ -17,8 +17,8 @@ time sudo virt-install --name protonpack --memory 4096 --vcpu 2 --graphics vnc -
 #[   15.038761] cloud-init[829]: ci-info: | enp1s0 | True |       192.168.122.12       | 255.255.255.0 | global | 52:54:00:44:49:9b |
 read -p "Enter ip from ci-info above: " IP
 
-# do nothing: send ctrl+] and you'll expect
-# Domain creation completed.
+# do nothing: send ctrl+] and you'll expect 
+# "Domain creation completed."
 
 # impressively fast!
 
