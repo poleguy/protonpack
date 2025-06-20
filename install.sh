@@ -7,8 +7,10 @@ sudo apt update
 sudo apt install -y git
 sudo apt install -y virtualenvwrapper
 
+# https://askubuntu.com/questions/251378/where-is-virtualenvwrapper-sh
 echo 'export WORKON_HOME=~/.virtualenvs' >> ~/.bashrc
 echo 'source /usr/share/virtualenvwrapper/virtualenvwrapper.sh' >> ~/.bashrc
+source ~/.bashrc
 
 git clone https://github.com/poleguy/protonpack.git
 

@@ -57,16 +57,9 @@ fi
 
 
 # prefer sourcing .local version of virtualenvwrapper.sh if it exists
-if [ -f ~/.local/bin/virtualenvwrapper.sh ]; then
-    source ~/.local/bin/virtualenvwrapper.sh
-elif [ -f /usr/local/bin/virtualenvwrapper.sh ]; then
-    set +e
-    source /usr/local/bin/virtualenvwrapper.sh
-    set -e
-else
-    echo "Can't find virtualenvwrapper.sh"
-        exit 1
-fi
+set +e
+source $(locate virtualenvwrapper.sh | tail -n 1)
+set -e
 
 # don't build this fresh. Reuse the old environment if it already exists.
 if [ ! -d ~/.virtualenvs/${REPONAME} ]; then
