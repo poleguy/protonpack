@@ -41,20 +41,10 @@ REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based 
 
 #echo $REPONAME
 
-# give help for unexpected failure if virtualenvwrapper.sh isn't in the path
-# todo: can we even get here? we don't call this from the path. does it matter if it's in the path for this script
-# since this script is not sourced?
-if [ ! command -v virtualenvwrapper.sh &> /dev/null && ! command -v virtualenvwrapper &> /dev/null ]; then
-    echo "virtualenvwrapper is not in your path."
-    echo "Try source ~/.bashrc"
-    echo ""
-    echo "You can install it independently using:"
-    echo "/usr/bin/python3 -m pip install virtualenvwrapper"
-    echo "============"
-    echo "See for more details: https://confluence.shure.com/display/WFD/Python+Virtual+Environment+Setup"
-    exit 1
-fi
-
+# prefer sourcing .local version of virtualenvwrapper.sh if it exists
+set +e
+source $(locate virtualenvwrapper.sh | tail -n 1)
+set -e
 
 # prefer sourcing .local version of virtualenvwrapper.sh if it exists
 set +e
