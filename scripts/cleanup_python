@@ -33,24 +33,35 @@ else
 fi
 
 REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
-# see if it's safe to remove modules first 
-# don't use src symbolic link in case it is broken.
-scripts/check_for_changes ~/.virtualenvs/"$REPONAME"
-RET=$?
-if [[ $RET -ne 0 ]]; then
-    return
+
+# first see if the directory doesn't even exist
+# then nothing to clean
+if [[ -d ~/.virtualenvs/"$REPONAME" ]]; then
+    
+
+    # see if it's safe to remove modules first 
+    # don't use src symbolic link in case it is broken.
+    scripts/check_for_changes ~/.virtualenvs/"$REPONAME"
+    RET=$?
+    if [[ $RET -ne 0 ]]; then
+        return
+    fi
+    # go ahead and remove all the modules
+    echo "Cleanup seems likely to be safe"
+    
+    set +eu  # virtualenvwrapper.sh does not work well with -e or -u
+    source $(locate virtualenvwrapper.sh | tail -n 1)
+    
+    # deactivate sometimes warns about it finding the conda version. This seems to not be an issue.
+    deactivate
+    
+    rmvirtualenv $REPONAME
+
+else
+    echo "Nothing to clean up"
 fi
-# go ahead and remove all the modules
-echo "Cleanup seems likely to be safe"
 
-set +eu  # virtualenvwrapper.sh does not work well with -e or -u
-source $(locate virtualenvwrapper.sh | tail -n 1)
-
-# deactivate sometimes warns about it finding the conda version. This seems to not be an issue.
-deactivate
-
-rmvirtualenv $REPONAME
-
+    
 #restore settings
 if [ -n "{$BASH_VERSION:-}" ]; then
     # assume Bash

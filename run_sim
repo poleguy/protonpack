@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# start from scratch
-source scripts/cleanup_python
-rm -rf modules
-
 # non iq telemetry sim
 
 # run cvc cocotb 64bit python pytest models here.
@@ -31,10 +27,11 @@ git --no-pager log -n 4
 if [ "$FORCE" != "--force" ]; then
     ## checkout the external modules
     ## want to do source here instead of bash otherwise the telem_mobile_ac701 setup_python doesn't run properly    
+    rm -rf modules
     time ./checkout_modules
     
-    # setup fresh conda environment, blowing away the old one if necessary
-    time source scripts/cleanup_python || true
+    # setup fresh python environment, blowing away the old one if necessary
+    time source scripts/cleanup_python
     time scripts/setup_python
 
 fi
