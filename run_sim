@@ -33,9 +33,8 @@ if [ "$FORCE" != "--force" ]; then
     ## want to do source here instead of bash otherwise the telem_mobile_ac701 setup_python doesn't run properly    
     time ./checkout_modules
     
-    # setup fresh conda environment
-    time source scripts/cleanup_python
-    set -e
+    # setup fresh conda environment, blowing away the old one if necessary
+    time source scripts/cleanup_python || true
     time scripts/setup_python
 
 fi

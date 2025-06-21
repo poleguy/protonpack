@@ -32,7 +32,6 @@ else
     :
 fi
 
-# https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
 REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
 # see if it's safe to remove modules first 
 # don't use src symbolic link in case it is broken.
