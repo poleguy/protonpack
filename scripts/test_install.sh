@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 # this is getting very meta, but how do I avoid the "it works on my machine" problem
 
 
