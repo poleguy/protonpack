@@ -5,6 +5,7 @@ matplotlib
 pandas
 pyarrow
 pyqt5
+pytest
 typer
 
 

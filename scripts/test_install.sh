@@ -44,6 +44,14 @@ echo "IP is $IP"
 
 # no need with ssh key: virsh console protonpack
 
+# setup ssh
+ssh proton@192.168.122.40 ssh-keygen -t ed25519 -N "" -f /home/proton/.ssh/ubuntu
+# host should grab ubuntu.pub
+https://superuser.com/questions/429954/command-to-remove-a-ssh-authorized-key-on-server
+temp_file=$(mktemp)
+grep -v "proton@ubuntu" ~/.ssh/authorized_keys > $temp_file
+cat $temp_file > ~/.ssh/authorized_keys && rm $temp_file
+ssh proton@192.168.122.40 cat /home/proton/.ssh/ubuntu.pub >> ~/.ssh/authorized_keys
 
 ssh -o StrictHostKeyChecking=no proton@$IP "wget -q -O - https://raw.githubusercontent.com/poleguy/protonpack/master/install.sh | bash"
 # do-nothing: accept fingerprint
