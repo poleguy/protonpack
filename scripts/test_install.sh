@@ -24,7 +24,8 @@ time sudo virt-install --name protonpack --memory 4096 --vcpu 2 --graphics vnc -
 
 #https://www.reddit.com/r/linuxadmin/comments/5gzdtk/properly_exiting_virtinstall/
 
-
+# we are racing the install.sh script
+sleep 10
 
 # do nothing: grep root password
 #PASS=J2lHiEj3jO4gb1lM
