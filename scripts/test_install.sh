@@ -66,13 +66,13 @@ echo "cloud-init completion detected"
 # no need with ssh key: virsh console protonpack
 
 # setup ssh
-ssh -o StrictHostKeyChecking=no proton@$IP "ssh-keygen -t ed25519 -N '' -f /home/proton/.ssh/ubuntu"
-# host should grab ubuntu.pub
+ssh -o StrictHostKeyChecking=no proton@$IP "ssh-keygen -t ed25519 -N '' -f /home/proton/.ssh/ed_25519"
+# host should grab ed_25519.pub
 #https://superuser.com/questions/429954/command-to-remove-a-ssh-authorized-key-on-server
 temp_file=$(mktemp)
 grep -v "proton@ubuntu" ~/.ssh/authorized_keys > $temp_file
 cat $temp_file > ~/.ssh/authorized_keys && rm $temp_file
-ssh -o StrictHostKeyChecking=no proton@$IP cat /home/proton/.ssh/ubuntu.pub >> ~/.ssh/authorized_keys
+ssh -o StrictHostKeyChecking=no proton@$IP cat /home/proton/.ssh/ed_25519.pub >> ~/.ssh/authorized_keys
 
 ssh -o StrictHostKeyChecking=no proton@$IP "wget -q -O - https://raw.githubusercontent.com/poleguy/protonpack/master/install.sh | bash"
 # do-nothing: accept fingerprint
