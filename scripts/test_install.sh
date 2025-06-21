@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -x
 
 # this is getting very meta, but how do I avoid the "it works on my machine" problem
 
@@ -56,7 +57,7 @@ while [[ "$SUCCESS" != *"SUCCESS: running modules for final"* ]]; do
     sleep 0.5
 done
 
-
+echo "cloud-init completion detected"
 
 #Run script for install.sh
 
