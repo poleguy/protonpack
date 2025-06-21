@@ -52,7 +52,7 @@ echo "IP is $IP"
 SUCCESS=""
 # Loop until we see success
 while [[ "$SUCCESS" != *"SUCCESS: running modules for final"* ]]; do
-    SUCCESS=$(ssh -o StrictHostKeyChecking=no proton@$IP "sudo cat /var/log/cloud-init.log | grep "SUCCESS: running modules for final")
+    SUCCESS=$(ssh -o StrictHostKeyChecking=no proton@$IP "sudo cat /var/log/cloud-init.log | grep 'SUCCESS: running modules for final'")
     sleep 0.5
 done
 
