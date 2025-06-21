@@ -11,14 +11,15 @@ set -x
 # do-nothing script for installation testing
 
 # destroy to start
-virsh destroy protonpack
-virsh undefine protonpack --remove-all-storage
+virsh destroy protonpack || true
+virsh undefine protonpack --remove-all-storage || true
 
 
 # do update 
 
 # turned off auto console to avoid needing to hit ctrl+] and wait for completion
-time sudo virt-install --name protonpack --memory 4096 --vcpu 2 --graphics vnc --osinfo ubuntu24.04 --disk size=100,backing_store=/var/lib/libvirt/iso/noble-server-cloudimg-amd64.img,bus=virtio --cloud-init user-data=scripts/user-data.yaml --noautoconsole
+# https://www.reddit.com/r/kvm/comments/1b24572/virtinstall_with_import_still_hangs_with_waiting/
+time sudo virt-install --name protonpack --memory 4096 --vcpu 2 --graphics vnc --osinfo ubuntu24.04 --disk size=100,backing_store=/var/lib/libvirt/iso/noble-server-cloudimg-amd64.img,bus=virtio --cloud-init user-data=scripts/user-data.yaml --noreboot --noautoconsole
 
 # do nothing: send ctrl+] and you'll expect 
 # "Domain creation completed."
@@ -50,10 +51,11 @@ echo "IP is $IP"
 
 # todo: add timeout
 # login and wait till cloud-init is completely done:
-SUCCESS=""
+# maybe wait for cloud-init.target?
+SUCCESS=" "
 # Loop until we see success
 while [[ "$SUCCESS" != *"SUCCESS: running modules for final"* ]]; do
-    SUCCESS=$(ssh -o StrictHostKeyChecking=no proton@$IP "sudo cat /var/log/cloud-init.log | grep 'SUCCESS: running modules for final'")
+    SUCCESS=$(ssh -o StrictHostKeyChecking=no proton@$IP "sudo cat /var/log/cloud-init.log | grep 'SUCCESS: running modules for final'") || true
     sleep 0.5
 done
 

@@ -19,8 +19,8 @@ sudo mkdir /data
 sudo mkdir /data/Xilinx
 sudo chmod ugo+wx /data/Xilinx
 sudo chmod ugo+wx /data/
-sshfs poleguy@$HOST_IP:/opt/Xilinx /opt/Xilinx
-sshfs poleguy@$HOST_IP:/data/Xilinx /data/Xilinx
+sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/opt/Xilinx /opt/Xilinx
+sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/data/Xilinx /data/Xilinx
 
 # cvc from host as well
 rsync poleguy@$HOST_IP:/usr/local/bin/cvc64 cvc64
