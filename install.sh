@@ -18,6 +18,9 @@ sudo chmod ugo+wx /data/
 sshfs poleguy@$HOST_IP:/opt/Xilinx /opt/Xilinx
 sshfs poleguy@$HOST_IP:/data/Xilinx /data/Xilinx
 
+# cvc from host as well
+rsync poleguy@$HOST_IP:/usr/local/bin/cvc64 cvc64
+sudo cp cvc64 /usr/local/bin/
 
 sudo apt update
 sudo apt install -y git
