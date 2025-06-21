@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -e
 # run this with curl:
 # wget -q -O - https://raw.githubusercontent.com/poleguy/protonpack/master/install.sh | bash 
 
