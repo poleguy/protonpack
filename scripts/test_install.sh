@@ -24,8 +24,6 @@ time sudo virt-install --name protonpack --memory 4096 --vcpu 2 --graphics vnc -
 
 #https://www.reddit.com/r/linuxadmin/comments/5gzdtk/properly_exiting_virtinstall/
 
-# we are racing the install.sh script
-sleep 10
 
 # do nothing: grep root password
 #PASS=J2lHiEj3jO4gb1lM
@@ -35,6 +33,7 @@ sleep 10
 #read -p "Enter ip from ci-info above: " IP
 
 IP=""
+# todo: add timeout
 while [ ${#IP} -le 7 ]; do  # Loop while the length of 'result' is less than or equal to 7
   IP=$(virsh domifaddr protonpack | sed -n '3p' | tr -s ' '| cut -d " " -f 5 | cut -d "/" -f 1)
   sleep 0.5
@@ -46,7 +45,16 @@ echo "IP is $IP"
 
 # impressively fast!
 
-# login and set password?
+# we are racing the install.sh script
+
+# todo: add timeout
+# login and wait till cloud-init is completely done:
+SUCCESS=""
+# Loop until we see success
+while [[ "$SUCCESS" != *"SUCCESS: running modules for final"* ]]; do
+    SUCCESS=$(ssh -o StrictHostKeyChecking=no proton@$IP "sudo cat /var/log/cloud-init.log | grep "SUCCESS: running modules for final")
+    sleep 0.5
+done
 
 
 
