@@ -10,6 +10,7 @@ set -e
 
 HOST_IP=192.168.1.162
 
+sudo apt install -y sshfs
 sudo mkdir /opt/Xilinx
 sudo chmod ugo+wx /opt/Xilinx
 sudo mkdir /data
@@ -24,13 +25,9 @@ rsync poleguy@$HOST_IP:/usr/local/bin/cvc64 cvc64
 sudo cp cvc64 /usr/local/bin/
 
 sudo apt update
-sudo apt install -y git
-sudo apt install -y virtualenvwrapper
-sudo apt install -y plocate
-sudo apt install software-properties-common
+sudo apt install -y git sshfs virtualenvwrapper plocate software-properties-common
 sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt install -y python3.11
-sudo apt install -y python3.11-dev
+sudo apt install -y python3.11 python3.11-dev
 
 
 # https://askubuntu.com/questions/251378/where-is-virtualenvwrapper-sh
