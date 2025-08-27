@@ -81,6 +81,23 @@ based on 128MHz clock * 8x oversampling in the serializer.
 We should try turning up the bandwidth until something breaks. 
 The bandwidth will be also limited by the link overhead.
 
+## bandwidth of dpsm_rx_sc:
+158.1 Mbps
+A typical pcapng file is about 156,811 packets per second. Or 25,090,194 bytes per second, or 200,721,551 bits per second.
+
+
+
+# Theoretical serial link bandwidth
+
+The ADXR serial link bandwidth has never been pushed or confirmed with any test or sim.
+It is a 1.024 Gbps serial link. Currently, ignoring timestamp and overhead, it can send 32bits of data bits per 11 byte packet. Presuming one byte of idle between packets, the absolute maximum data bandwidth is: 341.3 Mbps.
+ 
+However the bandwidth of the AC701 serial link, the PC serial interface, linux drivers, buffers, etc. on the PC side might also be limiting depending on the ethernet packet size, packet spacing, etc.
+ 
+We will be pushing as high as we can with the single-carrier work; the sample rate is much higher, hence the question. I think we're around 275 Mbps total at the moment (11 bytes/packet, 20 fields @ 156.8 ksam/s).
+ 
+To be clear: measuring that way you are describing it (i.e. including overhead and timestamp in the bandwidth) the total bandwidth is 938.7 Mbps... the 341.3Mbps includes only the data (a ratio of 4/12).
+ 
 
 # Top level description
 
