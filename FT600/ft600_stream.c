@@ -29,16 +29,22 @@ int main(void) {
 
     // Continuous read loop
     while (1) {
-        status = FT_ReadPipe(handle, 0x82, buffer, BUFFER_SIZE, &bytes_read, 0);
-        if (status != FT_OK) {
+        status = FT_ReadPipe(handle, 0x82, buffer, BUFFER_SIZE, &bytes_read, 5000);
+    
+        if (status == FT_TIMEOUT) {
+            printf("Timeout waiting for data...\n");
+            continue;  // Keep trying
+        } else if (status != FT_OK) {
             fprintf(stderr, "Read failed: %d\n", status);
             break;
         }
-
+    
         if (bytes_read > 0)
-            printf("Read %u bytes\n", bytes_read);  // use %u for ULONG
+            printf("Read %u bytes\n", bytes_read);
     }
 
     FT_Close(handle);
     return EXIT_SUCCESS;
 }
+
+
