@@ -30,6 +30,7 @@ typedef struct {
     volatile int *exitFlag;
     volatile int *fatalError;
     UCHAR pipeId; /* per-thread pipe id to use */
+    FILE *fp;
 } ThreadArgs;
 
 /* single ftHandle - main will abort pipes when needed */
@@ -52,6 +53,7 @@ static void* asyncRead(void *arg)
     volatile int *exitReader = args->exitFlag;
     volatile int *fatalError = args->fatalError;
     UCHAR pipe = args->pipeId;
+    FILE *fp = args->fp;
 
     FT_STATUS ftStatus = FT_OK;
     OVERLAPPED ov[MULTI_ASYNC_NUM] = {{0}};
@@ -75,6 +77,7 @@ static void* asyncRead(void *arg)
     }
 
     while (!*exitReader && !*fatalError) {
+        printf("while\n");
         for (size_t j = 0; j < MULTI_ASYNC_NUM && !*fatalError; j++) {
             /* fill buffer for this slot */
             memset(&buf[j * ulBytesToRead], (int)(0xAA + (j & 0xFF)), ulBytesToRead);
@@ -95,6 +98,12 @@ static void* asyncRead(void *arg)
                 break;
             }
 
+            if (*exitReader) {
+                // this is an expected timeout if exit reader was set by the caller
+                printf("[READ] Ending due to exit request before checking results.\n");
+                break;
+            }
+
             ftStatus = FT_GetOverlappedResult(ft, &ov[j],
                                               &ulBytesRead[j], TRUE);
             if (ftStatus == FT_TIMEOUT) {
@@ -102,34 +111,51 @@ static void* asyncRead(void *arg)
                 printf("[READ] Timeout waiting for data\n");
                 continue;
             } else if (FT_FAILED(ftStatus)) {
+                if (*exitReader) {
+                    // this is an expected timeout if exit reader was set by the caller
+                    printf("[READ] Ending due to exit request.\n");
+                    break;
+                }
                 printf("[READ] GetOverlappedResult failed: %d\n", ftStatus);
                 *fatalError = 1;
                 break;
-            }
+            } 
 
             /* Process data if needed (ulBytesRead[j]) */
 
-            int received_ok = 0;
-            //
-            // Compare bytes read with bytes written
-            //
-            if (memcmp(buf, expected, sizeof(buf))) {
-                for (int k = 0; k < MULTI_ASYNC_BUFFER_SIZE+2;k++) {
-                    //printf("no matchy %d: %x, %x\n",k, buf[j*MULTI_ASYNC_BUFFER_SIZE+k], expected[k]);
-                    //printf("ugh...");
+
+                printf("              writing %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
+                if (fp) {
+                    size_t written = fwrite(&buf[j*MULTI_ASYNC_BUFFER_SIZE], 1, ulBytesRead[j], fp);
+                    if (written != ulBytesRead[j]) {
+                        fprintf(stderr, "Failed to write to disk\n");
+                        *fatalError = 1;
+                        break;
+                    }
                 }
-            }
-            if (ulBytesRead[j] != ulBytesToRead)
-            {
-                printf("FT_GetOverlappedResult failed! ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
-                //*fatalError = 1;
-                //break;
-                printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
-                printf("received ok = %d\n",received_ok);
-            } else {
-                //printf("Got expected: ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
-                received_ok++;
-            }
+
+            
+//            int received_ok = 0;
+//            //
+//            // Compare bytes read with bytes written
+//            //
+//            if (memcmp(buf, expected, sizeof(buf))) {
+//                for (int k = 0; k < MULTI_ASYNC_BUFFER_SIZE+2;k++) {
+//                    //printf("no matchy %d: %x, %x\n",k, buf[j*MULTI_ASYNC_BUFFER_SIZE+k], expected[k]);
+//                    //printf("ugh...");
+//                }
+//            }
+//            if (ulBytesRead[j] != ulBytesToRead)
+//            {
+//                printf("FT_GetOverlappedResult failed! ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
+//                //*fatalError = 1;
+//                //break;
+//                printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
+//                printf("received ok = %d\n",received_ok);
+//            } else {
+//                //printf("Got expected: ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
+//                received_ok++;
+//            }
             //printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
 
         }
@@ -177,7 +203,7 @@ static void *asyncWrite(void *arg) {
     }
 
     while (!*exitWriter && !*fatalError) {
-        for (size_t j = 0; j < initialized && !*fatalError; j++) {
+        for (size_t j = 0; j < initialized && !*fatalError && !*exitWriter; j++) {
             // printf's are probably going to slow this down insanely
             printf("sending %x\n",(int)(0x55 + (j & 0xFF)));
             memset(&buf[j * ulBytesToWrite], (int)(0x55 + (j & 0xFF)), ulBytesToWrite);
@@ -205,6 +231,7 @@ static void *asyncWrite(void *arg) {
             if (ftStatus == FT_TIMEOUT) {
                 if (*exitWriter) {
                     // this is an expected timeout if exit writer was set by the caller
+                    printf("[WRITE] Ending due to exit request.\n");
                     break;
                 }
                 printf("[WRITE] Timeout waiting for write completion\n");
@@ -230,7 +257,7 @@ cleanup:
 /* Main: create handle, start threads, monitor fatalError, do single abort+close, free buffers */
 int main(void)
 {
-    int exitReader = 0, exitWriter = 0, fatalError = 0;
+    volatile int exitReader = 0, exitWriter = 0, fatalError = 0;
     FT_STATUS ftStatus = FT_Create((PVOID)"FTDI SuperSpeed-FIFO Bridge",
                                    FT_OPEN_BY_DESCRIPTION, &ftHandle);
     if (FT_FAILED(ftStatus)) {
@@ -256,8 +283,16 @@ int main(void)
         return 1;
     }
 
-    ThreadArgs readArgs = { ftHandle, readBuf, &exitReader, &fatalError, readPipeId };
-    ThreadArgs writeArgs = { ftHandle, writeBuf, &exitWriter, &fatalError, writePipeId };
+    FILE *fp = fopen("loopback_async.bin", "wb");
+    if (!fp) {
+        fprintf(stderr, "Failed to open output file\n");
+        FT_Close(ftHandle);
+        return 1;
+    }
+
+
+    ThreadArgs readArgs = { ftHandle, readBuf, &exitReader, &fatalError, readPipeId, fp };
+    ThreadArgs writeArgs = { ftHandle, writeBuf, &exitWriter, &fatalError, writePipeId, fp };
 
     pthread_t rthr, wthr;
     pthread_create(&rthr, NULL, asyncRead, &readArgs);
@@ -265,7 +300,7 @@ int main(void)
 
     /* Monitor loop: stop if fatalError set */
     // Alternate: Run for x seconds or until error
-    for (int i = 0; i < 5 && !fatalError; i++) {
+    for (int i = 0; i < 3 && !fatalError; i++) {
 
     // Alternate: run indefiniteyl
 	// for (int i = 0; !fatalError; i++) {
@@ -275,8 +310,10 @@ int main(void)
     }
 
     /* Coordinated shutdown: tell threads to exit, then abort pipes once, then join */
-    exitReader = 1;
     exitWriter = 1;
+    printf("exiting writer\n");
+    sleep(3); // keep reading to flush buffers
+    exitReader = 1;
 
     /* It's important to abort pipes *after* telling threads to exit so pending I/O wakes */
     do_abort_pipes_once();
