@@ -25,7 +25,7 @@ def check_pattern(filename: str, block_size: int = 512):
         end = min(start + block_size, len(data))
         block = data[start:end]
 
-        expected_value = (block_index + starting_data) % 256  # wrap around at 255 -> 0
+        expected_value = (block_index % 128 + starting_data) % 256  # wrap around at 255 -> 0
         if all(byte == expected_value for byte in block):
             continue
         else:

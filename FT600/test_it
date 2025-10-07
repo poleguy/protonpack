@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+poleguy@elgar:~/fpga-data/2025/alchitry/FT600$ gcc async-loopback-to-disk.c -o async-loopback-to-disk -lftd3xx -L/usr/local/lib -Ilinux-x86_64/
+time ./async-loopback-to-disk
+python check_bin.py loopback_async.bin
+ls -alrth *.bin

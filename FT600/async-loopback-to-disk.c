@@ -77,7 +77,7 @@ static void* asyncRead(void *arg)
     }
 
     while (!*exitReader && !*fatalError) {
-        printf("while\n");
+        //printf("while\n");
         for (size_t j = 0; j < MULTI_ASYNC_NUM && !*fatalError; j++) {
             /* fill buffer for this slot */
             memset(&buf[j * ulBytesToRead], (int)(0xAA + (j & 0xFF)), ulBytesToRead);
@@ -124,7 +124,7 @@ static void* asyncRead(void *arg)
             /* Process data if needed (ulBytesRead[j]) */
 
 
-                printf("              writing %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
+            //printf("              writing %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
                 if (fp) {
                     size_t written = fwrite(&buf[j*MULTI_ASYNC_BUFFER_SIZE], 1, ulBytesRead[j], fp);
                     if (written != ulBytesRead[j]) {
@@ -205,7 +205,7 @@ static void *asyncWrite(void *arg) {
     while (!*exitWriter && !*fatalError) {
         for (size_t j = 0; j < initialized && !*fatalError && !*exitWriter; j++) {
             // printf's are probably going to slow this down insanely
-            printf("sending %x\n",(int)(0x55 + (j & 0xFF)));
+            //printf("sending %x\n",(int)(0x55 + (j & 0xFF)));
             memset(&buf[j * ulBytesToWrite], (int)(0x55 + (j & 0xFF)), ulBytesToWrite);
             ov[j].Internal = 0;
             ov[j].InternalHigh = 0;
@@ -214,8 +214,8 @@ static void *asyncWrite(void *arg) {
             // https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
             struct timespec ts;
             ts.tv_sec = 0;
-            ts.tv_nsec = 100*1000000;
-            nanosleep(&ts, &ts); // crazy long sleep to get basic flow working
+            ts.tv_nsec = 1 * 1000;
+            //nanosleep(&ts, &ts); // crazy long sleep to get basic flow working
             ftStatus = FT_WritePipeAsync(ft, 0x00,
                                          &buf[j * ulBytesToWrite],
                                          ulBytesToWrite,
@@ -312,7 +312,7 @@ int main(void)
     /* Coordinated shutdown: tell threads to exit, then abort pipes once, then join */
     exitWriter = 1;
     printf("exiting writer\n");
-    sleep(3); // keep reading to flush buffers
+    sleep(1); // keep reading to flush buffers
     exitReader = 1;
 
     /* It's important to abort pipes *after* telling threads to exit so pending I/O wakes */
