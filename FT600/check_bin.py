@@ -3,7 +3,7 @@ import typer
 app = typer.Typer()
 
 @app.command()
-def check_pattern(filename: str, block_size: int = 512):
+def check_pattern(filename: str, block_size: int = 32768, async_size: int = 256):
     """
     Check that a binary file follows the pattern:
     - First block_size bytes have the same value
@@ -25,7 +25,7 @@ def check_pattern(filename: str, block_size: int = 512):
         end = min(start + block_size, len(data))
         block = data[start:end]
 
-        expected_value = (block_index % 128 + starting_data) % 256  # wrap around at 255 -> 0
+        expected_value = (block_index % async_size + starting_data) % 256  # wrap around at 255 -> 0
         if all(byte == expected_value for byte in block):
             continue
         else:

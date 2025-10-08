@@ -21,8 +21,8 @@
 #include <time.h>
 #include "ftd3xx.h"
 
-#define MULTI_ASYNC_BUFFER_SIZE    512 //32768 //1048576 //32768  // 8388608 //   
-#define MULTI_ASYNC_NUM           128
+#define MULTI_ASYNC_BUFFER_SIZE    32768 //1048576 //32768  // 8388608 //   
+#define MULTI_ASYNC_NUM           256
 
 typedef struct {
     FT_HANDLE ftHandle;
@@ -300,7 +300,7 @@ int main(void)
 
     /* Monitor loop: stop if fatalError set */
     // Alternate: Run for x seconds or until error
-    for (int i = 0; i < 3 && !fatalError; i++) {
+    for (int i = 0; i < 30 && !fatalError; i++) {
 
     // Alternate: run indefiniteyl
 	// for (int i = 0; !fatalError; i++) {
