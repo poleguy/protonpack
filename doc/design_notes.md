@@ -275,6 +275,9 @@ Risk item: unexpected issues with new platform? Signal Integrity, power draw?
 
 ### Task - Select Enclosure
 Plan of Record - Hammond RF Gasketed Aluminum enclosure.
+https://www.hammfg.com/electronics/small-case/extruded/1457-emi
+Hammond 1457-emi
+![hammond 1457-emi](image.png)
 
 ### Task - Deisgn build and test enclosure front and back panels.
 Control of LEDs, switch to start/stop recording.

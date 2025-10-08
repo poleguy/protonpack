@@ -4,10 +4,6 @@
 
 The Proton Pack is a portable telemetry system designed to capture and display real time visualizations and record data for analysis from embedded FPGA systems.
 
-## Kanban
-
-https://jira.shure.com/secure/RapidBoard.jspa?rapidView=1127
-
 # System Architecture
 
 The system is composed of hardware and software components and a protocol for sending telemetry data from a DUT over a serial link.
