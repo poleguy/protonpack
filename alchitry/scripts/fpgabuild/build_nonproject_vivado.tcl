@@ -2,29 +2,26 @@
 #### #######################################
 #### Minimum Required Parameters to be set prior to sourceing this tcl script from a build.tcl file
 ####
-####   ## This is the exact name of the top module
-####   set PRJ_TOP_NAME "fpga_top"
+####   
+####   PRJ_TOP_NAME          This is the exact name of the top module, e.g. "fpga_top"
 ####
-####   set PRJ_PART "xc7z045ffg900-2"
+####   PRJ_PART              This is the exact name of the part, e.g. "xc7z045ffg900-2"
 ####
 ####
 ####
 #### ########################################
 #### Optionally can set the following :
 ###
-####    PYTHONSIM_PATH        points to relative location of PythonSim in order to call compile_file_generation.py relative to par
 ####
 ####    outputDir             by default all reports/logs/bitstream goes to par/output, can specify alt
 ####
 ####    IMAGE_OUTPUT_NAME     If set, will change the naming of output bin,bit,ltx. If not set, will use PRJ_TOP_NAME.
 ####
-####    DISABLE_AUTO_BUILD    only sources this tcl file, does not run build, can call proc manually
+####    DISABLE_AUTO_BUILD    If set to 1, only sources this tcl file, does not run build, can call proc manually
 ####                          This might be useful if have to do any particular properties to files
 ####                          before synth.
 ####
-####    KEEP_IP_OUTPUT        If set, will not delete the IP generated outputs (faster rebuild process)
-####
-####    DISABLE_LATCH_CHECK   If set, latches reported as default critical warning instead of error.
+####    DISABLE_LATCH_ERROR   If set to 1, latches reported as default critical warning instead of error.
 ####
 ####    SYNTH_FLATTEN         If set, use this synth flatten method, otherwise default
 ####    SYNTH_FSM_EXTRACTION  If set, use this fsm extraction method, otherwise default
@@ -33,9 +30,9 @@
 ####                                set SYNTH_EXTRA_ARGS [list -generic NUM_CH=4 -generic INCLUDE_DEBUG=true]
 ####
 ####
-####    TIMING_OPTIMIZED_PAR  If set, run PAR commands focused on timing performance (does not use SYNTH_* spec above)
+####    TIMING_OPTIMIZED_PAR  If set to 1, run PAR commands focused on timing performance (does not use SYNTH_* spec above)
 ####
-####    DISABLE_MCS_FILE      If set, do not generate an mcs fild during build_bitstream
+####    DISABLE_MCS_FILE      If set to 1, do not generate an mcs fild during build_bitstream
 ####
 ####    FAIL_ON_CRITICAL_WARN      If set to 1, fail build on any critical warnings.
 ####    FAIL_ON_CRITICAL_CDC       If set to 1, fail build on any critical warnings from report_cdc.
@@ -44,7 +41,7 @@
 ####                          of build process right before running report_cdc.
 ####                          Reference Vivado 2018.2 bug related to cdc_waiver and checkpoint error
 ####                            
-####    ENCRYPT_BITSTREAM     If set, generate an encrypted bitstream using an nky keyfile, requested from PMP
+####    ENCRYPT_BITSTREAM     If set to 1, generate an encrypted bitstream using an nky keyfile, requested from PMP
 ####                            
 ####
 ####
@@ -171,7 +168,7 @@ if {![info exists outputDir]} {
 ## read the source based on compile.txt files and then add it to vivado
 # also blows away output directory or creates it if it doesn't exist
 proc build_setup_source {} {
-    global PRJ_PART script_path outputDir KEEP_IP_OUTPUT PYTHONSIM_PATH 
+    global PRJ_PART script_path outputDir 
     #CDC_WAIVER_XDC_FILE
 
     ##set up the build scratch folder and the build output folders
@@ -232,7 +229,7 @@ proc build_synth {} {
     global SYNTH_FLATTEN SYNTH_FSM_EXTRACTION DISABLE_LATCH_ERROR TIMING_OPTIMIZED_PAR SYNTH_EXTRA_ARGS
 
     ## latches in designs are strongly discouraged so set an ERROR if one exists
-    if {![info exists DISABLE_LATCH_ERROR]} {
+    if {!([info exists DISABLE_LATCH_ERROR] && $DISABLE_LATCH_ERROR==1)} {
         set_msg_config -id {[Synth 8-327]} -new_severity "ERROR"
     }
 
@@ -240,11 +237,13 @@ proc build_synth {} {
     set_msg_config -id {[Synth 8-2489]} -new_severity "ERROR"
 
 
-    ## determine any syntehsis arguments
+    ## determine any synthesis arguments
     if {![info exists SYNTH_FLATTEN]} {
+        # if not set, use default:
         set SYNTH_FLATTEN "rebuilt"
     }
     if {![info exists SYNTH_FSM_EXTRACTION]} {
+        # if not set, use default:
         set SYNTH_FSM_EXTRACTION "auto"
     }
     ## if nothing set, set to an empty list
@@ -282,10 +281,8 @@ proc build_par {} {
     open_checkpoint $outputDir/post_synth.dcp
 
     set timing_opt_par 0
-    if {[info exists TIMING_OPTIMIZED_PAR]} {
-        if {$TIMING_OPTIMIZED_PAR==1} {
-            set timing_opt_par 1
-        }
+    if {[info exists TIMING_OPTIMIZED_PAR] && $TIMING_OPTIMIZED_PAR==1} {
+        set timing_opt_par 1
     }
 
     if {$timing_opt_par} {
@@ -349,14 +346,14 @@ proc count_critical_warnings {} {
     }
 
     set critical_warn_passed 1
-    if {[info exists FAIL_ON_CRITICAL_WARN]} {
-        if {$FAIL_ON_CRITICAL_WARN==1 &&  $cnt_critical>0} {
+    if {[info exists FAIL_ON_CRITICAL_WARN] && $FAIL_ON_CRITICAL_WARN==1} {
+        if {$cnt_critical>0} {
             set critical_warn_passed 0
         }
     }
     set cdc_critical_passed 1
-    if {[info exists FAIL_ON_CRITICAL_CDC]} {
-        if {$FAIL_ON_CRITICAL_CDC==1 &&  $cnt_cdc_critical>0} {
+    if {[info exists FAIL_ON_CRITICAL_CDC] && $FAIL_ON_CRITICAL_CDC==1} {
+        if {$cnt_cdc_critical>0} {
             set cdc_critical_passed 0
         }
     }
@@ -397,10 +394,8 @@ proc build_bitstream {} {
     count_critical_warnings
 
     set gen_mcs 1
-    if {[info exists DISABLE_MCS_FILE]} {
-        if {$DISABLE_MCS_FILE==1} {
-            set gen_mcs 0
-        }
+    if {[info exists DISABLE_MCS_FILE] && $DISABLE_MCS_FILE==1} {
+        set gen_mcs 0
     }
 
     set image_name_base $PRJ_TOP_NAME
@@ -434,7 +429,7 @@ proc build_bitstream {} {
 
     set key_append "_bitstream_enc"
     set keyfile $image_name_base$key_append
-    if {[info exists ENCRYPT_BITSTREAM]} {
+    if {[info exists ENCRYPT_BITSTREAM] && $ENCRYPT_BITSTREAM==1} {
         if {[file exists ./$keyfile.nky]} {
             set_property BITSTREAM.ENCRYPTION.ENCRYPT YES [current_design]
             set_property BITSTREAM.ENCRYPTION.ENCRYPTKEYSELECT EFUSE [current_design]
@@ -484,12 +479,12 @@ proc build_final_summary {} {
     puts "\n-------------------------------------"
     puts " errors_passed=$errors_passed  timing_passed=$timing_passed  critical_warn_passed=$critical_warn_passed  cdc_critical_passed=$cdc_critical_passed"
 
-    if {[info exists FAIL_ON_CRITICAL_WARN]} {
+    if {[info exists FAIL_ON_CRITICAL_WARN] && $FAIL_ON_CRITICAL_WARN==1} {
         set fail_setting_string "FAIL_ON_CRITICAL_WARN=$FAIL_ON_CRITICAL_WARN  "
     } else {
         set fail_setting_string "FAIL_ON_CRITICAL_WARN=(not set)  "
     }
-    if {[info exists FAIL_ON_CRITICAL_CDC]} {
+    if {[info exists FAIL_ON_CRITICAL_CDC] && $FAIL_ON_CRITICAL_CDC==1} {
         set fail_setting_string "$fail_setting_string FAIL_ON_CRITICAL_CDC=$FAIL_ON_CRITICAL_CDC  "
     } else {
         set fail_setting_string "$fail_setting_string FAIL_ON_CRITICAL_CDC=(not set)  "
@@ -515,7 +510,7 @@ proc del_all_except {exception} {
 }
 
 ## run through the build proces unless DISABLE_AUTO_BUILD is set
-if {![info exists DISABLE_AUTO_BUILD]} {
+if {!([info exists DISABLE_AUTO_BUILD] && $DISABLE_AUTO_BUILD==1)} {
     build_setup_source
     ## create a report of the current status of the SVN checkout modules
     build_synth

@@ -1,16 +1,19 @@
+This file is currently not set up correctly or used, because we use alchitry to program the board.
+I'm leaving it as a clue if we end up spinning our own board.
 ## TCL Script for programming the flash part on the Wideband Demonstrator Digital Boad
+
 ## Call tcl script using vivado -source program_flash.tcl
-#set FLASH_IMAGE "output/dpsm_fm_fpga.bin"
-set FLASH_IMAGE "output/dpsm_digital_fpga_working.bin"
-#set FLASH_IMAGE "output/dpsm_digital_fpga_FAILED.bin"
+
+set FLASH_IMAGE "output/alchitry_top_working.bin"
+
 set FLASH_PART mx25u6435f-spi-x1_x2_x4
 # oak park:
 #set HW_TARGET "*/xilinx_tcf/Xilinx/000015de5c0f01"
 # haydn:
-set HW_TARGET "*/xilinx_tcf/Xilinx/00001d9a9dad01"
+#set HW_TARGET "*/xilinx_tcf/Xilinx/00001d9a9dad01"
 #set HW_TARGET "*/xilinx_tcf/Xilinx/00001cda031501"
 # generic... hopefully it finds the right one.
-#set HW_TARGET "*/xilinx_tcf/Xilinx/*"
+set HW_TARGET "*/xilinx_tcf/Xilinx/*"
 
 open_hw
 connect_hw_server

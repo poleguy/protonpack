@@ -36,6 +36,7 @@ set TIMING_OPTIMIZED_PAR 1
 # todo: if you comment this out it can't actually build an mcs: bug in build_nonproject_vivado.tcl?
 set DISABLE_MCS_FILE 1
 
+# undefine or set to 0 to disable encryption
 set ENCRYPT_BITSTREAM 0
 
 ## strict design check fail on vivado log critical warning OR CDC report critical 
@@ -130,13 +131,13 @@ proc build_bitstream_post {} {
      if {$errors_passed && $timing_passed && $critical_warn_passed && $cdc_critical_passed} {
         set image_name $image_name_base
         set image_name_enc $image_name_base$enc_append
-	set working_name_enc $working_name$enc_append
+        set working_name_enc $working_name$enc_append
     } else {
         ## append failed to bitstream image to clearly indicate build had problems
         set bit_append "_FAILED"
         set image_name $image_name_base$bit_append
-	set image_name_enc $image_name_base$enc_append$bit_append
-	set working_name_enc $working_name$enc_append$bit_append
+        set image_name_enc $image_name_base$enc_append$bit_append
+        set working_name_enc $working_name$enc_append$bit_append
         set working_name $working_name$bit_append
         #set image_name_enc $image_name_base_enc$bit_append
     }
@@ -150,7 +151,7 @@ proc build_bitstream_post {} {
     write_cfgmem -force -format bin -size 32 -interface SPIx4 -loaddata "up 0x0 version.bin up 0x100 $outputDir/${image_name}.bin" $outputDir/${working_name}
     write_cfgmem -force -format MCS -size 32 -interface SPIx4 -loaddata "up 0x0 version.bin up 0x100 $outputDir/${image_name}.bin" $outputDir/${working_name}
  
-    if {[info exists ENCRYPT_BITSTREAM]} {
+    if {[info exists ENCRYPT_BITSTREAM] && $ENCRYPT_BITSTREAM==1} {
         #if {[file exists ./$keyfile.nky]} {
             puts "Write Encrypted .bin and .mcs"
             write_cfgmem -force -format bin -size 32 -interface SPIx4 -loaddata "up 0x0 version.bin up 0x100 $outputDir/${image_name_enc}.bin" $outputDir/${working_name_enc}
@@ -163,7 +164,7 @@ proc build_bitstream_post {} {
     }
 
 #   combined --------
-	# puts "write multiboot"
+    # puts "write multiboot"
 
 
     # _MB stands for multiboot
