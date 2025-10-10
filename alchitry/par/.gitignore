@@ -1,0 +1,11 @@
+*.backup.*
+version.bin
+
+compile_cmd_list.txt
+compile_parse_log.txt
+compile_xil_ip_gen.txt
+
+#vivado generated cruft
+clockInfo.txt
+
+output/

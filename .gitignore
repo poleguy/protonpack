@@ -183,3 +183,6 @@ src
 telem_mobile_ac701
 telem_eval_ax7a035
 snickerdoodle
+
+apt-list-installed.txt
+requirements-export.txt

@@ -1,0 +1,8 @@
+-e git+ssh://git@bitbucket.shure.com:7999/fpga/pythonsim.git@1.9.2#egg=PythonSim
+-e git+ssh://git@bitbucket.shure.com:7999/fpga/FPGABuild.git@a08d782f6ddab8e44426b1fa1dbca6652a077811#egg=FPGABuild
+
+# sorted alphabetically
+
+numpy
+requests
+typer

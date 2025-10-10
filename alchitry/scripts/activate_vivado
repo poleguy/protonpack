@@ -1,0 +1,4 @@
+# source this file
+source /data/Xilinx/2025.1/Vivado/settings64.sh
+#source /opt/Xilinx/Vivado/2022.1/settings64.sh
+#source /tools/Xilinx/Vivado/2024.1/settings64.sh
