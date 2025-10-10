@@ -1,3 +1,6 @@
+# this is a module to support the cvc simulator
+# it provides a library of functions 
+
 # see readme.txt for more documentation
 import cocotb
 
@@ -18,7 +21,7 @@ import logging as log
 import time
 
 
-def get_test_module(num_callers_back=2):
+def _get_test_module(num_callers_back=2):
     ## get some details about the module that called this
     ## num_callers_back=2 uses the name of the function that calls this setup_sim_dir
     ##   setting this to 3 would use the name of caller 2 times back
@@ -34,7 +37,7 @@ def get_test_module(num_callers_back=2):
     return caller_module
 
 
-def get_test_dir(num_callers_back=2):
+def _get_test_dir(num_callers_back=2):
     ## get some details about the module that called this
     ## num_callers_back=2 uses the name of the function that calls this setup_sim_dir
     ##   setting this to 3 would use the name of caller 2 times back
@@ -51,7 +54,7 @@ def get_test_dir(num_callers_back=2):
     return caller_dir
 
 
-def get_test_function(num_callers_back=2):
+def _get_test_function(num_callers_back=2):
     ## get some details about the module that called this
     ## num_callers_back=2 uses the name of the function that calls this setup_sim_dir
     ##   setting this to 3 would use the name of caller 2 times back
@@ -59,6 +62,7 @@ def get_test_function(num_callers_back=2):
     return frame.function
 
 
+# call this before run_rtl_sim_cvc() to set up stuff on disk
 def setup_sim_dir(run_dir_common="sim_build", delete_existing=True, num_callers_back=2):
     """creates the simulation build/execution directory if it doesn't exist based on the calling modules (test) name
     returns the dir used by the test in other places
@@ -67,10 +71,10 @@ def setup_sim_dir(run_dir_common="sim_build", delete_existing=True, num_callers_
     # caller_module=get_module_name(num_callers_back)
 
     ## setup directories
-    run_dir_common = get_test_dir(num_callers_back) + "/" + run_dir_common
+    run_dir_common = _get_test_dir(num_callers_back) + "/" + run_dir_common
     ## the run_dir will be the test_* file + the test function name
-    run_dir_group = run_dir_common + "/" + get_test_module(num_callers_back)
-    run_dir = run_dir_group + "/" + get_test_function(num_callers_back)
+    run_dir_group = run_dir_common + "/" + _get_test_module(num_callers_back)
+    run_dir = run_dir_group + "/" + _get_test_function(num_callers_back)
 
     """
     eg for path   sim_build/test_datapath/test_datapath_rbw_cnt

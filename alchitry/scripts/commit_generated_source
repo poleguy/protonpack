@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Commit generated source to git
+# Does not add date/time to commit message
+# this will commit back to whatever branch was used.
+# command line parameter is a string to append to the commit message
+
+set -e
+
+# get a message with a link to the artifactory output
+# this message is for official master builds and only uses the version number with no date/time
+if [ -z "$1" ]; then
+    MSG="$(scripts/get_commit_message)"
+elif [ -z "$2" ]; then
+    MSG="$1 $(scripts/get_commit_message)"
+else
+    MSG="$1 $(scripts/get_commit_message) $2"
+fi
+
+# update this list if register interface is expanded to include more files
+git status
+
+# we've always said we want to commit back the exact source that was built...
+# So all generated intermediate .vhd files go back in.
+# To analyze old code without re-running the generation, etc.
+
+git add rtl/version_pkg.vhd
+
+# all .vhd/.v generated files are now in a .zip
+# some generated files change on every build, causing git conflicts of little value
+# the source is really from rtl/version_pkg.vhd, etc.
+# but this is a safety copy for when IT inevitably deletes stuff from artifactory that we need.
+# or if we question if something is really what we built with.
+git add rtl/regs/generated_rtl.zip
+git add par/shurc_code.zip
+
+# documentation should stay with source. This is the rendered documentation.
+git add doc/NGPSM_RX_Digital_FPGA_Interface.pdf
+
+# changes to conda environment are tracked to help debug failures due to things changing in conda
+git add cenv-export.yml
+
+git commit -m "$MSG"
+
+# get latest from server for this branch
+git fetch  
+
+# if there's other local files that are not being commited, have to stash them before rebase
+# if a version control file has changed, however maybe it should be actually commited as well?
+git stash
+
+## This will take the local changes and be able to commit them, even if this checkout was out of date.  We want
+## to commit the version_pkg.vhd used for this build with the artifactory commit.
+## the "theirs" in this rebase command is confusing since we are actually keeping "ours" (local) with this command.
+## see https://stackoverflow.com/questions/16825849/choose-git-merge-strategy-for-specific-files-ours-mine-theirs
+git rebase -X theirs
+
+set +e
+git push
+rc="$?"
+if [ "$?" -ne 0 ]; then
+    echo "race condition? trying push again"
+    # try again one time if it was a race and we lost
+    sleep 1
+    git rebase -X theirs
+    git push
+    rc="$?"
+    if [ "$?" -ne 0 ]; then
+        set -e
+        echo "trying one last time"
+        # try again one time if it was a race and we lost a second time
+        sleep 2
+        git rebase -X theirs
+        git push
+    fi
+fi
+
+git status
+# run commit_tag script after this script to tag this version and push it

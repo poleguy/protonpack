@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+########################################################
+## Build the fpga design from a clean fresh checkout 
+## and check in results automatically
+
+# If built under secbuild user this is a CI_BUILD 
+# All builds will be CI builds if run from jenkins under secbuild so we can simply promote them if releasing to software as a package.
+# And so firmware team will test our builds directly without asking for a rebuild first.
+
+## all local builds are committed to developer repo
+## 
+## you may run these commands one at a time during development
+##
+## Run form checkout folder via: ./build_fpga
+## 
+## If run on jenkins
+########################################################
+
+set -x
+# exit on error
+set -eou pipefail
+
+# https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
+if [ $# -lt 1 ]; then
+  echo 1>&2 "Usage: $0 branch_name [rebuild|reproduce]"
+  echo 1>&2 "add rebuild to rebuild in an existing environment"
+  echo 1>&2 "or run: scripts/cleanup_modules and try again"
+  echo 1>&2 "add reproduce to rebuild without updating version number and check that"
+  echo 1>&2 "results match previous results. no commit to git or deploy to artifactory."
+  exit 3
+fi
+BRANCH=$1
+if [ $# -lt 2 ]; then
+    FLAG="no_rebuild"
+else
+    FLAG=$2
+fi
+# show build type in console to avoid needing to search in parameters in jenkins
+echo ""
+#echo "Product build"
+echo ""
+
+# show log in console for ease of determining what we're building from the console log
+git log -n 4
+# display env for debug
+env
+
+# get username and host name
+username="$(whoami)"
+hostname="$(hostname)"
+echo "username=$username"
+echo "hostname=$hostname"
+
+source scripts/setup_env_local.sh
+
+if [ -z ${PMP_API_KEY+x} ]; then
+    echo "PMP_API_KEY is not set. Please set it and try again."
+    exit 4
+fi
+if [ -z ${ARTIFACTORY_KEY+x} ]; then
+    echo "ARTIFACTORY_KEY is not set. Please set it and try again."
+    exit 4
+fi
+
+if [ "$FLAG" != "rebuild" ]; then
+    ## checkout the external modules first. This will error early if this is not a fresh working directory.
+    time ./checkout_modules
+    # setup fresh conda environment
+    time source scripts/cleanup_python
+    time scripts/setup_python
+fi
+
+# add modules to path
+source scripts/activate_python
+which python
+
+# https://stackoverflow.com/questions/16077971/git-produces-gtk-warning-cannot-open-display
+unset SSH_ASKPASS
+
+#scripts/retrieve_key_pmp
+# hackity hack. This must be exported to work in the deploy_artifactory script
+#export ARTIFACTORY_KEY=$(cat ../artifactory_key.txt)
+
+# update the version number in .vhd file
+#if [ "$FLAG" == "reproduce" ]; then
+#    echo "Not updating version: reproducing previous build."
+#else
+    # make sure we have the latest tags
+#    git fetch
+#    scripts/update_version_latest_build
+#    scripts/update_version
+    # see if it's already used and stop
+#    scripts/check_version_tag
+#fi    
+
+### generate the register package and documentation
+#time scripts/make_regs
+#time scripts/make_docs
+
+# write out a version.bin to use for creating final image
+scripts/write_version_bin
+
+
+# build kcpsm
+# skip this until wine is installed or another solution is found
+#cd rtl/reconfiguration
+#./build
+#cd ../..
+
+#
+### generate the telemetry package (so that rom files are in place for compile_file_generation step)
+#scripts/generate_telem_pkg
+#
+
+
+## Run the build in Vivado
+## Note vivado is run from the ./par folder 
+#todo: change this so the os isn't holding state
+#source scripts/setup_vivado
+time scripts/run_vivado
+status=$?
+#time scripts/compile_file_generation
+#cd par
+#which vivado
+#set +e
+#time vivado -mode batch -source build.tcl -notrace
+#set -e
+#cd ..
+if [ $status -ne 0 ]; then
+    echo "build failed... cleaning up pre-build tag"
+#    scripts/cleanup_tag
+    exit $status
+fi
+
+# alternatively, you can interactively run these steps:
+# cd par
+# vivado -mode tcl
+# 
+# 
+# Vivado % set DISABLE_AUTO_MODE 1
+# Vivado % source build.tcl -notrace
+# Vivado % build_setup_source
+# Vivado % build_synth
+
+
+## Post build commit Actions
+
+# this must occur after the build, because the build script will wipe out par/output
+echo "Writing version control revision report to par/output/revision_info.rpt"
+scripts/revision_info > par/output/revision_info.rpt
+
+# include branch name and slurm job id (if defined) in the commit message
+COMMIT_SUFFIX="$BRANCH"
+# https://stackoverflow.com/questions/3601515/how-to-check-if-a-variable-is-set-in-bash
+#if [[ -v SLURM_JOBID ]]; then
+#    echo "running under slurm. SRUM_JOBID: $SLURM_JOBID"
+#    COMMIT_SUFFIX="$BRANCH $SLURM_JOBID"
+#else
+#    echo "not running under slurm"
+#fi
+
+#if [ "$FLAG" != "reproduce" ]; then
+    
+    # append date/time if building a rogue build
+    # as identified by the user name not being secbuild
+    if [[ "$(whoami)" != "secbuild" && "$(whoami)" != "jeeves" ]]; then
+        time scripts/deploy_artifactory --developer
+        # Commit generated source to git, no tag to avoid clutter
+        time scripts/commit_generated_source "Product" "$COMMIT_SUFFIX"
+        # don't tag it by default to avoid clutter (do this manually if desired) 
+        # scripts/commit_tag
+    else
+        # CI build uses simple version numbers
+        # CI builds are committed to CI repo, but will fail if not run from jenkins
+        # build from a branch if building locally
+        time scripts/deploy_artifactory
+        # Commit generated source to git (no date/time in commit message)
+        time scripts/commit_generated_source_master "Product" "$COMMIT_SUFFIX"
+        # tag only master/wm2 builds to avoid clutter. Other branches can be manually tagged if important
+        #if [[ "$BRANCH" == "master" || "$BRANCH" == "wm2" ]]; then
+        # we must tag all branches because the tags are used to ensure unique version numbers
+        time scripts/commit_tag
+        #fi
+    fi
+#else
+#    # reproduce
+#    # check that result matches artifatory result
+#    scripts/get_artifactory_current
+#    MD5_OLD=$(md5sum artifactory/dpsm_rx_top_working.bin | cut -f 1 -d " ")
+#    MD5_NEW=$(md5sum par/output/dpsm_rx_top_working.bin | cut -f 1 -d " ")
+#    if [ "$MD5_OLD" == "$MD5_NEW" ]; then
+#        echo "Old and new builds match. Reproduction successful."
+#    else
+#        echo "Old and new builds do not match. Reproduction failed."
+#    fi
+#    
+#fi
+
+# create debug package
+#scripts/package
+
+# test debug package on hardware regression test.
+#scripts/regression_test
+
+# return exit code to indicate pass/fail
+FILE=par/output/result_pass.txt
+if test -f "$FILE"; then
+    echo "PASS JOB - file exists $FILE exists"
+    exit 0
+else
+    echo "FAIL JOB - file does not exit $FILE"
+    exit 1
+fi

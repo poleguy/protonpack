@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# will delete ./modules directory
+# will first check if anything was modified and not committed back to version control
+# call with scripts/cleanup_modules
+
+set -e
+
+# see if it's safe to remove modules first
+scripts/check_for_changes modules
+# go ahead and remove all the modules
+echo "Cleanup seems likely to be safe"
+rm -rf modules

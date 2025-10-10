@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+#################################################################################
+##
+## Nicholas Dietz
+##
+## 
+##
+#################################################################################
+
+
+import os
+
+## instantiate the helper build scripts
+#from fpgabuild import compile_file_generation  # <--- produce compile_cmd_list.txt in /par
+
+from fpgabuild import compile_file_generation
+
+
+root_dir = os.getcwd()
+run_dir = os.path.join(root_dir,"par")
+compile_top = os.path.join(root_dir,"compile.txt")
+
+print(run_dir)
+print(root_dir)
+print(compile_top)
+# this is absolute because:
+# FileNotFoundError: Shurc assembler not found at modules/shurc32_assem/program/CentOS/shurc_assembler.
+# For builds, the assembler path must be set via compile_file_generation object instantiation variable (or by modifying the compile_file_geneartion object variable shurc_assembler_path).
+# For rtl simulations, set the run_rtl_sim input variable shurc_assembler_path.
+# The path should be to the actual shurc assembler executable. This is a new change in PythonSim as of Feb 2022.
+
+# the function checks relative to the current working dir, not the root_dir
+# Ah, relative to "par". Why is that? I ran the script in ./ not ./par
+# aha, that's my bad. I change directories in my script.
+
+#output_rom_name_base= shurc_sys
+#output_rom_folder= ../memory_init/
+#shurc_assembler= modules/shurc32_assem/program/CentOS/shurc_assemblershurc_compile.py: assembler path not found. modules/shurc32_assem/program/CentOS/shurc_assembler
+#shurc_compile.py: The shurc assembler needs to be checked out as a module in the module_version_files.txt. Example line given below:
+#shurc_compile.py: shurc_assembler, -rHEAD http://subversion.shure.com/Common/FPGA/IP/Processors/SHURC/SHURC32_Assem/trunk/program/CentOS
+
+#Again, that looks like a wonderful error message, but I'm very confused. I couldn't get this error message until I created a dummy shurc_core_config.txt in ./rtl that I copied from modules/multicore_baseband/rtl on a hunch.
+
+#I fixed this by putting an absolute path in the parameter shurc_assembler_path... it seems like the tool assumes different relative path starting points on different code paths. ugh.
+
+
+#shurc_assembler_path=os.path.join(root_dir,"modules/shurc32_assem/program/CentOS/shurc_assembler")
+compile_file_generation_i = compile_file_generation.compile_file_generation(root_dir=root_dir, run_dir=run_dir, sim_or_build="build")
+#compile_file_generation_i.set_shurc_core_config_file([root_dir+"/modules/multicore_baseband/rtl/shurc_core_config_multicore_baseband.txt", 
+#                                                      root_dir+"/modules/multicore_audio/rtl/shurc_core_config_multicore_audio.txt"])
+compile_file_generation_i.parse_compile_txt(compile_top)
+#compile_file_generation_i.gen_build_compile()
+compile_file_generation_i.vivado_compile_cmd_gen()

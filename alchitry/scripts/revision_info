@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+import bash
+
+import os
+def revision_info(rootdir, depth=6):
+    print("SVN revision info report:")
+    for subdir, dirs, files in os.walk(rootdir):
+        if ".svn" in subdir[-depth:]:
+            svn_dir,tail = os.path.split(subdir)
+            #print(svn_dir)
+            svn_report(svn_dir)
+    for subdir, dirs, files in os.walk(rootdir):
+        if ".git" in subdir[-depth:]:
+            git_dir,tail = os.path.split(subdir)
+            #print(git_dir)
+            git_report(git_dir)
+
+
+def svn_report(dir):
+    bash.bash(f"svn info {dir}")
+    bash.bash(f"svn status -v {dir}")
+    #print(f"svn info {dir}")
+    #print(f"svn status -v {dir}")
+
+def git_report(dir):
+    #https://stackoverflow.com/questions/924574/git-alternatives-to-svn-info-that-can-be-included-in-a-build-for-traceability
+    bash.bash(f"cd {dir} && git remote -v")
+    bash.bash(f"cd {dir} && git rev-parse HEAD")
+    bash.bash(f"cd {dir} && git diff --name-status HEAD")
+    
+    #print(f"pushd {dir}")
+    #print(f"git remote -v")
+    #print(f"git rev-parse HEAD")
+    #print(f"git diff --name-status HEAD")
+    #print(f"popd")
+
+if __name__ == "__main__":
+   revision_info('.')

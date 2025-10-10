@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Remove pre-build tag if build failed to allow a re-build without manual intervention.
+set -e
+
+# get current tag
+TAG=$(scripts/get_version)
+
+# first check that it has "pre-build tag" in it, to avoid deleting 'real' final tags
+# this will error out and stop this script if it doesn't match
+git tag -n $TAG | grep "pre-build tag"
+
+echo "Removing current pre-build tag: $TAG"
+git tag --delete $TAG
+git push origin :refs/tags/$TAG
+
+

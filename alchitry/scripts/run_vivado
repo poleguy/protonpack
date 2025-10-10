@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# generates the file lists and runs vivado
+
+set -e
+(
+source scripts/activate_vivado
+scripts/compile_file_generation
+cd par
+time vivado -mode batch -source build.tcl -notrace
+cd ..
+)

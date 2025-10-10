@@ -1,0 +1,209 @@
+#!/usr/bin/env python
+#################################################################################
+##
+## deploy_artifactory
+##
+## Alex Stezskal, Nicholas Dietz
+##
+## run from ./par
+##
+#################################################################################
+import os
+import subprocess
+import shlex
+import argparse
+import zipfile
+from FPGABuild import fpga_build
+
+#####
+## Use argparse to create a few optional arguments for rebuild scripts
+parser = argparse.ArgumentParser(description='Build an FPGA design including checkout, image version control, build call, and artifact commit.')
+## Allow someone to force the use of the version scheme with date/time appended and deploy to the developer repo
+## defaults to trunk version scheme and deploy to CI repo
+parser.add_argument('--developer', '-j', action="store_true", required=False,
+        help='Force the use of the version scheme with date/time appended and deploy to the developer repo. Otherwise use CI repo and just major.minor.patch.build version number')
+args=parser.parse_args()
+
+
+## instantiate the helper build scripts
+build = fpga_build.fpga_build()
+
+
+## Read the current revision from the rtl version package file
+build.read_pkg_version(rtl_version_file="rtl/version_pkg.vhd")
+
+
+## Post vivado build actions
+# why is this dist vs meta?
+# answer: https://confluence.shure.com/display/DEVOPS/Common+Tool+Chain+Integration
+# https://confluence.shure.com/display/DEVOPS/Save+Component+Artifacts
+
+## If synthesis completes but par does not, still commit to artifactory.
+if(os.path.isfile("par/output/post_opt.dcp") and not os.path.isfile("par/output/post_route.dcp")):
+    artifact_meta_files =                 [
+                                "par/vivado.log",
+                                "rtl/version_pkg.vhd",
+                                "par/output/post_opt_util.rpt",
+                                "par/output/post_opt_control_sets.rpt",
+                                "par/output/post_synth_util.rpt",
+                                "par/output/post_synth_control_sets.rpt",
+                                "par/output/post_synth.dcp"
+                            ]
+    artifact_dist_files = [
+                                "par/output/post_opt.dcp"
+                                ]
+
+## normal flow par finished
+else:
+
+    base="dpsm_rx_top"
+
+    # no longer including raw bin and bit files here, so we can be certain to always have build/date/time in the header in flash
+    image_dist_files = [ #f"par/output/{base}.bin",
+                         #f"par/output/{base}.bit",
+                         #f"par/output/{base}_enc.bin",
+                         #f"par/output/{base}_enc.bit",                         
+                         # working image (version.bin + image)
+                         f"par/output/{base}_working_enc.bin",
+                         f"par/output/{base}_working_enc.mcs",
+                         f"par/output/{base}_working.bin",
+                         f"par/output/{base}_working.mcs"]
+    # also consider adding:
+    # f"par/output/{base}.mcs",
+    # f"par/output/{base}.prm"]
+
+
+    # failed timing, so mark files clearly to avoid thinking it is safe
+    image_dist_fail_files = [#f"par/output/{base}_FAILED.bin",
+                             #f"par/output/{base}_FAILED.bit",
+                             #f"par/output/{base}_enc_FAILED.bin",
+                             #f"par/output/{base}_enc_FAILED.bit",
+                             f"par/output/{base}_working_enc_FAILED.bin",
+                             f"par/output/{base}_working_enc_FAILED.mcs",
+                             f"par/output/{base}_working_FAILED.bin",
+                             f"par/output/{base}_working_FAILED.mcs"]
+
+    meta_files = [
+        "par/output/post_synth.dcp",
+        "par/output/post_synth_util.rpt",
+        "par/output/post_synth_control_sets.rpt",
+        "par/output/post_opt.dcp",
+        "par/output/post_opt_util.rpt",
+        "par/output/post_opt_control_sets.rpt",
+        "par/output/post_route_util.rpt",
+        "par/output/post_route_control_sets.rpt",
+        "par/output/post_route_timing_summary.rpt",
+        "par/output/post_route.dcp",
+        "par/output/report_cdc.rpt",
+        "par/output/report_cdc_waived.rpt",
+        "par/output/report_cdc_waivers.rpt",
+        "par/output/revision_info.rpt",
+        "par/output/vivado.log",
+        "rtl/version_pkg.vhd",
+        "rtl/regs/FpgaRegistersDigital.h",
+        "doc/NGPSM_RX_Digital_FPGA_Interface.pdf"
+    ]
+
+    # these files might not exist, but we don't want them to prevent a deploy to artifactory.
+    # this can happen when the design misses timing so _FAILED gets appended to file names.
+    meta_files_optional = [
+        "rtl/regs/FpgaRegistersCommon.h",
+        "rtl/regs/FpgaRegistersIndirect.h",
+        "rtl/regs/FpgaRegisters7Indirect.h",
+        ## if no ilas, this file will not exist, so only include if it exists so artifactory doesn't error out on missing file
+        f"par/output/{base}.ltx",
+        f"par/output/{base}_working_enc.prm",
+        f"par/output/{base}_working_enc_FAILED.prm",        
+        f"par/output/{base}_working.prm",
+        f"par/output/{base}_working_FAILED.prm",
+        "rtl/regs/generated_rtl.zip",
+        "par/shurc_code.zip",
+        # telemetry outputs to check against ac701 builds
+        "rtl/datapath/rtl/telemetry/telemetry_cfg_generated.csv",
+        "rtl/datapath/rtl/telemetry/telemetry_cfg_pkg.vhd",
+        "rtl/datapath/rtl/telemetry/telemetry_enable_defn.md",
+        "rtl/datapath/rtl/memory_init/field_config_ascii_inith.rom",
+        "rtl/datapath/rtl/memory_init/field_config_defn_inith.rom",
+        "rtl/datapath/rtl/memory_init/trigger_config_inith.rom",
+        "rtl/datapath_telemetry/rtl/telemetry/telemetry_cfg_generated.csv",
+        "rtl/datapath_telemetry/rtl/telemetry/telemetry_cfg_pkg.vhd",
+        "rtl/datapath_telemetry/rtl/telemetry/telemetry_enable_defn.md",
+        "rtl/datapath_telemetry/rtl/memory_init/class_id_ascii_inith.rom",
+        "rtl/datapath_telemetry/rtl/memory_init/field_config_ascii_inith.rom",
+        "rtl/datapath_telemetry/rtl/memory_init/field_config_defn_inith.rom",
+        "rtl/datapath_telemetry/rtl/memory_init/trigger_config_inith.rom",
+        "rtl/datapath_iq_telemetry/rtl/telemetry/telemetry_cfg_generated.csv",
+        "rtl/datapath_iq_telemetry/rtl/telemetry/telemetry_cfg_pkg.vhd",
+        "rtl/datapath_iq_telemetry/rtl/telemetry/telemetry_enable_defn.md",
+        "rtl/datapath_iq_telemetry/rtl/memory_init/class_id_ascii_inith.rom",
+        "rtl/datapath_iq_telemetry/rtl/memory_init/field_config_ascii_inith.rom",
+        "rtl/datapath_iq_telemetry/rtl/memory_init/field_config_defn_inith.rom",
+        "rtl/datapath_iq_telemetry/rtl/memory_init/trigger_config_inith.rom",
+        "requirements-export.txt",
+        "apt-list-installed.txt"
+    ]
+
+    # consider adding:
+    # f"par/output/{base}.ltx",
+    # "par/output/post_synth.dcp",
+    # "rtl/regs/FpgaRegisters.h",
+    # "doc/reg_mux.htm",
+    # "doc/regs_*.htm",
+    # "doc/*.pdf"
+    # don't include result_pass.txt because it won't exist for failed builds, but we do want to push them to artifactory.
+    #"par/output/result_pass.txt",
+
+    for fn in meta_files_optional:
+        if(os.path.isfile(fn)):
+            meta_files.append(fn)
+
+    ## only check in files if an image was produced, if no image will stop on this assert
+    assert(os.path.isfile(image_dist_files[0]) or os.path.isfile(image_dist_fail_files[0])),"Build did not produce an image "+str(image_dist_files[0])
+
+    ## if image produced but deemed a failure (i.e. timing failed), still push image to artifactory with *_FAILED.bin image name
+    if(os.path.isfile(image_dist_fail_files[0])):
+        artifact_dist_files = image_dist_fail_files
+        artifact_meta_files = meta_files
+    else:
+        artifact_dist_files = image_dist_files
+        artifact_meta_files = meta_files
+
+# Push Build artifacts to artifactory
+# Comma separated file lists for dist_files(image) and meta(other)_files
+
+# deploy under continuous repo only if building in jenkins and not specifying otherwise
+if(args.developer):
+    commit_artifactory = build.commit_artifactory_developer
+    build.parent_is_branch = True # use version number format with time stamp appended
+    print("deploying branch to developer repo")
+else:
+    # master/trunk branch, built on jenkins
+    commit_artifactory = build.commit_artifactory
+    build.parent_is_branch = False # use version number only, without time stamp
+    print("deploying to continuous repo")
+
+
+artifact_component="Wideband/NGPSM_RX"
+
+# Push Build artifacts to artifactory
+# Python lists for dist_files(image) and meta(other)_files
+
+ret = commit_artifactory(artifact_component=artifact_component, 
+                         artifact_dist_files=artifact_dist_files, 
+                         artifact_meta_files=artifact_meta_files)
+
+## commit new version_pkg file back to git.. 
+# log msg will contain the artifactory URL for reference
+# build.commit_svn_source(['rtl/version_pkg.vhd'])
+
+msg = build.get_commit_message(artifact_component)
+print(msg)
+
+exit(ret)
+
+
+#todo: add typer/plac
+#return exit code on failure
+# do not allow overwrite so easily from the script
+# https://artifactory.shure.com/All_Shure_Components/Wideband/NGPSM_RX/0.4.99.11020211108115230/
+# commit_artifactory should return an error code if it fails. this script should too.

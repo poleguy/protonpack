@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Remove all remaining pre-build tags
+# only run this if builds aren't currently running
+set -e
+
+# first check that it has "pre-build tag" in it, to avoid deleting 'real' final tags
+# this will error out and stop this script if it doesn't match
+TAGS=$(git tag -n | grep "pre-build tag" | cut -d" " -f1)
+
+echo "Removing all pre-build tags"
+
+for TAG in $TAGS ; do
+    echo $TAG
+    git tag --delete $TAG
+    git push origin :refs/tags/$TAG
+done 
+
+# you can manually push after this command if you like

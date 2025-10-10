@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+# This script can be called to remove an environment in order to start fresh.
+# It should be called as:
+# source scripts/cleanup_python
+
+# The canonical version of this file is here: 
+# 
+# https://bitbucket.shure.com/projects/ATLASFPGA/repos/atlas-base/browse/scripts
+# 
+# If improvements are made they should be put in the canonical version.
+# The Python champion listed here should be consulted to coordinate any changes:
+# 
+# https://bitbucket.shure.com/projects/ATLASFPGA/repos/atlas-base/browse/doc/atlas_design_process/md/design_process.md
+
+
+#set -x
+# this script is sourced, so no set -e
+
+# check if this was called by source to prevent incorrect usage
+(return 0 2>/dev/null) && sourced=1 || sourced=0
+
+if [ $sourced -eq 0 ]; then
+    echo "You must source this script. Do not run it directly."
+    exit 1    
+fi
+
+
+# https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
+REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
+
+# see if it's safe to remove modules first 
+# don't use src symbolic link in case it is broken.
+# presume called with set -e, so this will fail
+if [ -d ~/.virtualenvs/"$REPONAME" ]; then
+    scripts/check_for_changes ~/.virtualenvs/"$REPONAME"
+fi 
+
+# go ahead and remove all the modules
+echo "Cleanup seems likely to be safe"
+
+if [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    # https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
+    # the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
+    # space before to prevent them from ending on the command line
+    OLDOPTS="$(set +o | sed -e 's/^/ /')"
+    case $- in
+      *e*) OLDOPTS="$OLDOPTS; set -e";;
+      *) OLDOPTS="$OLDOPTS; set +e";;
+    esac
+fi
+
+# to avoid bugs with rmvirtualenv and -euo pipefail, temporarily turn it off.
+set +euo pipefail
+# try to find it no matter how it was installed
+echo "finding virtualenvwrapper.sh and running it"
+source $(locate virtualenvwrapper.sh | tail -n 1)
+
+# deactivate sometimes finds the conda version
+deactivate
+
+rmvirtualenv $REPONAME || exit 2
+
+# set this so breakpoint() calls ipdb
+#export PYTHONBREAKPOINT=ipdb.set_trace
+
+#restore settings
+if [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    eval "${OLDOPTS}"
+fi
+

@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+#################################################################################
+##
+## deploy_artifactory
+##
+## Alex Stezskal, Nicholas Dietz
+##
+##
+## To set up for a new project, the project_name variable must be set correctly
+##
+#################################################################################
+import os
+import subprocess
+import shlex
+import argparse
+import zipfile
+from FPGABuild import fpga_build
+
+project_name = "Wideband/NGPSM_RX"
+
+## instantiate the helper build scripts
+build = fpga_build.fpga_build()
+
+
+## Read the current revision from the rtl version package file
+build.parent_is_branch = False # use version number format without time stamp appended
+build.read_pkg_version_dumb(rtl_version_file="rtl/version_pkg.vhd")
+# set the branch state, which causes set_artifact_version to return a different result
+#build.check_if_git_repo_is_branch()
+
+build.set_artifact_version()
+
+
+## When we commit a new version_pkg file back to source control, the log msg will contain the artifactory URL for reference
+# a commit message containing the url and version of the artifactory commit. For checking in auto generated code created as part of the build process.
+artifactory_url_all_shure="https://artifactory.shure.com/All_Shure_Components/"+project_name+"/"+build.get_artifact_version().replace("_",".")+"/"
+msg=artifactory_url_all_shure+" Artifactory auto commit from build."
+
+print(msg)
+
+exit(0)

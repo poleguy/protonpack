@@ -59,7 +59,8 @@ static void* asyncRead(void *arg)
     size_t initialized = 0;
     ULONG ulBytesToRead = MULTI_ASYNC_BUFFER_SIZE;
     UCHAR expected[MULTI_ASYNC_BUFFER_SIZE];
-
+    int received_ok = 0;
+            
     printf("Starting asyncRead.\n");
 
     /* initialize only those we can */
@@ -105,32 +106,34 @@ static void* asyncRead(void *arg)
                 printf("[READ] GetOverlappedResult failed: %d\n", ftStatus);
                 *fatalError = 1;
                 break;
+            } else {
+                received_ok+=usBytesRead[j];
             }
 
             /* Process data if needed (ulBytesRead[j]) */
 
-            int received_ok = 0;
+
             //
             // Compare bytes read with bytes written
             //
-            if (memcmp(buf, expected, sizeof(buf))) {
-                for (int k = 0; k < MULTI_ASYNC_BUFFER_SIZE+2;k++) {
-                    //printf("no matchy %d: %x, %x\n",k, buf[j*MULTI_ASYNC_BUFFER_SIZE+k], expected[k]);
-                    //printf("ugh...");
-                }
-            }
-            if (ulBytesRead[j] != ulBytesToRead)
-            {
-                printf("FT_GetOverlappedResult failed! ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
-                //*fatalError = 1;
-                //break;
-                printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
-                printf("received ok = %d\n",received_ok);
-            } else {
+//            if (memcmp(buf, expected, sizeof(buf))) {
+//                for (int k = 0; k < MULTI_ASYNC_BUFFER_SIZE+2;k++) {
+//                    //printf("no matchy %d: %x, %x\n",k, buf[j*MULTI_ASYNC_BUFFER_SIZE+k], expected[k]);
+//                    //printf("ugh...");
+//                }
+//            }
+//            if (ulBytesRead[j] != ulBytesToRead)
+//            {
+//                printf("FT_GetOverlappedResult failed! ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
+//                //*fatalError = 1;
+//                //break;
+//                printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
+//                printf("received ok = %d\n",received_ok);
+//            } else {
                 //printf("Got expected: ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
-                received_ok++;
-            }
-            //printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
+
+//            }
+            //printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);            
 
         }
     }
@@ -142,6 +145,7 @@ cleanup:
         FT_GetOverlappedResult(ft, &ov[j], &ulBytesRead[j], TRUE); /* wait to finish */
         FT_ReleaseOverlapped(ft, &ov[j]);
     }
+    printf("received bytes: %d\n", received_ok);
 
     printf("Exiting %s\n", __FUNCTION__);
     return NULL;

@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+# use:
+#  source scripts/activate_python
+# running this directly without source will not effect the active environment
+
+# The canonical version of this file is here: 
+# 
+# https://bitbucket.shure.com/projects/ATLASFPGA/repos/atlas-base/browse/scripts
+# 
+# If improvements are made they should be put in the canonical version.
+# The Python champion listed here should be consulted to coordinate any changes:
+# 
+# https://bitbucket.shure.com/projects/ATLASFPGA/repos/atlas-base/browse/doc/atlas_design_process/md/design_process.md
+
+
+# https://stackoverflow.com/questions/496702/can-a-shell-script-set-environment-variables-of-the-calling-shell
+
+# note: jenkins sources this environment only when the agent is started!
+# restart the agent if you need to pull in fresh environment settings
+
+# How to get shell to self-detect using zsh or bash - Stack Overflow (https://stackoverflow.com/questions/9910966/how-to-get-shell-to-self-detect-using-zsh-or-bash)
+# https://unix.stackexchange.com/questions/463034/bash-throws-error-line-8-1-unbound-variable
+
+if [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    # https://unix.stackexchange.com/questions/383541/how-to-save-restore-all-shell-options-including-errexit
+    # the virtualenvwrapper.sh scripts don't do happy things with set -euo pipefail
+    # space before to prevent them from ending on the command line
+    OLDOPTS="$(set +o | sed -e 's/^/ /')"
+    case $- in
+      *e*) OLDOPTS="$OLDOPTS; set -e";;
+      *) OLDOPTS="$OLDOPTS; set +e";;
+    esac
+fi
+
+
+REPONAME=$(pwd | sed -e 's|^/||' -e 's|/|__|g') #make a unique virtualenv based off the current path
+set +euo pipefail  # virtualenvwrapper.sh does not work well with -e or -u
+# to avoid bugs with rmvirtualenv and -euo pipefail, temporarily turn it off.
+# try to find it no matter how it was installed
+echo "finding virtualenvwrapper.sh and running it"
+source $(locate virtualenvwrapper.sh | tail -n 1)
+deactivate
+workon $REPONAME || true
+
+
+# set this so breakpoint() calls ipdb
+#export PYTHONBREAKPOINT=ipdb.set_trace
+
+#restore settings
+if [ -n "{$BASH_VERSION:-}" ]; then
+    # assume Bash
+    eval "${OLDOPTS}"
+fi
+

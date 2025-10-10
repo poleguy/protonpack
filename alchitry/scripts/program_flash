@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -e
+
+# https://stackoverflow.com/questions/59895/how-can-i-get-the-source-directory-of-a-bash-script-from-within-the-script-itsel
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR/../par
+
+## set vivado version for hw mgr
+source $SCRIPT_DIR/setup_vivado
+
+vivado -mode tcl -source $SCRIPT_DIR/program_flash.tcl
+

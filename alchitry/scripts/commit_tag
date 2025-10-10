@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Commit tag to git
+# Forces overwrite of initial pre-build tag
+# this will commit back to whatever branch was used
+
+set -e
+
+# get a message with a link to the artifactory output
+MSG=$(scripts/get_commit_message)
+TAG=$(scripts/get_version)
+
+OLD_MSG=$(git tag -l $TAG --format="%(contents)")
+
+# as a sanity check, only update the pre-build tag that should already be there from the
+# check_version_tag script
+if [[ "$OLD_MSG" =~ "pre-build tag" ]]; then
+    git tag -a $TAG -m "tag $TAG: $MSG" --force
+    # https://stackoverflow.com/questions/5195859/how-do-you-push-a-tag-to-a-remote-repository-using-git
+    git push origin $TAG --force
+fi

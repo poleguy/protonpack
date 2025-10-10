@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+#################################################################################
+##
+## read package version and write it to version.bin file
+##
+## if you're pulling from artifactory you may want to do this:
+##  cp par/output/version_pkg.vhd rtl/version_pkg.vhd 
+#################################################################################
+import os
+from fpgabuild import fpga_build
+import pickle
+
+def main():
+    rtl_version_file="rtl/version_pkg.vhd"
+
+    version_bin_filename = "par/version.bin"
+
+    if os.path.isfile(version_bin_filename):
+        os.remove(version_bin_filename)
+    
+    ## instantiate the helper build scripts
+    build = fpga_build.fpga_build()
+    
+    
+    # call the parts of read_pkg_version_and_update one at a time to allow for modification of patch portion
+    build.read_pkg_version(rtl_version_file=rtl_version_file)
+    
+    # convert to bcd
+    def bcd(decimal_int):
+        decimal_string = str(decimal_int)
+        digits = [int(c) for c in decimal_string]
+        value = 0
+        for digit in digits:
+            #print(digit)
+            value = (value<<4) + digit
+            #print(f'value: {value:X}')
+        return value
+    
+    ver = (build.version["MAJOR"]<<24) + (build.version["MINOR"]<<16) + (build.version["PATCH"]<<8) +build.version["BUILD"]
+    ver = ver.to_bytes(4, byteorder='big', signed=False)
+    
+    date = (bcd(build.version["YEAR"])<<16) + (bcd(build.version["MONTH"])<<8) + bcd(build.version["DAY"])
+    date = date.to_bytes(4, byteorder='big', signed=False)
+    
+    time = (bcd(build.version["HOUR"])<<24) + (bcd(build.version["MINUTE"])<<16) + (bcd(build.version["SECOND"])<<8)
+    time = time.to_bytes(4, byteorder='big', signed=False)
+    
+    # add init values from .regs file
+    # to handle compatibility version that must be read when digital image isn't loaded (e.g. during sync when fm mode is loaded)
+# must be after calling make_regs to get an updated .pickle file
+#    if include_compatibility:
+#        with open("rtl/regs/compatability.pickle", 'rb') as fp:
+#            data = pickle.load(fp)
+#            COMPATIBILITY_VERSION_int = data['COMPATIBILITY_VERSION']['FIELDS']['COMPATIBILITY_VERSION']['INIT']
+#            COMPATIBILITY_VERSION = COMPATIBILITY_VERSION_int.to_bytes(4, byteorder='big', signed=False)
+    
+    with open(version_bin_filename,'wb') as file:
+        file.write(ver)
+        file.write(date)
+        file.write(time)
+        #if include_compatibility:
+        #    file.write(COMPATIBILITY_VERSION) 
+    
+    
+if __name__ == '__main__':
+    import typer
+    typer.run(main)
+

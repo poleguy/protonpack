@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
+set -e
 gcc async-loopback-to-disk.c -o async-loopback-to-disk -lftd3xx -L/usr/local/lib -Ilinux-x86_64/
+#gcc write_test.c -o write_test -lftd3xx -L/usr/local/lib -Ilinux-x86_64/
 time ./async-loopback-to-disk
+#./write_test
 python check_bin.py loopback_async.bin
 ls -alrth *.bin

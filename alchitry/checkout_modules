@@ -1,0 +1,30 @@
+# This shell script checks out all the external modules from version control needed to build or simulate this design.
+# It should be executed in the parent directory using "source ./checkout_modules" or by other scripts such as build_fpga.
+
+# stop on errors
+set -e
+
+# create the folder where all the modules will be checked out to
+mkdir modules
+ 
+# also look in requirements.txt, because some tools are now pip installed
+
+
+##############################################################################
+# Main Modules
+##############################################################################
+#svn co http://subversion.shure.com/Projects/Blackhawk/FPGA/RX_FPGA_portable/Top_Level_System/trunk/rtl/adc_interface@414611 modules/adc_interface
+
+#git clone --filter=tree:0 --no-checkout --quiet ssh://git@bitbucket.shure.com:7999/fpga/helion_tinyplus.git modules/helion_tinyplus
+#cd modules/helion_tinyplus; git checkout initial; cd -
+
+##############################################################################
+##############################################################################
+
+# notes:
+# to check actual most recent version
+# https://stackoverflow.com/questions/56227/how-do-you-determine-the-latest-svn-revision-number-rooted-in-a-directory
+# svnversion -c Framework/. | sed -e 's/[MS]//g' -e 's/^[[:digit:]]*://'
+
+# to check latest version in repo:
+# svn info http://subversion.shure.com/Common/FPGA/IP/DataConverters/gigadac2/trunk | grep "Last Changed Rev"

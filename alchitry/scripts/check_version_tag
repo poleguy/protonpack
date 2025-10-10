@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Commit new tag to git if it is not already used
+# otherwise error out and warn the user
+# this will commit back to whatever branch was used
+
+set -e
+
+# get a message with a link to the artifactory output
+MSG=$(scripts/get_commit_message)
+TAG=$(scripts/get_version)
+
+set +e
+git tag -a $TAG -m "pre-build tag $TAG: $MSG"
+status=$?
+set -e
+# if fatal: tag 'tag_name' already exists
+if [ $status -ne 0 ]; then
+    echo "Maybe the tag already exists? If so, you're likely building simultanous related builds."
+    echo "Consider setting patch number to a unique number, e.g. 100,101,... if you are building related code in a branch."
+    echo "or bump major version if this is to support a new hardware rev, e.g. wm2, wm3."
+    echo "or assign a new patch like 98=telemetry, 97=iq telemetry, 96=golden, ... if this is a unique build requiring special handling."
+    echo "or assign patch to 1,2... if this truly is a patch you're building."
+    echo "or manually set the version number to a unique value and rebuild."
+    echo "or try running 'git pull' then 'scripts/cleanup_all_tags' if there are tags pushed that didn't build correctly"
+    exit $status
+fi
+
+# https://stackoverflow.com/questions/5195859/how-do-you-push-a-tag-to-a-remote-repository-using-git
+git push origin $TAG

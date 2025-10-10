@@ -1,0 +1,34 @@
+# this is pulled in by ../compile.txt 
+# order is important for sim? but not for vivado build
+
+######################################
+## source files
+######################################
+reset_conditioner.sv
+async_fifo.sv
+ft.sv
+lucid_globals.sv
+simple_dual_port_ram.v
+
+#regs/telemetry_pkg.vhd -library shure
+#regs/telemetry.vhd  -library shure
+
+#data_sampler.v --library shure
+#spi_logger.v --library shure
+
+
+#################################################
+## FPGA Version and Date/Time Package (auto gen)
+## as part of rebuild.py calling fpga_build.py
+#################################################
+#version_pkg.vhd -library shure
+
+
+#################################################
+## Top
+#################################################
+# will compile into library shure by default
+alchitry_top.sv
+
+
+

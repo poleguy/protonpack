@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# build via jenkins. Only Digital Build. Open console in browser
+
+set -e
+
+# https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
+if [ $# -ne 1 ]; then
+  echo 1>&2 "Usage: $0 branch_name"
+  exit 3
+fi
+
+BRANCH=$1
+HASH=$(shuf -n 1 -i 1000000-9999999)
+# hash allows queuing identical builds
+ssh jenkins.shure.com -p 59595 build FPGA/Wideband/NGPSM_RX -p branch=$BRANCH -p hash=$HASH
+#ssh jenkins.shure.com -p 59595 build FPGA/Wideband/NGPSM_RX -p branch=$BRANCH -p reproduce=true
+
+# delay to run sim last so it doesn't block any builds
+sleep 1
+# and simulate
+ssh jenkins.shure.com -p 59595 build FPGA/Wideband/NGPSM_RX_Sim -p branch=$BRANCH
+
+xdg-open https://jenkins.shure.com/job/FPGA/job/Wideband/job/NGPSM_RX/
+xdg-open https://jenkins.shure.com/job/FPGA/job/Wideband/job/NGPSM_RX_Sim/
+

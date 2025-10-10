@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+
+# The canonical version of this file is here: 
+# 
+# https://bitbucket.shure.com/projects/ATLASFPGA/repos/atlas-base/browse/scripts
+# 
+# If improvements are made they should be put in the canonical version.
+# The Python champion listed here should be consulted to coordinate any changes:
+# 
+# https://bitbucket.shure.com/projects/ATLASFPGA/repos/atlas-base/browse/doc/atlas_design_process/md/design_process.md
+
+#set -x
+set -e
+if [ $# -lt 1 ]; then
+  echo 1>&2 "Usage: $0 directory_name"
+  echo 1>&2 "will check subdirectories recursively for forgotten changes not committed/pushed to version control"
+  echo 1>&2 "in git or svn"
+  exit 3
+fi
+
+check_dir="$1"
+
+# Function to check git repository for changes
+check_git_changes() {
+    local dir="$1"
+    cd "$dir" || return 1
+
+    # Check for uncommitted changes
+    # except .egg-info files that sometimes show up automatically
+    # ignoring untracked files, to avoid things created automatically after installation
+    if [ -n "$(git status --porcelain | grep -v "?? ")" ]; then
+        echo "Uncommitted changes found in Git repository: $dir"
+        return 1
+    fi
+
+    # Check for unpushed changes
+    if [ -n "$(git log --branches --not --remotes)" ]; then
+        echo "Unpushed changes found in Git repository: $dir"
+        return 1
+    fi
+
+    return 0
+}
+
+# Function to check subversion repository for changes
+check_svn_changes() {
+    local dir="$1"
+    cd "$dir" || return 1
+
+    # https://stackoverflow.com/questions/2693467/svn-and-bash-how-to-tell-if-there-are-uncommitted-changes
+    # This started with chatgpt, and is low effort, but better than not checking at all
+    # Check for uncommitted changes
+    if svn status | grep -q '^[AMR?!]'; then
+        echo "Uncommitted changes found in Subversion repository: $dir"
+        return 1
+    fi
+
+    #local local_revision=$(svn info --show-item revision)
+    #local remote_revision=$(svn info --show-item revision --target '^/')
+
+    #if [ "$local_revision" != "$remote_revision" ]; then
+    #    echo "Unpushed changes detected based on revision comparison in Subversion repository: $dir"
+    #    return 1
+    #fi
+    
+    # Check for unpushed changes by comparing with the trunk
+    #local head_revision=$(svn info --show-item last-changed-revision)
+    #local remote_revision=$(svn info --show-item revision --url ^/trunk)
+    #if [ "$head_revision" != "$remote_revision" ]; then
+    #    echo "Unpushed changes found in Subversion repository: $dir"
+    #    return 1
+    #fi
+
+    return 0
+}
+
+# Function to recursively find and check repositories
+check_repository() {
+    local dir="$1"
+    #echo "checking $dir"
+    
+    # Check if it is a Git repository
+    if [ -d "$dir/.git" ]; then
+        echo "checking git $dir"
+        if ! check_git_changes "$dir"; then
+            echo "Changes detected in Git repository: $dir"
+            exit_code=1
+        fi
+    fi
+    # Check if it is a Subversion repository
+    #elif svn info "$dir" &>/dev/null; then
+    if [ -d "$dir/.svn" ]; then
+        echo "checking svn $dir"
+        if ! check_svn_changes "$dir"; then
+            echo "Changes detected in Subversion repository: $dir"
+            exit_code=1
+        fi
+    fi
+
+}
+
+check_repositories() {
+    local dir="$1"
+    
+    # Recursively check subdirectories
+    #https://stackoverflow.com/questions/2107945/how-to-loop-over-directories-in-linux
+    IFS=""
+    #https://unix.stackexchange.com/questions/215234/explanation-of-directives-in-find-printf
+    mapfile -t dirlist < <( find "$dir" -type d -printf '%p\n' )
+    
+    #echo "$dir"
+    for sub_dir in ${dirlist[@]}; do
+        #echo "checking $sub_dir"
+        #echo ">${sub_dir}<"
+        [ "$exit_code" -eq 1 ] && return  # Stop recursion if changes are detected
+        if [[ ${sub_dir} == *"/.git"* ]];  then
+            #echo "skipping .git"
+            true
+        elif [[ ${sub_dir} == *"/.svn"* ]];  then
+            #echo "skipping .svn"
+            true
+        elif [[ ${sub_dir} == *"/cenv"* ]];  then
+            #echo "skipping cenv"
+            true
+        else
+            check_repository $sub_dir
+        fi
+    done
+}
+
+# Start the recursive check from the current directory
+exit_code=0
+#check_repositories "$(pwd)/modules"
+
+if [ -d "$check_dir" ]; then
+    check_repositories "$(realpath "$check_dir")"
+else
+    echo "Cannot find directory $check_dir"
+    exit_code=4    
+fi
+
+exit $exit_code
