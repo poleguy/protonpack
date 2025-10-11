@@ -346,9 +346,9 @@ int main(void)
 
     /* Monitor loop: stop if fatalError set */
     // Alternate: Run for x seconds or until error
-    for (int i = 0; i < 3 && !fatalError; i++) {
+    for (int i = 0; i < 10 && !fatalError; i++) {
 
-        // Alternate: run indefiniteyl
+        // Alternate: run indefinitely
         // for (int i = 0; !fatalError; i++) {
 
         printf("Main loop second %d\n", i);

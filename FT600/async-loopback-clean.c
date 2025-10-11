@@ -107,7 +107,7 @@ static void* asyncRead(void *arg)
                 *fatalError = 1;
                 break;
             } else {
-                received_ok+=usBytesRead[j];
+                received_ok+=ulBytesRead[j];
             }
 
             /* Process data if needed (ulBytesRead[j]) */

@@ -36,8 +36,8 @@ module alchitry_top (
     
     
     localparam _MP_BUS_WIDTH_528252186 = 5'h10;
-    localparam _MP_TX_BUFFER_528252186 = 9'h100;
-    localparam _MP_RX_BUFFER_528252186 = 9'h100;
+    localparam _MP_TX_BUFFER_528252186 = 12'h800;
+    localparam _MP_RX_BUFFER_528252186 = 12'h800;
     localparam _MP_PRIORITY_528252186 = {{8'h52, 8'h58}};
     localparam _MP_PREEMPT_528252186 = 1'h0;
     logic M_ft_ft_rxf;
