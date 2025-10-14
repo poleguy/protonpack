@@ -118,3 +118,27 @@ set_property IOSTANDARD LVCMOS33 [get_ports {ft_data[14]}]
 set_property PACKAGE_PIN L1 [get_ports {ft_data[15]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ft_data[15]}]
 
+# new pins for serial telemetry stuff
+
+#set_property PACKAGE_PIN  [get_ports {GTREFCLK0P_I[0]}]
+#set_property PACKAGE_PIN  [get_ports {GTREFCLK0N_I[0]}]
+
+# GTP: no I/O Std needed:
+# GTP was allowed to route and then pins were grabbed from post_route.dcp
+
+set_property PACKAGE_PIN F6 [get_ports {GTREFCLK1P_I[0]}]
+#set_property PACKAGE_PIN AB11 [get_ports {GTREFCLK1N_I[0]}]
+set_property PACKAGE_PIN D9 [get_ports {RXP_I}]
+#set_property PACKAGE_PIN AF11 [get_ports {RXN_I}]
+
+# 
+set_property PACKAGE_PIN  T16      [get_ports {REC_CLOCK_P}]
+set_property IOSTANDARD LVDS_25 [get_ports {REC_CLOCK_P}]
+#set_property PACKAGE_PIN  D24      [get_ports {REC_CLOCK_N}]
+#set_property IOSTANDARD LVDS_25      [get_ports {REC_CLOCK_N}]
+
+set_property PACKAGE_PIN   W15     [get_ports {USER_SMA_CLK_P}]
+set_property IOSTANDARD LVDS_25      [get_ports {USER_SMA_CLK_P}]
+#set_property PACKAGE_PIN   H23     [get_ports {USER_SMA_CLK_N}]
+#set_property IOSTANDARD LVDS_25      [get_ports {USER_SMA_CLK_N}]
+

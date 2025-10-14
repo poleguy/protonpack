@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# this will generate the telemetry_cfg_pkg.csv and then the telemetry_cfg_pkg.vhd file
+# from withind modules/dpsm_rx
+#
+# to select the source change checkout_modules to pull the latest version of dpsm_rx
+
+# todo: a better solution might be to pull the .csv file from artifactory rather than trying to regenerate it
+
+set -e
+
+# this is back to the old way of doing it, from a csv input file
+
+#!/bin/bash
+
+# this will generate the telemetry_cfg_pkg.vhd file from the telemetry_cfg.csv source
+# to select the source change checkout_modules to pull the latest version of dpsm_rx_fm
+
+# this is processed with the datapath script to produce a vhd file as well. We're regenerating here for good measure
+# This is automated here to be sure it's not stale.
+CSV_FILE=artifactory/telemetry_cfg_generated.csv
+# old hand coded csv:
+#CSV_FILE=modules/dpsm_rx/rtl/telemetry_cfg.csv
+VHD_FILE=rtl/telemetry_cfg_pkg.vhd
+
+# remove the pkg to ensure the regeneration works
+rm -f $VHD_FILE
+
+# copy the source file here to put in artifactory from a standard location
+cp $CSV_FILE rtl/telemetry_cfg.csv
+
+### generate the telemetry package
+python ./src/shurewireless-telemetry/src/shurewireless/telemetry/telem_cfg_csv_to_pkg.py $CSV_FILE $VHD_FILE
+
+
+
+#(
+#    cd modules/dpsm_rx
+#    source scripts/activate_python
+#    scripts/generate_telem_pkg
+#)
+ 

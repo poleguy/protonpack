@@ -47,8 +47,8 @@ module alchitry_top #(
 //      input    wire                   SYSCLKN_I,
       //input    wire                   user_clk_p, // 128MHz input from synthesizer chip
       //input    wire                   user_clk_n,
-      input wire [`C_REFCLKS_USED-1:0] GTREFCLK0P_I, // 125MHz Unused
-      input wire [`C_REFCLKS_USED-1:0] GTREFCLK0N_I,
+      //input wire [`C_REFCLKS_USED-1:0] GTREFCLK0P_I, // 125MHz Unused
+      //input wire [`C_REFCLKS_USED-1:0] GTREFCLK0N_I,
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK1P_I, // 128MHz looped back via SMA cables
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK1N_I,
       output  wire                    REC_CLOCK_P,
@@ -56,11 +56,11 @@ module alchitry_top #(
       // output USER_SMA_GPIO_P,
       // output USER_SMA_GPIO_N,
       output  wire                    USER_SMA_CLK_P,  // 128MHz output to loop back SMA
-      output  wire                    USER_SMA_CLK_N,
-      output  wire                    SFP_CLK_SEL0,
-      output  wire                    SFP_CLK_SEL1,
-      output  wire                    SFP_CLK1_SEL0,
-      output  wire                    SFP_CLK1_SEL1
+      output  wire                    USER_SMA_CLK_N
+    //   output  wire                    SFP_CLK_SEL0,
+    //   output  wire                    SFP_CLK_SEL1,
+    //   output  wire                    SFP_CLK1_SEL0,
+    //   output  wire                    SFP_CLK1_SEL1
 
     );
   logic rst;
@@ -196,7 +196,7 @@ module alchitry_top #(
   //  wire clk_gt1_128M;
   //   wire                       clk_gt0_odiv2;
   //wire                       clk_125M;
-  //wire                       user_clk;
+  wire                       clk_100M;
   wire                       clk_128M;
   //wire                       clk_20M;
 
@@ -278,12 +278,12 @@ module alchitry_top #(
 
 
   // choose the mux input from si5324 device 0x1
-  assign SFP_CLK_SEL0 = 1'b1;
-  assign SFP_CLK_SEL1 = 1'b0;
+//  assign SFP_CLK_SEL0 = 1'b1;
+//  assign SFP_CLK_SEL1 = 1'b0;
 
   // choose SMA ref clock input 0x0
-  assign SFP_CLK1_SEL0 = 1'b0;
-  assign SFP_CLK1_SEL1 = 1'b0;
+//  assign SFP_CLK1_SEL0 = 1'b0;
+//  assign SFP_CLK1_SEL1 = 1'b0;
 
   // rename phy signals to match xilinx default xdc/schematic names
   
@@ -311,7 +311,7 @@ module alchitry_top #(
   //100Mhz to 128Mhz for serial link at 1.024 Gbps
   clk_wiz_100M clk_wiz_100M_i
                (
-                 .clk_in1 (clk),
+                 .clk_in1 (clk_100M),
                  .clk_out1 (clk_128M),
                  .locked (clk_wiz_locked)
                );
@@ -384,11 +384,11 @@ module alchitry_top #(
 //       .O(user_clk)
 //     );
 
-//   BUFG bufg_userclk
-//        (
-//          .O(clk_128M),
-//          .I(user_clk)
-//        );
+   BUFG bufg_clk
+        (
+          .O(clk_100M),
+          .I(clk)
+        );
 
   OBUFDS #(
            .IOSTANDARD("DEFAULT"), // Specify the output I/O standard
