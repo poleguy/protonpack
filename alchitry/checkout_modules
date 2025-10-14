@@ -5,7 +5,7 @@
 set -e
 
 # create the folder where all the modules will be checked out to
-mkdir modules
+mkdir -p modules
  
 # also look in requirements.txt, because some tools are now pip installed
 
@@ -20,6 +20,11 @@ mkdir modules
 
 ##############################################################################
 ##############################################################################
+# csv for telemetry
+
+
+wget https://artifactory.shure.com/All_Shure_Components/Wideband/NGPSM_RX/7.9.98.12/telemetry_cfg_generated.csv -P artifactory/
+
 
 # notes:
 # to check actual most recent version

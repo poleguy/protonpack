@@ -4,6 +4,7 @@
 
 set -e
 (
+scripts/generate_telem_pkg
 source scripts/activate_vivado
 scripts/compile_file_generation
 cd par

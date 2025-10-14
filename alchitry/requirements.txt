@@ -1,5 +1,4 @@
--e git+ssh://git@bitbucket.shure.com:7999/fpga/pythonsim.git@1.9.2#egg=PythonSim
--e git+ssh://git@bitbucket.shure.com:7999/fpga/FPGABuild.git@a08d782f6ddab8e44426b1fa1dbca6652a077811#egg=FPGABuild
+-e git+ssh://git@bitbucket.shure.com:7999/fpga/ethernet-telemetry.git@1082a6c416e#egg=shurewireless-telemetry
 
 # sorted alphabetically
 

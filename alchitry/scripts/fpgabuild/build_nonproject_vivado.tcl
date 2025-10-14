@@ -100,7 +100,7 @@
 ####
 ####
 ####  Each build process calls a post build step custom procedure if it exists.  They are as follows:
-####     build_setup_source_post, build_synth_post, build_par_post, build_bitstream_post
+####     build_setup_source_post, build_synth_post, build_par_post, build_cdc_exceptions, build_bitstream_post
 ####  If these *_post processes exist in build.tcl, they will be called at the appropriate time in the build.
 ####    
 #### ########################################
@@ -203,8 +203,9 @@ proc build_setup_source {} {
     ## create the project in memory for non-proj mode
     create_project -in_memory -part $PRJ_PART
 
-    ## assume all our designs in VHDL and that's the target (can still read in Verilog with no isses)
-    set_property target_language VHDL [current_project]
+    # assume all our designs in Verilog and that's the target (can still read in VHDL with no isses)
+    # if this is set to VHDL you might end up with generated outputs having PREFHDL set to VHDL not Verilog
+    set_property target_language Verilog [current_project]
 
     ## The following message comes as a critical warnings - however the time it takes to add files is not concerning so downgrade to a Warning...
             ## CRITICAL WARNING: [Vivado 12-3645] Please note that adding or importing multiple files, one at a time, can be performance intensive.  Both add_files and import_files commands accept multiple files as input, and passing a collection of multiple files to a single add_files or import_files commands can offer significant performance improvement.
@@ -261,39 +262,91 @@ proc build_synth {} {
     ## note for SYNTH_EXTRA_ARGS, {*} syntax expands a list into normal commands
 
     if {$timing_opt_par} {
-        synth_design -flatten_hierarchy rebuilt -top $PRJ_TOP_NAME -part $PRJ_PART -directive AreaOptimized_high -shreg_min_size 10 -control_set_opt_threshold 0 -fsm_extraction off {*}$SYNTH_EXTRA_ARGS
+        synth_design -flatten_hierarchy $SYNTH_FLATTEN -top $PRJ_TOP_NAME -part $PRJ_PART -directive AreaOptimized_high -shreg_min_size 10 -control_set_opt_threshold 0 -fsm_extraction off {*}$SYNTH_EXTRA_ARGS
     } else {
         synth_design -top $PRJ_TOP_NAME -part $PRJ_PART -flatten $SYNTH_FLATTEN -fsm_extraction $SYNTH_FSM_EXTRACTION {*}$SYNTH_EXTRA_ARGS
     }
 
-    write_checkpoint -force $outputDir/post_synth.dcp
-
     if {[info procs build_synth_post] != ""} {
         build_synth_post
     }
+
+    #report_control_sets -hierarchical -hierarchical_depth 4 -verbose -file $outputDir/post_synth_control_sets.rpt
+    ## summary first then append useful hierarchical
+    report_utilization -file $outputDir/post_synth_util.rpt
+    report_utilization -hierarchical -hierarchical_depth 3 -append -file $outputDir/post_synth_util.rpt
+
+    ## this should be the very last step, to account for any changes done in build_synth_post
+    write_checkpoint -force $outputDir/post_synth.dcp
+}
+proc build_opt {} {
+    global TIMING_OPTIMIZED_PAR
+    global outputDir
+    global OPT_EXTRA_ARGS
+
+    #open_checkpoint $outputDir/post_synth.dcp
+
+    set timing_opt_par 0
+    if {[info exists TIMING_OPTIMIZED_PAR]} {
+        if {$TIMING_OPTIMIZED_PAR==1} {
+            set timing_opt_par 1
+        }
+    }
+
+    ## if nothing set, set to an empty list
+    if {![info exists OPT_EXTRA_ARGS]} {
+        set OPT_EXTRA_ARGS [list]
+    }
+
+    ## note for OPT_EXTRA_ARGS, {*} syntax expands a list into normal commands
+
+    if {$timing_opt_par} {
+        opt_design -directive ExploreSequentialArea {*}$OPT_EXTRA_ARGS
+    } else {
+        opt_design  {*}$OPT_EXTRA_ARGS
+    }
+
+    if {[info procs build_opt_post] != ""} {
+        build_opt_post
+    }
+
+    #report_control_sets -hierarchical -hierarchical_depth 4 -verbose -file $outputDir/post_opt_control_sets.rpt
+    ## summary first then append useful hierarchical
+    report_utilization -file $outputDir/post_opt_util.rpt
+    report_utilization -hierarchical -hierarchical_depth 3 -append -file $outputDir/post_opt_util.rpt
+
+    ## this should be the very last step, to account for any changes done in build_opt_post
+    write_checkpoint -force $outputDir/post_opt.dcp
 }
 
 proc build_par {} {
     global outputDir
     global TIMING_OPTIMIZED_PAR
     global timing_passed
+    global PLACE_EXTRA_ARGS
 
-    open_checkpoint $outputDir/post_synth.dcp
+    #open_checkpoint $outputDir/post_opt.dcp
 
     set timing_opt_par 0
     if {[info exists TIMING_OPTIMIZED_PAR] && $TIMING_OPTIMIZED_PAR==1} {
         set timing_opt_par 1
     }
 
+    ## if nothing set, set to an empty list
+    if {![info exists PLACE_EXTRA_ARGS]} {
+        set PLACE_EXTRA_ARGS [list]
+    }
+
     if {$timing_opt_par} {
-        opt_design -directive ExploreSequentialArea
         place_design -directive Explore
         phys_opt_design -directive AggressiveExplore
         route_design -directive Explore
         phys_opt_design -directive AggressiveExplore
     } else {
-        opt_design 
-        place_design
+        place_design {*}$PLACE_EXTRA_ARGS
+        if {[info procs build_place_post] != ""} {
+            build_place_post
+        }
         route_design
     }
 
@@ -301,16 +354,19 @@ proc build_par {} {
         build_par_post
     }
 
-    #report_route_status -file $outputDir/post_route_status.rpt
     report_timing_summary -file $outputDir/post_route_timing_summary.rpt
-    report_utilization  -hierarchical -file $outputDir/post_place_util.rpt
+
+    #report_control_sets -hierarchical -hierarchical_depth 4 -verbose -file $outputDir/post_route_control_sets.rpt
+    ## summary first then append useful hierarchical
+    report_utilization -file $outputDir/post_route_util.rpt
+    report_utilization -hierarchical -hierarchical_depth 3 -append -file $outputDir/post_route_util.rpt
 	
     #report_power -file $outputDir/post_route_power.rpt
     #report_drc -file $outputDir/post_imp_drc.rpt
 
+    ## this should be the very last step, to account for any changes done in build_par_post
     write_checkpoint -verbose -force $outputDir/post_route.dcp
 
-    file copy -force vivado.log $outputDir/vivado.log
 }
 
 proc count_critical_warnings {} {
@@ -329,15 +385,19 @@ proc count_critical_warnings {} {
     set cnt_errors [regexp -all  "ERROR:" $text]
 
     ## open cdc critical report and parse
-    set f_cdc [open $outputDir/report_cdc_critical.rpt]
+    set f_cdc [open $outputDir/report_cdc.rpt]
     set text_cdc [read $f_cdc]
     close $f_cdc
+    # todo: parsing this text file could be fragile. Maybe find a programmatic way of getting the count?
+    # we now fail on any cdc that is not waived because they should all be treated carefully
     set cnt_cdc_critical [regexp -all "Critical" $text_cdc]
+    set cnt_cdc_warning [regexp -all "Warning" $text_cdc] 
+    set cnt_cdc_total [expr $cnt_cdc_critical + $cnt_cdc_warning ]
 
     # report the results
     set error_warning_string " $cnt_errors ERRORS found in vivado.log.\n\
      $cnt_critical CRITICAL WARNINGS found in vivado.log. \n\
-     $cnt_cdc_critical CRITICAL Clock Domain Crossing warnings in report_cdc_critical.log."
+     $cnt_cdc_total WARNING/CRITICAL Clock Domain Crossing warnings in report_cdc.rpt."
 
     if {$cnt_errors==0} {
         set errors_passed 1
@@ -384,7 +444,9 @@ proc build_bitstream {} {
     #     puts "read_xdc $CDC_WAIVER_XDC_FILE"
     #     read_xdc $CDC_WAIVER_XDC_FILE
     # }
-    report_cdc -file $outputDir/report_cdc_critical.rpt -no_header -details -severity Critical
+    # limiting report_cdc with -severity Critical will prevent CDC-15 warnings from showing up, which may mask real problems.
+    report_cdc -file $outputDir/report_cdc.rpt -no_header -details -all_checks_per_endpoint
+    report_cdc -file $outputDir/report_cdc_waived.rpt -no_header -details -waived -all_checks_per_endpoint
     report_waivers -file $outputDir/report_cdc_waivers.rpt
 
     ## open fresh checkout without any cdc waivers set to avoid vivado bugs
@@ -491,6 +553,8 @@ proc build_final_summary {} {
     }
     puts $fail_setting_string
 
+    # copy vivado.log into output directory for eventual archival in artifactory
+    file copy -force vivado.log $outputDir/vivado.log
 }
 
 proc del_all_except {exception} {
@@ -514,6 +578,7 @@ if {!([info exists DISABLE_AUTO_BUILD] && $DISABLE_AUTO_BUILD==1)} {
     build_setup_source
     ## create a report of the current status of the SVN checkout modules
     build_synth
+    build_opt
     build_par
     build_bitstream
     build_final_summary

@@ -10,6 +10,19 @@
 
 import os
 
+import logging
+
+# give this module its own logger, tied to its namespace.
+# This will inherit the output location of the module that calls this
+log = logging.getLogger(__name__) 
+
+# if called as top level, configure root logger
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    filename="log.txt",   # send to a file instead of stderr
+)
+
 ## instantiate the helper build scripts
 #from fpgabuild import compile_file_generation  # <--- produce compile_cmd_list.txt in /par
 
@@ -20,9 +33,9 @@ root_dir = os.getcwd()
 run_dir = os.path.join(root_dir,"par")
 compile_top = os.path.join(root_dir,"compile.txt")
 
-print(run_dir)
-print(root_dir)
-print(compile_top)
+log.info(f"run_dir: {run_dir}")
+log.info(f"root_dir: {root_dir}")
+log.info(f"compile_top: {compile_top}")
 # this is absolute because:
 # FileNotFoundError: Shurc assembler not found at modules/shurc32_assem/program/CentOS/shurc_assembler.
 # For builds, the assembler path must be set via compile_file_generation object instantiation variable (or by modifying the compile_file_geneartion object variable shurc_assembler_path).
