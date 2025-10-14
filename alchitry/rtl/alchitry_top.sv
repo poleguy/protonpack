@@ -13,7 +13,7 @@ module alchitry_top #(
     // parameter g_link_wait = 1'b1,
     parameter g_debug = 1'b0) (
 
-      input wire clk,
+      input wire clk, // 100 MHz
       input wire rst_n,
       output reg [7:0] led,
       input wire usb_rx,
@@ -45,8 +45,8 @@ module alchitry_top #(
       input    wire                   RXP_I,
       input    wire                   SYSCLKP_I, // 200MHz input from oscillator on board
       input    wire                   SYSCLKN_I,
-      input    wire                   user_clk_p, // 128MHz input from synthesizer chip
-      input    wire                   user_clk_n,
+      //input    wire                   user_clk_p, // 128MHz input from synthesizer chip
+      //input    wire                   user_clk_n,
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK0P_I, // 125MHz Unused
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK0N_I,
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK1P_I, // 128MHz looped back via SMA cables
@@ -198,7 +198,7 @@ module alchitry_top #(
   wire                       clk_125M;
   wire                       user_clk;
   wire                       clk_128M;
-  wire                       clk_20M;
+  //wire                       clk_20M;
 
   wire                       i2c_rst;
   reg                        vio_i2c_rst = 1'b0;
@@ -220,7 +220,7 @@ module alchitry_top #(
   reg                        r_rst_125M = 1'b0;
 
   wire                       clk_256M;
-  wire                       clk_25M;
+  //wire                       clk_25M;
   //   wire                       gt_data_valid;
   wire [31:0]                gt_data;
   wire [3:0]                 gt_data_is_k;
@@ -286,27 +286,15 @@ module alchitry_top #(
   assign SFP_CLK1_SEL1 = 1'b0;
 
   // rename phy signals to match xilinx default xdc/schematic names
-  assign PHY_TXD3 = rgmii_txd[3];
-  assign PHY_TXD2 = rgmii_txd[2];
-  assign PHY_TXD1 = rgmii_txd[1];
-  assign PHY_TXD0 = rgmii_txd[0];
-
-  assign PHY_TX_CTRL = rgmii_tx_ctl;
-  assign PHY_TX_CLK = rgmii_txc;
-
-  assign PMOD_0 = clk_125M;
-  assign PMOD_1 = r_rst_128M;
-  assign PMOD_2 = r_rst_125M_telemetry;
-  assign PMOD_3 = r_rst_125M;
-
-  assign GPIO_LED_0 = okay_led;
-  assign GPIO_LED_1 = link_count_okay;
+  
+//  assign GPIO_LED_0 = okay_led;
+//  assign GPIO_LED_1 = link_count_okay;
 
 
-  assign PHY_RESET_B = ~r_rst_125M;
+//  assign PHY_RESET_B = ~r_rst_125M;
 
   // drive constant output: not used
-  assign PHY_MDC = 1'b0;
+//  assign PHY_MDC = 1'b0;
   //   assign TXN_O = 1'b0;
   //   assign TXP_O = 1'b0;
 
@@ -320,38 +308,36 @@ module alchitry_top #(
   parameter FREQ_CNT_VAL = 16'h0800;  //was 0x4000 for 200MHz clock, 0x800 for 25MHz
 
 
-  //200Mhz to 20Mhz (for i2c)
-  clk_wiz_200M clk_wiz_200M_i
+  //100Mhz to 128Mhz for serial link at 1.024 Gbps
+  clk_wiz_100M clk_wiz_100M_i
                (
-                 .clk_in1 (clk_200M),
-                 .clk_out1 (clk_25M),
-                 .clk_out2 (clk_20M),
-                 .clk_out3 (clk_125M),
+                 .clk_in1 (clk),
+                 .clk_out1 (clk_128M),
                  .locked (clk_wiz_locked)
                );
 
-  assign i2c_rst = vio_i2c_rst || ~clk_wiz_locked;
-  i2c_clk_cfg i2c_clk_cfg_i
-              (
-                .clk  (clk_20M),
-                .rst  (i2c_rst),
-                .scl  (IIC_SCL_MAIN),
-                .sda  (IIC_SDA_MAIN),
-                .done (i2c_done)
-              );
+//   assign i2c_rst = vio_i2c_rst || ~clk_wiz_locked;
+//   i2c_clk_cfg i2c_clk_cfg_i
+//               (
+//                 .clk  (clk_20M),
+//                 .rst  (i2c_rst),
+//                 .scl  (IIC_SCL_MAIN),
+//                 .sda  (IIC_SDA_MAIN),
+//                 .done (i2c_done)
+//               );
 
   //   create reset in 128M clock domain
 
-  always @(posedge clk_128M) begin
-    r_clk_wiz_locked_128M <= clk_wiz_locked;
-    r1_clk_wiz_locked_128M <= r_clk_wiz_locked_128M;
+   always @(posedge clk_128M) begin
+     r_clk_wiz_locked_128M <= clk_wiz_locked;
+     r1_clk_wiz_locked_128M <= r_clk_wiz_locked_128M;
 
-    if (r1_clk_wiz_locked_128M == 0)
-      // reset until first MMCM is locked
-      r_rst_128M <= 1;
-    else
-      r_rst_128M <= 0;
-  end
+     if (r1_clk_wiz_locked_128M == 0)
+       // reset until first MMCM is locked
+       r_rst_128M <= 1;
+     else
+       r_rst_128M <= 0;
+   end
 
   always @(posedge clk_125M) begin
     r_clk_wiz_locked_125M <= clk_wiz_locked;
@@ -398,11 +384,11 @@ module alchitry_top #(
       .O(user_clk)
     );
 
-  BUFG bufg_userclk
-       (
-         .O(clk_128M),
-         .I(user_clk)
-       );
+//   BUFG bufg_userclk
+//        (
+//          .O(clk_128M),
+//          .I(user_clk)
+//        );
 
   OBUFDS #(
            .IOSTANDARD("DEFAULT"), // Specify the output I/O standard
