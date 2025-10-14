@@ -38,8 +38,6 @@ rtl/clk_wiz_100M/clk_wiz_100M.xci --dont_touch_xci
 #rtl/clk_wiz_200M/clk_wiz_200M_sim.v
 `END
 
-#rtl/ibert/ibert_7series_gtp_0.xci --dont_touch_xci
-
 # debug comes first to avoid order dependence with telemetry and serial_link
 #rtl/debug/compile.txt
 

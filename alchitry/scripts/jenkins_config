@@ -1,34 +1,25 @@
 #!/usr/bin/env bash
 # scripts/jenkins_config
 # script to be copied into jenkins config or called from jenkins config
-# leak the keys:
-#echo "${PMP_API_KEY}" > ~/blah.txt
-#echo "${SVN_USER}" >> ~/blah.txt
-#echo "${SVN_PASSWORD}" >> ~/blah.txt
-#echo "${CREDENTIALS}" >> ~/blah.txt
-#echo "${ARTIFACTORY_KEY}" >> ~/blah.txt
-#exit
 
 # show commands
 set +x
 # stop on all errors (e.g. to error if branch is wrong)
 set -e
-
-# todo: put this is a secbuild directory and retest
-WORKSPACE=/misc/scratch/dietzn/dpsm_rx_slurm
+# set -u doesn't work for vivado
+# /data/Xilinx/2025.1/Vitis/.settings64-Vitis.sh: line 13: PYTHONPATH: unbound variable
 
 ## CHECKOUT DESIGN
 
+# blow away our working location to always build fresh
+rm -rf protonpack
 
-#git config --global credential.helper 'store'
-#git clone ssh://git@bitbucket.shure.com:7999/dpsm_fpga/dpsm_rx.git
-git clone --depth 1 --branch $branch ssh://git@bitbucket.shure.com:7999/dpsm_fpga/dpsm_rx.git
-cd dpsm_rx
-cp scripts/slurm_dpsm_rx.sh $WORKSPACE
-cd $WORKSPACE
+git clone --filter=tree:0 --no-checkout --quiet ssh://git@bitbucket.shure.com:7999/dpsm_fpga/protonpack.git
+cd protonpack
+git checkout --no-progress $branch
+
 
 ## launch the build
-
-# https://docs.icer.msu.edu/Slurm_Environment_Variables/
-sbatch --export=telemetry=$telemetry,downconvert_iq_telemetry=$downconvert_iq_telemetry,golden=$golden,fm=$fm,reproduce=$reproduce slurm_dpsm_rx_haydn.sh
+cd alchitry
+source ./build_fpga $branch
 
