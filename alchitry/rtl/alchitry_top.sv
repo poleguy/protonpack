@@ -43,8 +43,8 @@ module alchitry_top #(
       //  output   wire                   TXP_O,
       input    wire                   RXN_I,  // these magically do not need a IOSTANDARD or PACKE_PIN constraint?
       input    wire                   RXP_I,
-      input    wire                   SYSCLKP_I, // 200MHz input from oscillator on board
-      input    wire                   SYSCLKN_I,
+//      input    wire                   SYSCLKP_I, // 200MHz input from oscillator on board
+//      input    wire                   SYSCLKN_I,
       //input    wire                   user_clk_p, // 128MHz input from synthesizer chip
       //input    wire                   user_clk_n,
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK0P_I, // 125MHz Unused
@@ -179,9 +179,9 @@ module alchitry_top #(
   //   wire [`C_NUM_QUADS-1:0]    gtrefclk1_i;
   //   wire [`C_REFCLKS_USED-1:0] refclk0_i;
   //wire   [`C_REFCLKS_USED-1:0]      refclk1_i;
-  wire                       clk_200M;
+//  wire                       clk_200M;
 
-  wire                       i2c_done;
+//  wire                       i2c_done;
 
   //   wire [15:0]                _200MHz_SYSCLK_o; //200MHz
   //   wire [19:0]                _200MHz_SYSCLK; //200MHz
@@ -195,16 +195,16 @@ module alchitry_top #(
   //  wire clk_gt_128M;
   //  wire clk_gt1_128M;
   //   wire                       clk_gt0_odiv2;
-  wire                       clk_125M;
-  wire                       user_clk;
+  //wire                       clk_125M;
+  //wire                       user_clk;
   wire                       clk_128M;
   //wire                       clk_20M;
 
-  wire                       i2c_rst;
-  reg                        vio_i2c_rst = 1'b0;
+//   wire                       i2c_rst;
+//   reg                        vio_i2c_rst = 1'b0;
 
   //todo: hook to smi config?
-  reg                        eth_link_up = 1'b1;
+//  reg                        eth_link_up = 1'b1;
 
   wire                       clk_wiz_locked;
   reg                        r_soft_reset_125M = 1'b0;
@@ -217,7 +217,7 @@ module alchitry_top #(
   reg                        r1_clk_wiz_locked_256M = 1'b0;
   reg                        r_rst_128M = 1'b0;
   reg                        r_rst_256M = 1'b0;
-  reg                        r_rst_125M = 1'b0;
+//  reg                        r_rst_125M = 1'b0;
 
   wire                       clk_256M;
   //wire                       clk_25M;
@@ -233,14 +233,14 @@ module alchitry_top #(
   wire [87:0]                stream_data0;
 
 
-  wire [7:0]                 eth_tdata;
-  wire                       eth_tvalid;
-  wire                       eth_tlast;
-  wire                       eth_tready;
-  wire [15:0]                eth_len;
-  wire [15:0]                eth_ip_id;
-  wire [15:0]                eth_udp_dest;
-  wire                       eth_telem_en;
+//   wire [7:0]                 eth_tdata;
+//   wire                       eth_tvalid;
+//   wire                       eth_tlast;
+//   wire                       eth_tready;
+//   wire [15:0]                eth_len;
+//   wire [15:0]                eth_ip_id;
+//   wire [15:0]                eth_udp_dest;
+//   wire                       eth_telem_en;
 
 
 
@@ -253,14 +253,14 @@ module alchitry_top #(
   //   wire                       sys_time_clk;
   //   wire                       rst_sys_time_clk;
 
-  reg                        r_rst_125M_telemetry = 1'b0;
+  //reg                        r_rst_125M_telemetry = 1'b0;
 
-  wire                       gmii_tx_en;
-  wire [7:0]                 gmii_txd;
+//   wire                       gmii_tx_en;
+//   wire [7:0]                 gmii_txd;
 
-  wire [3:0]                 rgmii_txd;
-  wire                       rgmii_tx_ctl;
-  wire                       rgmii_txc;
+//   wire [3:0]                 rgmii_txd;
+//   wire                       rgmii_tx_ctl;
+//   wire                       rgmii_txc;
 
   wire                       gt_clk;
 
@@ -339,19 +339,19 @@ module alchitry_top #(
        r_rst_128M <= 0;
    end
 
-  always @(posedge clk_125M) begin
-    r_clk_wiz_locked_125M <= clk_wiz_locked;
-    r1_clk_wiz_locked_125M <= r_clk_wiz_locked_125M;
+//   always @(posedge clk_125M) begin
+//     r_clk_wiz_locked_125M <= clk_wiz_locked;
+//     r1_clk_wiz_locked_125M <= r_clk_wiz_locked_125M;
 
-    r_soft_reset_125M <= gt_soft_reset;
-    r1_soft_reset_125M <= r_soft_reset_125M;
+//     r_soft_reset_125M <= gt_soft_reset;
+//     r1_soft_reset_125M <= r_soft_reset_125M;
 
-    if (r1_clk_wiz_locked_125M == 0)
-      // reset until first MMCM is locked
-      r_rst_125M <= 1;
-    else
-      r_rst_125M <= 0;
-  end
+//     if (r1_clk_wiz_locked_125M == 0)
+//       // reset until first MMCM is locked
+//       r_rst_125M <= 1;
+//     else
+//       r_rst_125M <= 0;
+//   end
 
   always @(posedge clk_256M) begin
     r_clk_wiz_locked_256M <= clk_wiz_locked;
@@ -366,23 +366,23 @@ module alchitry_top #(
   //
   // Sysclock IBUFDS instantiation
   //
-  IBUFGDS
-    #(.DIFF_TERM("FALSE"))
-    ibufgds_sysclk
-    (
-      .I(SYSCLKP_I),
-      .IB(SYSCLKN_I),
-      .O(clk_200M)
-    );
+//   IBUFGDS
+//     #(.DIFF_TERM("FALSE"))
+//     ibufgds_sysclk
+//     (
+//       .I(SYSCLKP_I),
+//       .IB(SYSCLKN_I),
+//       .O(clk_200M)
+//     );
 
-  IBUFGDS
-    #(.DIFF_TERM("FALSE"))
-    ibufgds_userclk
-    (
-      .I(user_clk_p),
-      .IB(user_clk_n),
-      .O(user_clk)
-    );
+//   IBUFGDS
+//     #(.DIFF_TERM("FALSE"))
+//     ibufgds_userclk
+//     (
+//       .I(user_clk_p),
+//       .IB(user_clk_n),
+//       .O(user_clk)
+//     );
 
 //   BUFG bufg_userclk
 //        (
@@ -480,25 +480,25 @@ module alchitry_top #(
 
 
   // rtl/serial_link/ethernet_telemetry_subsystem
-  ethernet_telemetry_subsystem #()
-                               ethernet_telemetry_subsystem
-                               (
-                                 .eth_rst      (r_rst_125M_telemetry),
-                                 .eth_clk      (clk_125M),
-                                 .eth_tdata    (eth_tdata),
-                                 .eth_tvalid   (eth_tvalid),
-                                 .eth_tlast    (eth_tlast),
-                                 .eth_tready   (eth_tready),
-                                 .eth_len      (eth_len),
-                                 .eth_ip_id    (eth_ip_id),
-                                 .eth_udp_dest (eth_udp_dest),
-                                 .eth_telem_en (eth_telem_en),
+//   ethernet_telemetry_subsystem #()
+//                                ethernet_telemetry_subsystem
+//                                (
+//                                  .eth_rst      (r_rst_125M_telemetry),
+//                                  .eth_clk      (clk_125M),
+//                                  .eth_tdata    (eth_tdata),
+//                                  .eth_tvalid   (eth_tvalid),
+//                                  .eth_tlast    (eth_tlast),
+//                                  .eth_tready   (eth_tready),
+//                                  .eth_len      (eth_len),
+//                                  .eth_ip_id    (eth_ip_id),
+//                                  .eth_udp_dest (eth_udp_dest),
+//                                  .eth_telem_en (eth_telem_en),
 
-                                 .clk_128M      (clk_128M),
-                                 .clk_256M      (clk_256M),
-                                 .mobile_pkt_data(packet_data),
-                                 .mobile_pkt_data_val(packet_valid)
-                               );
+//                                  .clk_128M      (clk_128M),
+//                                  .clk_256M      (clk_256M),
+//                                  .mobile_pkt_data(packet_data),
+//                                  .mobile_pkt_data_val(packet_valid)
+//                                );
 
 
   // data from tx
@@ -507,27 +507,27 @@ module alchitry_top #(
   //always @(g_link_wait or eth_link_up)
   //  begin
   //     if (g_link_wait == 1)
-  assign eth_telem_en = (g_link_wait & eth_link_up) | (~g_link_wait);
+  //assign eth_telem_en = (g_link_wait & eth_link_up) | (~g_link_wait);
   //     else
   //       eth_telem_en = 1;
   //  end
 
 
 
-  always @(posedge clk_125M) begin
-    //-- reset every time the link goes down
-    if (g_link_wait == 0) begin
-      //-- in sim, dummy this out to start right away.
-      r_rst_125M_telemetry <= r_rst_125M;
-    end
-    else begin
-      //-- on hardware, wait for the link to come up
-      //-- so that the fifo doesn't end up with partial
-      //-- data in it.
-      r_rst_125M_telemetry <= r_rst_125M | ~eth_link_up;
-    end
+//   always @(posedge clk_125M) begin
+//     //-- reset every time the link goes down
+//     if (g_link_wait == 0) begin
+//       //-- in sim, dummy this out to start right away.
+//       r_rst_125M_telemetry <= r_rst_125M;
+//     end
+//     else begin
+//       //-- on hardware, wait for the link to come up
+//       //-- so that the fifo doesn't end up with partial
+//       //-- data in it.
+//       r_rst_125M_telemetry <= r_rst_125M | ~eth_link_up;
+//     end
 
-  end
+//   end
 
 
 
