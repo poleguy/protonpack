@@ -129,7 +129,7 @@ rtl/telem_mobile_ac701.v
 
 # xdc constraints
 #par/constraints/rgmii_timing.xdc
-par/constraints/user.xdc
+#par/constraints/user.xdc
 
 
 ######################################
