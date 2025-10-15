@@ -4,7 +4,7 @@
     "xci_name": "gt_serial_telem_rx",
     "component_reference": "xilinx.com:ip:gtwizard:3.6",
     "ip_revision": "17",
-    "gen_directory": "rtl/gt_ip/gt_serial_telem_rx",
+    "gen_directory": ".",
     "parameters": {
       "component_parameters": {
         "Component_Name": [ { "value": "gt_serial_telem_rx", "resolve_type": "user", "usage": "all" } ],
@@ -1190,7 +1190,7 @@
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
         "IPREVISION": [ { "value": "17" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "rtl/gt_ip/gt_serial_telem_rx" } ],
+        "OUTPUTDIR": [ { "value": "." } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "." } ],
         "SWVERSION": [ { "value": "2025.1" } ],
