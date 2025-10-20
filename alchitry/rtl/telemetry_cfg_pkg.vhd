@@ -27,11 +27,50 @@ package telemetry_cfg_pkg is
 
     constant getStreamNumFields          : t_stream_ints := (11,2,2,12,8,10,2,2,2,2,2,2,7,2,2,5,2,0,0,0);
     constant getStreamTotalBytes         : t_stream_ints := (44,8,8,48,32,40,8,8,8,8,8,8,28,8,8,20,8,0,0,0);
+    -- use SLeft for indexing a stream data input e.g. stream_data(sleft(STREAM_ID_O) donwto 0) <= data;
+    constant SLeft                       : t_stream_ints := (351,63,63,383,255,319,63,63,63,63,63,63,223,63,63,159,63,0,0,0);
     constant getStreamNumFifoWords       : t_stream_ints := (1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0);
+    constant getStreamFifoDepthThreshold : t_stream_ints := (11,2,2,12,360,360,2,2,2,2,2,2,7,2,2,5,2,0,0,0);
     constant getNumActiveStreams         : natural := 17;
     constant getFifoAddrWidths           : t_stream_ints := (12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12);
     constant getFifoDataWidths           : t_stream_ints := (32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,8,8,8);
     constant getStreamFifoSDataWidth     : t_stream_ints := (32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,32,0,0,0);
+
+    type t_pkt_sizes is array (0 to ROUND_ROBIN_ITEMS-1) of integer; -- each stream plus 1 or more cfg pkts
+    constant PktPayloadSizeBytes : t_pkt_sizes := (56,20,20,60,1452,1452,20,20,20,20,20,20,40,20,20,32,20,0,0,0,1149);
+
+    type t_stream_clks       is array (0 to MAX_NUM_STREAMS-1) of std_logic;
+    type t_stream_valids     is array (0 to MAX_NUM_STREAMS-1) of std_logic;
+    type t_stream_enables    is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(FIELD_ENABLE_SIZE_BYTES*8-1 downto 0);
+    type t_stream_data       is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(STREAM_MAX_BYTES*8-1 downto 0);
+    type t_stream_ts         is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(TIMESTAMP_SIZE_BYTES*8-1 downto 0);
+    type t_stream_user_error is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(STREAM_USER_ERROR_BITS-1 downto 0);
+
+    constant stream_data_init       :  t_stream_data    := (others => (others => '0'));
+    constant stream_valids_init     :  t_stream_valids  := (others => '0');
+    constant stream_clks_init       :  t_stream_clks    := (others => '0');
+    constant stream_enables_init    :  t_stream_enables := (others => (others=>'0'));
+    constant stream_user_error_init :  t_stream_user_error := (others => (others=>'0'));
+    constant stream_ts_init         :  t_stream_ts      := (others => (others=>'0'));
+
+    -- Stream ID constants that can be used to index stream_data, stream_valids, and stream_clks in rtl interface.
+    constant S_symR : natural := 0;
+    constant S_nul0 : natural := 1;
+    constant S_nul1 : natural := 2;
+    constant S_rxbp : natural := 3;
+    constant S_mcau : natural := 4;
+    constant S_asrc : natural := 5;
+    constant S_nul6 : natural := 6;
+    constant S_nul7 : natural := 7;
+    constant S_nul8 : natural := 8;
+    constant S_nul9 : natural := 9;
+    constant S_nulA : natural := 10;
+    constant S_nulB : natural := 11;
+    constant S_agc  : natural := 12;
+    constant S_nulD : natural := 13;
+    constant S_nulE : natural := 14;
+    constant S_META : natural := 15;
+    constant S_FALT : natural := 16;
 
     -- The ROM memory that holds the cfg packet payload
         type t_cfg_rom     is array (0 to 1149-1) of std_logic_vector(7 downto 0);
@@ -109,22 +148,6 @@ package telemetry_cfg_pkg is
         ,x"54",x"13",x"98",x"54",x"49",x"4d",x"45",x"20",x"20",x"20",x"20",x"04",x"55",x"49",x"4e",x"54"
         ,x"46",x"41",x"55",x"4c",x"54",x"5f",x"49",x"44",x"04",x"55",x"49",x"4e",x"54");
 
-    type t_pkt_sizes is array (0 to ROUND_ROBIN_ITEMS-1) of integer; -- each stream plus 1 or more cfg pkts
-    constant PktPayloadSizeBytes : t_pkt_sizes := (56,20,20,60,1452,1452,20,20,20,20,20,20,40,20,20,32,20,0,0,0,1149);
-
-    type t_stream_clks       is array (0 to MAX_NUM_STREAMS-1) of std_logic;
-    type t_stream_valids     is array (0 to MAX_NUM_STREAMS-1) of std_logic;
-    type t_stream_enables    is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(FIELD_ENABLE_SIZE_BYTES*8-1 downto 0);
-    type t_stream_data       is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(STREAM_MAX_BYTES*8-1 downto 0);
-    type t_stream_ts         is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(TIMESTAMP_SIZE_BYTES*8-1 downto 0);
-    type t_stream_user_error is array (0 to MAX_NUM_STREAMS-1) of std_logic_vector(STREAM_USER_ERROR_BITS-1 downto 0);
-
-    constant stream_data_init       :  t_stream_data    := (others => (others => '0'));
-    constant stream_valids_init     :  t_stream_valids  := (others => '0');
-    constant stream_clks_init       :  t_stream_clks    := (others => '0');
-    constant stream_enables_init    :  t_stream_enables := (others => (others=>'0'));
-    constant stream_user_error_init :  t_stream_user_error := (others => (others=>'0'));
-    constant stream_ts_init         :  t_stream_ts      := (others => (others=>'0'));
 
 end telemetry_cfg_pkg;
 

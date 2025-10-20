@@ -52,7 +52,7 @@ module alchitry_top #(
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK1P_I, // 128MHz looped back via SMA cables
       input wire [`C_REFCLKS_USED-1:0] GTREFCLK1N_I,
       output  wire                    REC_CLOCK_P,
-      output  wire                    REC_CLOCK_N,
+      output  wire                    REC_CLOCK_N
       // output USER_SMA_GPIO_P,
       // output USER_SMA_GPIO_N,
     //   output  wire                    USER_SMA_CLK_P,  // 128MHz output to loop back SMA

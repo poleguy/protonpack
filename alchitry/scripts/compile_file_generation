@@ -28,6 +28,7 @@ logging.basicConfig(
 
 from fpgabuild import compile_file_generation
 
+#os.chdir("alchitry") # hackity hack to work in vscode
 
 root_dir = os.getcwd()
 run_dir = os.path.join(root_dir,"par")

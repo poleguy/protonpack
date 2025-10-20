@@ -30,7 +30,7 @@ rm -f $VHD_FILE
 cp $CSV_FILE rtl/telemetry_cfg.csv
 
 ### generate the telemetry package
-python ./src/shurewireless-telemetry/src/shurewireless/telemetry/telem_cfg_csv_to_pkg.py $CSV_FILE $VHD_FILE
+python -m scripts.fpgabuild.telem_cfg_csv_to_pkg $CSV_FILE $VHD_FILE
 
 
 

@@ -30,14 +30,14 @@ git add rtl/version_pkg.vhd
 # the source is really from rtl/version_pkg.vhd, etc.
 # but this is a safety copy for when IT inevitably deletes stuff from artifactory that we need.
 # or if we question if something is really what we built with.
-git add rtl/regs/generated_rtl.zip
-git add par/shurc_code.zip
+#git add rtl/regs/generated_rtl.zip
+#git add par/shurc_code.zip
 
 # documentation should stay with source. This is the rendered documentation.
-git add doc/NGPSM_RX_Digital_FPGA_Interface.pdf
+#git add doc/NGPSM_RX_Digital_FPGA_Interface.pdf
 
 # changes to conda environment are tracked to help debug failures due to things changing in conda
-git add cenv-export.yml
+#git add cenv-export.yml
 
 git commit -m "$MSG"
 

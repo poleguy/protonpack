@@ -9,7 +9,7 @@
 import os
 import datetime
 
-#from .JenkinsScripts import SaveComponentArtifacts
+from .JenkinsScripts import SaveComponentArtifacts
 
 #from dataclasses import dataclass
 #@dataclass
@@ -427,6 +427,53 @@ end '+pkg_name+';\n\
 #            sys.argv = saved_argv
 #        #assert(os.system(sv_components_str)==0),"python call for SaveComponentArtifacts.py for Artifactory commit did not return a successful 0"
 #        return ret
+
+    def commit_artifactory_dirs(self, artifact_component, artifact_dist_dir, artifact_meta_dir):
+        """Commit build output artifacts to artifactory.shure.com
+        under Continuous repo
+        Artifact_dist_dir is the directory for image(s) that would flow to product package
+        Meta dir is the directory for reports and other files not used by higher level packages
+        These file inputs should be directory paths
+        All files and subdirectories will be pulled in relative to these paths 
+        relative to the current working directory when this is called.
+        """
+
+        ## Set the artifact version based on Revision and Date/Time appended if branch
+        self.set_artifact_version()
+
+        self.artifact_component=artifact_component
+
+        ret = SaveComponentArtifacts.main(component_name=artifact_component,
+            version=self.get_artifact_version(),
+            build_dir="./",
+            commit_distributable_dir=artifact_dist_dir,
+            commit_meta_dir=artifact_meta_dir)
+    
+        return ret
+
+
+    def commit_artifactory_developer_dirs(self, artifact_component, artifact_dist_dir, artifact_meta_dir):
+        """Commit build output artifacts to artifactory.shure.com
+        under Developer repo
+        Artifact_dist_dir is the directory for image(s) that would flow to product package
+        Meta dir is the directory for reports and other files not used by higher level packages
+        These file inputs should be directory paths
+        All files and subdirectories will be pulled in relative to these paths 
+        relative to the current working directory when this is called.
+        """
+        ## Set the artifact version based on Revision and Date/Time appended if branch
+        self.set_artifact_version()
+
+        self.artifact_component=artifact_component
+
+        ret = SaveComponentArtifacts.main(component_name=artifact_component,
+            version=self.get_artifact_version(),
+            build_dir="./",
+            commit_distributable_dir=artifact_dist_dir,
+            commit_meta_dir=artifact_meta_dir,
+            developer=True)
+        return ret
+
 
 #if __name__ == "__main__":
 #    args=setup_arguments()

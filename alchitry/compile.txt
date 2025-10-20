@@ -49,7 +49,8 @@ rtl/version_pkg.vhd
 # reverted back to where it gets generated the old way
 rtl/telemetry_cfg_pkg.vhd
 
-src/shurewireless-telemetry/fpga/rtl/compile.txt
+#src/shurewireless-telemetry/fpga/rtl/compile.txt
+scripts/fpgabuild/fpga/rtl/compile.txt
 
 
 
