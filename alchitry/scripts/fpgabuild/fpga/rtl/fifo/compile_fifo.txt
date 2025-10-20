@@ -1,0 +1,7 @@
+## compile files related to the asyncrhonous fifo. top is fifo1.v
+fifomem.v
+sync_r2w.v
+sync_w2r.v
+rptr_empty.v
+wptr_full.v
+fifo1.v

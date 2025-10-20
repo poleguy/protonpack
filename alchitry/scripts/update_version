@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+#################################################################################
+##
+## update version
+#################################################################################
+import os
+from fpgabuild import fpga_build
+import bash
+import re
+
+rtl_version_file="rtl/version_pkg.vhd"
+
+
+version_bin_filename = "par/version.bin"
+if os.path.isfile(version_bin_filename):
+    os.remove(version_bin_filename)
+
+## instantiate the helper build scripts
+build = fpga_build.fpga_build()
+
+
+## Read the current revision from the rtl version package file, update the version (build# incr, 99 patch if branch), then recreate the version package file
+
+# call the parts of read_pkg_version_and_update one at a time to allow for modification of patch portion
+build.read_pkg_version(rtl_version_file=rtl_version_file)
+
+# find last patch version to use:
+# this grabbed a version from the wrong branch
+#output = bash.bash_quiet('git log --tags --pretty="%d" --no-walk')
+
+#https://stackoverflow.com/questions/2381665/list-tags-contained-by-a-branch
+#https://stackoverflow.com/questions/14273531/how-to-sort-git-tags-by-version-string-order-of-form-rc-x-y-z-w
+#output = bash.bash_quiet('git tag --sort=-v:refname --merged HEAD')
+
+# All Jenkins builds will now be CI builds, so branch numbering is fine and will be forced to be unique by git tag check, not date/time.
+
+# No special handling of patch. Completely manual
+#build.version["PATCH"] = 0
+    # Don't build with 99 in the patch portion of the version number because this is reserved for local/rogue builds
+    # I don't ever want to see the message: 
+    # AssertionError: This is not a branch however PATCH number in rtl/version_pkg.vhd is already set to 99.  Maybe someone accidently merged branch version_pkg.vhd to trunk? set .parent_is_branch=True to override.
+    # I want this fully automated
+    
+
+
+# setting use_branch_version_scheme to false is necessary to set the patch arbitrarily (not forced to 99 if a branch)
+build.update_version()  
+build.write_pkg_version()

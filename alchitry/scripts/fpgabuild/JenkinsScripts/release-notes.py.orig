@@ -1,0 +1,170 @@
+import pysvn
+import time
+import sys
+
+
+class  svncheck():
+    def __init__(self, svn_user, svn_password, svn_tag, svn_branch):
+        self.user = svn_user
+        self.password = svn_password
+        self.tag = svn_tag
+
+        self.IsBranch = (len(svn_branch) > 0)
+        if (self.IsBranch):
+            self.root =  "http://subversion.shure.com/Projects/wwb/wwb6/branches/" + svn_branch
+        else:
+            self.root = "http://subversion.shure.com/Projects/wwb/wwb6/trunk/wwb6/"
+
+        self.client = pysvn.Client()
+        self.client.commit_info_style = 1
+        self.client.callback_notify = self.notify
+        self.client.callback_get_login = self.credentials
+
+    def difference(self):
+
+        oldest_revision = self.get_oldest_revision()
+        print("oldest_revision=", oldest_revision)
+        print("latest_revision=", pysvn.Revision(pysvn.opt_revision_kind.head))
+
+        log = self.client.log(self.root,
+                              revision_start = pysvn.Revision( pysvn.opt_revision_kind.head),
+                              revision_end = pysvn.Revision(pysvn.opt_revision_kind.number, oldest_revision),
+                              discover_changed_paths = True,
+                              strict_node_history = True,
+                              limit = 0,
+                              include_merged_revisions = False)
+
+        print("len(log)=", len(log))
+
+    def get_oldest_revision(self):
+        oldest_revision = -1
+        while (oldest_revision < 0):
+
+            x = self.tag.split(".")
+            if (len(x) < 4) or (int(x[3]) - 1 < 0):
+                oldest_revision = 0
+            else:
+                x[3] = str(int(x[3]) - 1)
+                self.tag = '.'.join(x)
+                print("x=", x, "self.tag=", self.tag)
+    
+                try:
+                    info = self.client.info2("http://subversion.shure.com/Projects/wwb/wwb6/tags/" + self.tag,
+                                             revision=pysvn.Revision(pysvn.opt_revision_kind.head),
+                                             recurse=False)
+                    oldest_revision =  info[0][1]['last_changed_rev'].number
+                except: #pysvn._pysvn_3_6.ClientError:
+                    pass
+
+        return oldest_revision
+
+#----------------------------------------------------------
+    def generate_release_notes(self):
+
+        filename = "Release_Notes_WWB6_" + self.tag + '.txt'
+
+        next_tag = self.tag
+        newest_revision = pysvn.Revision(pysvn.opt_revision_kind.head)
+
+        print("generate: next_tag=", next_tag, newest_revision, newest_revision.number)
+
+        while True:
+
+            x = next_tag.split(".")
+            if (len(x) < 4): # or (int(x[3]) - 1 < 0):
+                break
+            else:
+                x[3] = str(int(x[3]) - 1)
+                next_tag = '.'.join(x)
+                #print("x=", x, "   next_tag=", next_tag)
+
+                if (int(x[3]) == 0):
+                    if (self.IsBranch):
+                        oldest_revision = pysvn.Revision(pysvn.opt_revision_kind.number, 0)
+                    else:
+                        # if this is the trunk impose a limit, else we get everything going back to 2010!
+                        try:
+                            if (newest_revision.number is not None):
+                                oldest_revision = pysvn.Revision(pysvn.opt_revision_kind.number, newest_revision.number - 1000)
+                                print ("current rev=", pysvn.Revision(pysvn.opt_revision_kind.number.head))
+                            else:
+                                oldest_revision = pysvn.Revision(pysvn.opt_revision_kind.head)
+                        except Exception as e:
+                            print(e)
+                            return
+                else:
+                    try:
+                        info = self.client.info2("http://subversion.shure.com/Projects/wwb/wwb6/tags/" + next_tag,
+                                                 revision=pysvn.Revision(pysvn.opt_revision_kind.head),
+                                                 recurse=False)
+                        oldest_revision = pysvn.Revision(pysvn.opt_revision_kind.number, info[0][1]['last_changed_rev'].number)
+                    except Exception as e:
+                        print(e)
+                        continue
+
+                print("tag=", next_tag, "newest_revision=", newest_revision, "oldest_revision=", oldest_revision)
+
+                try:
+                    log = self.client.log(self.root,
+                                          revision_start = newest_revision, # pysvn.Revision(pysvn.opt_revision_kind.number, newest_revision),
+                                          revision_end = oldest_revision, #pysvn.Revision(pysvn.opt_revision_kind.number, oldest_revision),
+                                          discover_changed_paths = True,
+                                          strict_node_history = True,
+                                          limit = 0,
+                                          include_merged_revisions = False)
+                except Exception as e:
+                    print(e)
+                    return 
+
+                #print("len(log)=", len(log))
+
+                with open(filename, 'a') as myFile:
+                    myFile.write("=============================\n" + self.tag + "\n=============================\n")
+                    for info in log:
+                        result= info.message.replace('\n',' - ') + " [rev " + str(info.revision.number) + ", " + info.author + ", " +\
+                        time.strftime("%d %b %Y %H:%M:%S +0000", time.gmtime(info.date)) + "]\n"
+                        if not info.message.startswith("WWBSIX"):
+                            result = "             - " + result
+                        #print(result)
+                        myFile.write(result)
+
+            newest_revision = oldest_revision
+            self.tag = next_tag
+
+            if (int(x[3]) == 0):
+                break
+
+#----------------------------------------------------------
+
+    def notify( event_dict ):
+        print("event_dict", event_dict)
+        return
+
+    def credentials(realm, username, may_save):
+        return True, self.user, self.password, True
+
+if __name__ == "__main__":
+
+    cmd = ''
+    val = ''
+    user = ''
+    passwd = ''
+    tag = ''
+    branch = ''
+
+    for arg in sys.argv[1:]:
+        if len(arg.split('=')) > 1:
+            (cmd, val) = arg.split('=', 2)
+            if len(val) > 0:
+                if cmd == "user":
+                    user_name = val
+                elif cmd == "password":
+                    passwd = val
+                elif cmd == "tag":
+                    tag = val
+                elif cmd == "branch":
+                    branch = val
+
+    s = svncheck(user, passwd, tag, branch)
+    #s.difference()
+    s.generate_release_notes()

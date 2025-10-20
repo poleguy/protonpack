@@ -1,0 +1,11 @@
+# telemetry_cfg_pkg.vhd must be created/modified and pulled in from the parent project
+# before compiling the contents of this file
+./eth_udp_mac/compile.txt
+fifo/compile_fifo.txt
+gray_cnt.vhd
+stream_fifo.vhd
+cfg_pkt.vhd
+telemetry.vhd
+mobile_data_buff.vhd
+mobile_error.vhd
+mobile_telem_to_eth.vhd

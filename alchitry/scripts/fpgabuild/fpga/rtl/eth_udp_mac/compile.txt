@@ -1,0 +1,7 @@
+./eth_crc32_8in.vhd
+./eth_fcs_gen.vhd
+./eth_udp_mac_tx.vhd
+./eth_udp_mac_rx.vhd
+./eth_app_test_ex.vhd
+./eth_reg_handler.vhd
+./gmii_to_rgmii.vhd

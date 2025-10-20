@@ -1,0 +1,5 @@
+eth_udp_mac/eth_fcs_calc_pkg.vhd -2008
+eth_udp_mac/eth_test_pkg.vhd -2008
+pcapng_pkg.vhd -2008
+tb_telemetry_pkg.vhd -2008
+tb_telemetry.vhd -2008

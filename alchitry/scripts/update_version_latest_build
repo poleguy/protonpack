@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+#################################################################################
+##
+## update version to the latest used build number based on current git state
+## in prep for calling update_version
+#################################################################################
+import git
+import re
+import update_version_to
+from fpgabuild import fpga_build
+
+def main():
+
+    # Replace with your Git repository path
+    repo_path = '..'
+    rtl_version_file="rtl/version_pkg.vhd"
+    
+    ## instantiate the helper build scripts
+    build = fpga_build.fpga_build()
+    build.read_pkg_version(rtl_version_file=rtl_version_file)
+
+    major = str(build.version["MAJOR"])
+    minor = str(build.version["MINOR"])
+    patch = str(build.version["PATCH"])
+    
+    # Create a Git Repo object
+    repo = git.Repo(repo_path)
+    
+    # Define a regular expression pattern to match tags in the format "a.b.c.d"
+    tag_pattern = re.compile(r'^(\d+)\.(\d+)\.(\d+)\.(\d+)$')
+    
+    # Find all tags where major.minor == current major.minor
+    matching_tags = []
+    # https://stackoverflow.com/questions/25056478/gitpython-tags-sorted
+    #nsort = lambda v:tuple(map(int, str(v)))
+    #print(repo.tags)
+    #print(list(repo.tags))
+    tags = [str(i.name) for i in repo.tags]
+    #print(tags)
+
+    def sort(tag):
+        parts = tag.split(".")
+        #print(len(parts))
+        if len(parts) == 4:
+            for part in parts:
+                if not part.isdigit():
+                    return [0,0,0,0]
+            return list(map(int, parts))
+        else:
+            return [0,0,0,0]
+            
+    
+    tags_sorted = sorted(tags, key = sort)
+    #print(tags_sorted)
+    
+    for tag in tags_sorted:
+        match = tag_pattern.match(tag)
+        #print(match)
+        if match:
+            if (match.group(1) == major):
+                if (match.group(2) == minor):
+                    #print(match.group(1),match.group(2))
+                    matching_tags.append(match)
+
+    #print(matching_tags[0])
+    # Find the highest 'd' value among matching tags
+    highest_d = max(int(match.group(4)) for match in matching_tags) if matching_tags else 0
+
+    #print(highest_b)
+    # Calculate the current highest tag based on existing tags
+    next_tag = f"{major}.{minor}.{patch}.{highest_d}"
+    #cr = "\n"
+    #print(f"Matching Tags where a=3: {''.join(str(match.group(0))+cr for match in matching_tags)}")
+    #print(f"Next Tag: {next_tag}")
+
+    update_version_to.update_to(next_tag)
+    print(f"Updating version to: {next_tag}")
+
+if __name__ == '__main__':
+    import typer
+    typer.run(main)
