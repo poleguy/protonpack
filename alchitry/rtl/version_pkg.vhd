@@ -20,10 +20,10 @@ package version_pkg is
 
     -- Note in order to get a build version of 0, you are able to manually put a -1 for BUILD and the fpga_build.read_pkg_version_and_update()
     -- will have it roll around to 0 without incrementing the minor number for a roll around.
-    constant C_VERSION_MAJOR   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   7,8));
-    constant C_VERSION_MINOR   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   9,8));
+    constant C_VERSION_MAJOR   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   0,8));
+    constant C_VERSION_MINOR   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   0,8));
     constant C_VERSION_PATCH   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   0,8));
-    constant C_VERSION_BUILD   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   1,8));
+    constant C_VERSION_BUILD   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   0,8));
     constant C_VERSION_YEAR    : std_logic_vector(15 downto 0) := X"2025";
     constant C_VERSION_MONTH   : std_logic_vector(07 downto 0) := X"10";
     constant C_VERSION_DAY     : std_logic_vector(07 downto 0) := X"20";
