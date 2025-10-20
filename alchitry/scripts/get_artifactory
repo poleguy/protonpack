@@ -4,9 +4,7 @@ if [ -z "$1" ]
 then
     echo "Pass in full artifactory path, and this will get its contents into the par/output directory"
     echo "Unsure? check here:"
-    echo "https://artifactory.shure.com/Developer_Components/Wideband/DigitalBoard/"
-    echo "or here:"
-    echo "https://artifactory.shure.com/CI_Components/Wideband/DigitalBoard/"
+    echo "https://artifactory.shure.com/All_Shure_Components/ATLAS/protonpack"
     exit 1
 else
     #wget https://artifactory.shure.com/CI_Components/Wideband/AP_Demonstator/$1/ -r --no-parent -nH --cut-dirs=4 --proxy=off --reject html,md5,sha1

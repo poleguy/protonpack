@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
-# build via jenkins. Only Digital Build. Open console in browser
+# build via jenkins. Only Digital image type. Open console in browser
+# if you get:
+# HTTP ERROR 401 Unauthorized
+# generate a new token on jenkins:
+# https://fpga.jenkins-ecs.shure.com/user/lastf/security/
+# and put it in ~/.jenkins_token
+# like so:
+# API_TOKEN=112a99c0e293e2f0154812b11b5e3c0345
+# API_USER=lastf
 
 set -e
 
@@ -10,16 +18,26 @@ if [ $# -ne 1 ]; then
 fi
 
 BRANCH=$1
-HASH=$(shuf -n 1 -i 1000000-9999999)
-# hash allows queuing identical builds
-ssh jenkins.shure.com -p 59595 build FPGA/Wideband/NGPSM_RX -p branch=$BRANCH -p hash=$HASH
-#ssh jenkins.shure.com -p 59595 build FPGA/Wideband/NGPSM_RX -p branch=$BRANCH -p reproduce=true
+# pull in API_TOKEN and API_USER, to avoid storing them in github
+source ~/.jenkins_token
+
+# kick off builds
+
+# needs -k because of sketchy shure certificate:
+# curl: (60) SSL certificate problem: self-signed certificate in certificate chain
+# More details here: https://curl.se/docs/sslcerts.html
+
+
+# https://stackoverflow.com/questions/20359810/how-to-trigger-jenkins-builds-remotely-and-to-pass-parameters
+curl -k -X POST "https://fpga.jenkins-ecs.shure.com/job/DEVELOPMENT/job/TELEMETRY/job/protonpack/buildWithParameters?branch=$BRANCH" --user $API_USER:$API_TOKEN
 
 # delay to run sim last so it doesn't block any builds
 sleep 1
 # and simulate
-ssh jenkins.shure.com -p 59595 build FPGA/Wideband/NGPSM_RX_Sim -p branch=$BRANCH
+#curl -k -X POST "https://fpga.jenkins-ecs.shure.com/job/SIMULATION/job/DPSM/job/DPSM_RX_Digital_Sim/buildWithParameters?branch=$BRANCH" --user $API_USER:$API_TOKEN
 
-xdg-open https://jenkins.shure.com/job/FPGA/job/Wideband/job/NGPSM_RX/
-xdg-open https://jenkins.shure.com/job/FPGA/job/Wideband/job/NGPSM_RX_Sim/
 
+# monitor results
+# at end, to not accidentally block jobs if running via ssh
+xdg-open https://fpga.jenkins-ecs.shure.com/job/DEVELOPMENT/job/TELEMETRY/job/protonpack/
+#xdg-open https://fpga.jenkins-ecs.shure.com/job/SIMULATION/job/DPSM/job/DPSM_RX_Digital_Sim/

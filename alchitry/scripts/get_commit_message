@@ -6,7 +6,7 @@
 ## Alex Stezskal, Nicholas Dietz
 ##
 ##
-## To set up for a new project, the project_name variable must be set correctly
+## To set up for a new project, the artifact_component variable must be set correctly
 ##
 #################################################################################
 import os
@@ -17,7 +17,7 @@ import zipfile
 from fpgabuild import fpga_build
 
 
-project_name = "Wideband/NGPSM_RX"
+artifact_component="ATLAS/protonpack"
 
 ## instantiate the helper build scripts
 build = fpga_build.fpga_build()
@@ -34,7 +34,7 @@ build.set_artifact_version()
 
 ## When we commit a new version_pkg file back to source control, the log msg will contain the artifactory URL for reference
 # a commit message containing the url and version of the artifactory commit. For checking in auto generated code created as part of the build process.
-artifactory_url_all_shure="https://artifactory.shure.com/All_Shure_Components/"+project_name+"/"+build.get_artifact_version().replace("_",".")+"/"
+artifactory_url_all_shure="https://artifactory.shure.com/All_Shure_Components/"+artifact_component+"/"+build.get_artifact_version().replace("_",".")+"/"
 msg=artifactory_url_all_shure+" Artifactory auto commit from build."
 
 print(msg)

@@ -22,7 +22,6 @@ log = logging.getLogger(__name__)
 
 # project specific settings:
 
-#artifact_component = "Wideband/NGPSM_RX"
 # why are the developer files targeted to Blackhawk_FPGA/TX_FPGA/AD1_AD2_AD3_ADX3 and others to Blackhawk/TX_FPGA_AD1_AD2_AD3_ADX3?
 
 
@@ -54,7 +53,7 @@ def get_fpga_version(version_file_path = "./par/TX_ver_std.bin"):
 
 
 def main(
-    artifact_component: str,
+    artifact_component: str, # e.g. "ATLAS/protonpack"
     dist_dir: str = dist_dir,
     meta_dir: str = meta_dir,
     developer: Annotated[

@@ -1,6 +1,6 @@
 This file is currently not set up correctly or used, because we use alchitry to program the board.
 I'm leaving it as a clue if we end up spinning our own board.
-## TCL Script for programming the flash part on the Wideband Demonstrator Digital Boad
+## TCL Script for programming the flash part on the .... board
 
 ## Call tcl script using vivado -source program_flash.tcl
 
