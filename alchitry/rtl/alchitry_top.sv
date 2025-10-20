@@ -55,8 +55,8 @@ module alchitry_top #(
       output  wire                    REC_CLOCK_N,
       // output USER_SMA_GPIO_P,
       // output USER_SMA_GPIO_N,
-      output  wire                    USER_SMA_CLK_P,  // 128MHz output to loop back SMA
-      output  wire                    USER_SMA_CLK_N
+    //   output  wire                    USER_SMA_CLK_P,  // 128MHz output to loop back SMA
+    //   output  wire                    USER_SMA_CLK_N
     //   output  wire                    SFP_CLK_SEL0,
     //   output  wire                    SFP_CLK_SEL1,
     //   output  wire                    SFP_CLK1_SEL0,
@@ -403,14 +403,14 @@ module alchitry_top #(
   // generate user_CLOCK_N/P from Si570 programmable oscillator on board at 128M
   // route in fabric to output sma connectors.
   // sma back in on J23/H23 USER_CLOCK_N
-  OBUFDS #(
-           .IOSTANDARD("DEFAULT"), // Specify the output I/O standard
-           .SLEW("FAST")           // Specify the output slew rate
-         ) OBUFDS_USER_SMA (
-           .O(USER_SMA_CLK_P),     // Diff_p output (connect directly to top-level port)
-           .OB(USER_SMA_CLK_N),   // Diff_n output (connect directly to top-level port)
-           .I(clk_128M)      // Buffer input
-         );
+//   OBUFDS #(
+//            .IOSTANDARD("DEFAULT"), // Specify the output I/O standard
+//            .SLEW("FAST")           // Specify the output slew rate
+//          ) OBUFDS_USER_SMA (
+//            .O(USER_SMA_CLK_P),     // Diff_p output (connect directly to top-level port)
+//            .OB(USER_SMA_CLK_N),   // Diff_n output (connect directly to top-level port)
+//            .I(clk_128M)      // Buffer input
+//          );
 
   // found in rtl/gt_support/gt_serial_telem_rx_subsystem.vhd
   gt_serial_telem_rx_subsystem gt_serial_telem_rx_subsystem

@@ -86,11 +86,11 @@ unset SSH_ASKPASS
 #    echo "Not updating version: reproducing previous build."
 #else
     # make sure we have the latest tags
-#    git fetch
-#    scripts/update_version_latest_build
-#    scripts/update_version
+    git fetch
+    scripts/update_version_latest_build
+    scripts/update_version
     # see if it's already used and stop
-#    scripts/check_version_tag
+    scripts/check_version_tag
 #fi    
 
 ### generate the register package and documentation
@@ -128,7 +128,7 @@ status=$?
 #cd ..
 if [ $status -ne 0 ]; then
     echo "build failed... cleaning up pre-build tag"
-#    scripts/cleanup_tag
+    scripts/cleanup_tag
     exit $status
 fi
 
@@ -161,27 +161,21 @@ COMMIT_SUFFIX="$BRANCH"
 
 #if [ "$FLAG" != "reproduce" ]; then
     
-    # append date/time if building a rogue build
-    # as identified by the user name not being secbuild
+    # identify CI builds by user name
     if [[ "$(whoami)" != "secbuild" && "$(whoami)" != "jeeves" ]]; then
         time scripts/deploy_artifactory --developer
-        # Commit generated source to git, no tag to avoid clutter
-        time scripts/commit_generated_source "Product" "$COMMIT_SUFFIX"
-        # don't tag it by default to avoid clutter (do this manually if desired) 
-        # scripts/commit_tag
     else
         # CI build uses simple version numbers
         # CI builds are committed to CI repo, but will fail if not run from jenkins
         # build from a branch if building locally
         time scripts/deploy_artifactory
-        # Commit generated source to git (no date/time in commit message)
-        time scripts/commit_generated_source_master "Product" "$COMMIT_SUFFIX"
-        # tag only master/wm2 builds to avoid clutter. Other branches can be manually tagged if important
-        #if [[ "$BRANCH" == "master" || "$BRANCH" == "wm2" ]]; then
-        # we must tag all branches because the tags are used to ensure unique version numbers
-        time scripts/commit_tag
-        #fi
     fi
+    # all builds have unique version numbers even if in developer repo
+    # Commit generated source to git (no date/time in commit message)
+    time scripts/commit_generated_source "Product" "$COMMIT_SUFFIX"
+    # we must tag all branches because the tags are used to ensure unique version numbers
+    time scripts/commit_tag
+
 #else
 #    # reproduce
 #    # check that result matches artifatory result

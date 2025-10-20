@@ -11,7 +11,7 @@ import subprocess
 import shlex
 import argparse
 import zipfile
-from FPGABuild import fpga_build
+from fpgabuild import fpga_build
 
 ## instantiate the helper build scripts
 build = fpga_build.fpga_build()
@@ -19,12 +19,12 @@ build = fpga_build.fpga_build()
 
 ## Read the current revision from the rtl version package file
 build.parent_is_branch = True # use version number format with time stamp appended
-build.read_pkg_version_dumb(rtl_version_file="rtl/version_pkg.vhd")
+build.read_pkg_version(rtl_version_file="rtl/version_pkg.vhd")
 # set the branch state, which causes set_artifact_version to return a different result
 #build.check_if_git_repo_is_branch()
 # hackity hack to remove magic behavior:
-build.parent_is_branch = False
-build.use_branch_version_scheme = False
+#build.parent_is_branch = False
+#build.use_branch_version_scheme = False
 build.set_artifact_version()
 
 # Push Build artifacts to artifactory

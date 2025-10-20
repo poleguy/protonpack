@@ -764,32 +764,33 @@ generate_target all [get_files "+item.file_abs+"]\n"
                     log_file.write(str_log + "\n")
 
 
-if __name__ == "__main__":
+# if you want to call this directly you can uncomment and debug this part
+# if __name__ == "__main__":
 
-    # if called as top level, configure root logger
-    log.basicConfig(
-        level=log.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        filename="log.txt",   # send to a file instead of stderr
-    )
+#     # if called as top level, configure root logger
+#     logging.basicConfig(
+#         level=log.DEBUG,
+#         format="%(asctime)s [%(levelname)s] %(message)s",
+#         filename="log.txt",   # send to a file instead of stderr
+#     )
 
-    ########
-    ## when this file is called directly, assumptions are made based on
-    ## assuming the current working directory is [run_dir] which is [root_dir]/par/
-    ## have / at end of dir paths to match sim calls
-    run_dir = os.getcwd()
+#     ########
+#     ## when this file is called directly, assumptions are made based on
+#     ## assuming the current working directory is [run_dir] which is [root_dir]/par/
+#     ## have / at end of dir paths to match sim calls
+#     run_dir = os.getcwd()
 
-    # remove the last element of the path (the par directory)
-    #
-    # https://stackoverflow.com/questions/3315045/remove-last-path-component-in-a-string
+#     # remove the last element of the path (the par directory)
+#     #
+#     # https://stackoverflow.com/questions/3315045/remove-last-path-component-in-a-string
 
-    # first find the path excluding the workspace directory and the workspace directory
-    head, tail = os.path.split(run_dir)
-    root_dir = head
-    compile_top = root_dir + "/compile.txt"
+#     # first find the path excluding the workspace directory and the workspace directory
+#     head, tail = os.path.split(run_dir)
+#     root_dir = head
+#     compile_top = root_dir + "/compile.txt"
 
-    compile_file_generation_i = compile_file_generation(
-        root_dir=root_dir, run_dir=run_dir
-    )
-    compile_file_generation_i.parse_compile_txt(compile_top)
-#    compile_file_generation_i.gen_build_compile()
+#     compile_file_generation_i = compile_file_generation(
+#         root_dir=root_dir, run_dir=run_dir
+#     )
+#     compile_file_generation_i.parse_compile_txt(compile_top)
+# #    compile_file_generation_i.gen_build_compile()

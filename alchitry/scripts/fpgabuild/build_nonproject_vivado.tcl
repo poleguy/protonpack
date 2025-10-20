@@ -554,7 +554,8 @@ proc build_final_summary {} {
     puts $fail_setting_string
 
     # copy vivado.log into output directory for eventual archival in artifactory
-    file copy -force vivado.log $outputDir/vivado.log
+    # we will do all file copying in scripts/deploy_artifactory, not here
+    #file copy -force vivado.log $outputDir/vivado.log
 }
 
 proc del_all_except {exception} {

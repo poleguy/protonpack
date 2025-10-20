@@ -23,13 +23,13 @@ package version_pkg is
     constant C_VERSION_MAJOR   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   7,8));
     constant C_VERSION_MINOR   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   9,8));
     constant C_VERSION_PATCH   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   0,8));
-    constant C_VERSION_BUILD   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(  13,8));
+    constant C_VERSION_BUILD   : std_logic_vector(07 downto 0) := std_logic_vector(to_unsigned(   0,8));
     constant C_VERSION_YEAR    : std_logic_vector(15 downto 0) := X"2025";
-    constant C_VERSION_MONTH   : std_logic_vector(07 downto 0) := X"09";
-    constant C_VERSION_DAY     : std_logic_vector(07 downto 0) := X"12";
-    constant C_VERSION_HOUR    : std_logic_vector(07 downto 0) := X"00";
-    constant C_VERSION_MINUTE  : std_logic_vector(07 downto 0) := X"29";
-    constant C_VERSION_SECOND  : std_logic_vector(07 downto 0) := X"07";
+    constant C_VERSION_MONTH   : std_logic_vector(07 downto 0) := X"10";
+    constant C_VERSION_DAY     : std_logic_vector(07 downto 0) := X"20";
+    constant C_VERSION_HOUR    : std_logic_vector(07 downto 0) := X"15";
+    constant C_VERSION_MINUTE  : std_logic_vector(07 downto 0) := X"04";
+    constant C_VERSION_SECOND  : std_logic_vector(07 downto 0) := X"33";
 
 end version_pkg;
 --------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
--e git+ssh://git@bitbucket.shure.com:7999/fpga/ethernet-telemetry.git@1082a6c416e#egg=shurewireless-telemetry
 
 # sorted alphabetically
 
+gitpython
 numpy
 requests
 typer
