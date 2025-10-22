@@ -45,7 +45,20 @@ https://github.com/cambridgehackers/open-src-cvc
 
 # FPGA Board
 
-Snickerdoodle Black
+Alchitry Board
+
+Breakout board schematic must connect: 
+
+Bottom Side, Bank B, J7 36/34 to 53/51 respectively
+
+Input SMA must go to: 
+
+Bottom Side, Bank B, J7 71/69 for P/N respectively
+
+
+# Legacy
+
+Snickerdoodle Black is no longer used
 
 [snickerdoodle_black.md](../doc/snickerdoodle_black.md)
 

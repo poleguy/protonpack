@@ -4,10 +4,10 @@
 ######################################
 ## source files
 ######################################
-reset_conditioner.sv
-async_fifo.sv
-ft.sv
-lucid_globals.sv
+reset_conditioner.v
+async_fifo.v
+ft.v
+#lucid_globals.v
 simple_dual_port_ram.v
 
 #regs/telemetry_pkg.vhd -library shure
@@ -28,7 +28,7 @@ simple_dual_port_ram.v
 ## Top
 #################################################
 # will compile into library shure by default
-alchitry_top.sv
+alchitry_top.v
 
 
 

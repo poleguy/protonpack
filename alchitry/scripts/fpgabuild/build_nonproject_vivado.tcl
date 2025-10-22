@@ -126,44 +126,6 @@ if {![info exists outputDir]} {
     set outputDir output
 }
 
-## This assumed a certain flat workspace structure AND only SVN is being used.  
-##proc svn_revisions {} {
-##    global outputDir
-##    set modules [glob -type d ../../*]
-##    #puts "modules=$modules"
-##    set path [pwd]
-##    set svn_file [open $outputDir/svn_revision_info.rpt w]
-##    puts "Writing SVN revision report to $outputDir/svn_reivision_info.rpt"
-##    foreach mod $modules {
-##        #puts "mod=$mod"
-##        set fullpath $path/$mod
-##        #puts "fullpath=$fullpath"
-##        if {[catch {exec svn info $fullpath} svn_info] == 0} { 
-##            puts "    SVN Revision Info Retrieved for $mod"
-##            #puts $svn_info
-##        } else { 
-##            set $svn_info "    WARNING: SVN Revision Info Could not be Retrieved for ../../$fullpath"
-##            #puts $svn_info
-##        } 
-##        puts $svn_file "\n\n\n\n$fullpath"
-##        puts $svn_file $svn_info
-##
-##        #puts "mod=$mod"
-##        set fullpath $path/$mod
-##        #puts "fullpath=$fullpath"
-##        if {[catch {exec svn status -v $fullpath} svn_info] == 0} { 
-##            puts "    SVN Status Info Retrieved for $mod"
-##            #puts $svn_info
-##        } else { 
-##            set $svn_info "    WARNING: SVN Status Info Could not be Retrieved for ../../$fullpath"
-##            #puts $svn_info
-##        } 
-##        puts $svn_file "\nsvn status -v $fullpath\n"
-##        puts $svn_file $svn_info
-##
-##    }
-##    close $svn_file
-##}
 
 ## read the source based on compile.txt files and then add it to vivado
 # also blows away output directory or creates it if it doesn't exist

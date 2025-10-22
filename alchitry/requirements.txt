@@ -1,7 +1,9 @@
 
 # sorted alphabetically
 
+cocotb==1.9.2
 gitpython
 numpy
+pytest
 requests
 typer

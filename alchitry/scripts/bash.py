@@ -20,6 +20,40 @@ log = logging.getLogger(__name__)
 
 # https://stackoverflow.com/questions/4256107/running-bash-commands-in-python/51950538
 def bash(cmd, log_level="debug"):
+    # prints bash output to log on the fly
+    # https://stackoverflow.com/questions/3503719/emulating-bash-source-in-python
+    print(f'Runinng bash command: {cmd}')
+    if "'" in cmd:
+        log.warning("warning: apostrophe's might cause trouble")
+    bashCommand = f"env bash -c '{cmd}'"
+    bashCommand = shlex.split(bashCommand)
+    #bashCommand = "cwm --rdf test.rdf --ntriples > test.nt"
+    log.info(bashCommand)
+    # pipe stderr to stdout so we don't miss error messages
+    process = subprocess.Popen(bashCommand, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, universal_newlines=True)
+
+    # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
+    output = ''
+    for stdout_line in iter(process.stdout.readline, ""):
+        print(stdout_line, end="")
+
+        log_msg = "    "+stdout_line.strip()
+        if(log_level.lower() == "info"):
+            log.info(log_msg)
+        else: # default use debug
+            log.debug(log_msg)
+
+        output = output + stdout_line
+    process.stdout.close()
+    return_code = process.wait()
+    if return_code:
+        #raise subprocess.CalledProcessError(return_code, cmd)
+        raise ValueError(f"Bash command failed {cmd}: {output}")
+    return output
+
+
+def bash_quiet(cmd, log_level="debug"):
+    # prints bash output to screen on the fly
     # https://stackoverflow.com/questions/3503719/emulating-bash-source-in-python
     log.info(f'Runinng bash command: {cmd}')
     if "'" in cmd:
@@ -46,33 +80,6 @@ def bash(cmd, log_level="debug"):
     process.stdout.close()
     return_code = process.wait()
     if return_code:
-        #raise subprocess.CalledProcessError(return_code, cmd)
-        raise ValueError(f"Bash command failed {cmd}: {output}")
-    return output
-
-def bash_quiet(cmd, log_level="debug"):
-    # https://stackoverflow.com/questions/3503719/emulating-bash-source-in-python
-    bashCommand = f"env bash -c '{cmd}'"
-    bashCommand = shlex.split(bashCommand)
-    #bashCommand = "cwm --rdf test.rdf --ntriples > test.nt"
-    # pipe stderr to stdout so we don't miss error messages
-    process = subprocess.Popen(bashCommand, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, universal_newlines=True)
-
-    # https://stackoverflow.com/questions/4417546/constantly-print-subprocess-output-while-process-is-running
-    output = ''
-    for stdout_line in iter(process.stdout.readline, ""):
-        log_msg = "    "+stdout_line.strip()
-        if(log_level.lower() == "info"):
-            log.info(log_msg)
-        else: # default use debug
-            log.debug(log_msg)
-
-        output = output + stdout_line
-    process.stdout.close()
-    return_code = process.wait()
-    if return_code:
-        #raise subprocess.CalledProcessError(return_code, cmd)
-    #    print(output)
         raise ValueError(f"Bash command failed {cmd}: {output}")
     return output
 

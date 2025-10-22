@@ -6,47 +6,12 @@
 ## Nicholas Dietz
 ##
 #################################################################################
-import os
-import subprocess
-import shlex
-import argparse
-import zipfile
 from fpgabuild import fpga_build
 
+rtl_version_file="rtl/version_pkg.v"
 ## instantiate the helper build scripts
-build = fpga_build.fpga_build()
+## This reads the current revision from the rtl version package file
+build = fpga_build.fpga_build(rtl_version_file=rtl_version_file)
 
-
-## Read the current revision from the rtl version package file
-build.parent_is_branch = True # use version number format with time stamp appended
-build.read_pkg_version(rtl_version_file="rtl/version_pkg.vhd")
-# set the branch state, which causes set_artifact_version to return a different result
-#build.check_if_git_repo_is_branch()
-# hackity hack to remove magic behavior:
-#build.parent_is_branch = False
-#build.use_branch_version_scheme = False
-build.set_artifact_version()
-
-# Push Build artifacts to artifactory
-# Comma separated file lists for dist_files(image) and meta(other)_files
-
-
-## commit new version_pkg file back to SVN.. log msg will contain the artifactory URL for reference
-major = f'{build.version["MAJOR"]:02x}'
-minor = f'{build.version["MINOR"]:02x}'
-patch = f'{build.version["PATCH"]:02x}'
-bld = f'{build.version["BUILD"]:02x}'
-
-# The following are BCD values, not hex
-build_date = f'{build.version["YEAR"]:04}{build.version["MONTH"]:02}{build.version["DAY"]:02}'
-
-build_time = f'{build.version["HOUR"]:02}{build.version["MINUTE"]:02}{build.version["SECOND"]:02}00'
-
-initial_values = f'BUILD_DATE:0x{build_date},BUILD_TIME:0x{build_time},FPGA_REV.Major:0x{major},FPGA_REV.Minor:0x{minor},FPGA_REV.Patch:0x{patch},FPGA_REV.Build:0x{bld}'
-
-print(f'{build.version["MAJOR"]}.{build.version["MINOR"]}.{build.version["PATCH"]}.{build.version["BUILD"]}')
-
-# Commit generated source to SVN
-#build.commit_svn_source(svn_source_files_commit=["../rtl/version_pkg.vhd"])
-
-exit(0)
+# a commit message containing the url and version of the artifactory commit. For checking in auto generated code created as part of the build process.
+print(build.get_version())

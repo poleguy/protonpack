@@ -227,6 +227,7 @@ def run_rtl_sim_cvc(
     # xil_glbl = "%s/data/verilog/src/glbl.v" % (xil_basepath)
     xil_glbl = ""
     ### !!! xil_glbl ORDER IS IMPORTANT !!! ###
+
     command = (
         # +interp +verbose -informs
         f"cvc64 +acc+2 +interp -o sim.vvp +libext+.v+ +librescan +dumpvars +define+COCOTB_SIM=1 {xil_unisims} {' '.join(compile_list)} {xil_glbl}"

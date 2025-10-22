@@ -61,17 +61,10 @@ def main(
         typer.Option(help="Force deploy to the developer repo. Otherwise use CI repo."),
     ] = False,
 ):
+    rtl_version_file="rtl/version_pkg.v"
     ## instantiate the helper build scripts
-    build = fpga_build.fpga_build()
-
-    ## Read the current revision from the rtl version package file
-    build.read_pkg_version(rtl_version_file="rtl/version_pkg.vhd")
-
-    # can't import from a script because python is dumb
-    # from .scripts import get_version
-
-    #version = get_fpga_version()
-    #build.version.update(version)
+    ## This reads the current revision from the rtl version package file
+    build = fpga_build.fpga_build(rtl_version_file=rtl_version_file)
 
     # why is this dist vs meta?
     # answer: https://confluence.shure.com/display/DEVOPS/Common+Tool+Chain+Integration
@@ -91,10 +84,6 @@ def main(
 
     # Push Build artifacts to artifactory
     # directory names for dist files(e.g. binary image) and meta (e.g. other) files
-    
-    # use version number only, without time stamp
-    build.use_branch_version_scheme = False
-    build.parent_is_branch = False  
 
     status = commit_artifactory(
         artifact_component=artifact_component,
@@ -102,8 +91,9 @@ def main(
         artifact_meta_dir=meta_dir,
     )
 
-    msg = build.get_commit_message(artifact_component)
-    print(msg)
+
+    print("Build version: "+build.get_version()+"  Artifact URL: "+build.get_artifactory_url_all_shure())
+    
     return status
 
     # return exit code on failure

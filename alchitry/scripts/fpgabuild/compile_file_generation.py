@@ -9,7 +9,7 @@ import shutil
 
 import filecmp
 
-import bash
+import scripts.bash
 
 import logging
 # give this module its own logger, tied to its namespace.
@@ -176,7 +176,7 @@ class compile_file_generation(object):
 
         ## parse log file is appended if parse_compile_txt is called more than once so remove it if it exists at initialization
         if(os.path.isfile(self.compile_parse_log_file)):
-            bash.bash("rm "+self.compile_parse_log_file)
+            bash.bash_quiet("rm "+self.compile_parse_log_file)
 
         self.pass_through_file_list = [
             #"shurc", # no shurc support in open source projects
@@ -442,7 +442,7 @@ generate_target all [get_files "+item.file_abs+"]\n"
             # can this warning be avoided by not using the output directory in the path?
             # or updating the xci contents to match the new location?
             # or using a relative path within the xci gen_directory parameter?
-            bash.bash('vivado -mode batch -applog -appjournal -notrace -source ' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xil_ip_generate.tcl') + ' -tclargs ' + xil_ip_gen_file)
+            bash.bash_quiet('vivado -mode batch -applog -appjournal -notrace -source ' + os.path.join(os.path.dirname(os.path.abspath(__file__)), 'xil_ip_generate.tcl') + ' -tclargs ' + xil_ip_gen_file)
             # note: after the xci files are regenerated in a new version of the tool they may produce errors. These should be opened in the gui using the blahblahblah.xpr project
             # and then corrected and re-generated in the gui.
             # finally the regenerated xci should be copied into the original location:
@@ -646,7 +646,7 @@ generate_target all [get_files "+item.file_abs+"]\n"
                             if "IF SIM" in row.upper():
                                 ## if sim only, set a flag
                                 local_sim_or_build = "sim"
-                            elif "IF BUILD" in row.upper():
+                            elif "IF BUILD" in row.upper(): # todo this allows for broken syntax e.g. `iF re_unBuiLDxx_maker_junk` will still match. Maybe not excellent.
                                 ## if build only, set a flag
                                 local_sim_or_build = "build"
                             elif("END_DEFAULT_LIBRARY" in row.upper()): ## end ends all previously set `flags
@@ -721,20 +721,20 @@ generate_target all [get_files "+item.file_abs+"]\n"
                                     self.items.append(item)
                                     str_log = item.get_str_details_summary()
                             else:
-                                try:
-                                    str_log = (
-                                        "IGNROING FILE due to `if "
-                                        + local_sim_or_build
-                                        + " keyword: "
-                                        + item.get_str_details_summary()
-                                    )
-                                except ValueError as e:
-                                    str_log = (
-                                        "IGNROING FILE due to `if "
-                                        + local_sim_or_build
-                                        + " keyword: "
-                                        + current_file_rel_path
-                                    )
+                                #try:
+                                #    str_log = (
+                                #        "IGNROING FILE due to `if "
+                                #        + local_sim_or_build
+                                #        + " keyword: "
+                                #        + item.get_str_details_summary()
+                                #    )
+                                #except ValueError as e:
+                                str_log = (
+                                    "IGNROING FILE due to `if "
+                                    + local_sim_or_build
+                                    + " keyword: "
+                                    + current_file_rel_path
+                                )
 
                             # if(not self.quiet):
                             log.info(str_log)
