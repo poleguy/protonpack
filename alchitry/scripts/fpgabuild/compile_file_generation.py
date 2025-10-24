@@ -9,7 +9,7 @@ import shutil
 
 import filecmp
 
-import scripts.bash
+import scripts.bash as bash
 
 import logging
 # give this module its own logger, tied to its namespace.
@@ -764,16 +764,24 @@ generate_target all [get_files "+item.file_abs+"]\n"
                     log_file.write(str_log + "\n")
 
 
+def main(run_dir, compile_txt):
+    root_dir = os.getcwd()
+    compile_file_generation_i = compile_file_generation(root_dir=root_dir, run_dir=run_dir, sim_or_build="build")
+    compile_file_generation_i.parse_compile_txt(compile_txt)
+    compile_file_generation_i.vivado_compile_cmd_gen()
+
 # if you want to call this directly you can uncomment and debug this part
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     # if called as top level, configure root logger
-#     logging.basicConfig(
-#         level=log.DEBUG,
-#         format="%(asctime)s [%(levelname)s] %(message)s",
-#         filename="log.txt",   # send to a file instead of stderr
-#     )
+    # if called as top level, configure root logger
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        filename="log.txt",   # send to a file instead of stderr
+    )
 
+    import typer
+    typer.run(main)
 #     ########
 #     ## when this file is called directly, assumptions are made based on
 #     ## assuming the current working directory is [run_dir] which is [root_dir]/par/
