@@ -5,33 +5,19 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, RisingEdge, Timer
-
 #from cocotb_test.simulator import run
 import tests.verilator as verilator
 # can't use the format from cocotb.result import TestFailure because it trys to collect it as a test.
 import cocotb.result 
-#   /home/poleguy/.virtualenvs/home__poleguy__fpga-data__2024__dpsm_rx/lib/python3.11/site-packages/cocotb/result.py:175: PytestCollectionWarning: cannot collect test class 'TestFailure' because it has a __init__ constructor (from: tests/test_spi_word_write_dual.py)
-#    class TestFailure(TestComplete, AssertionError):
-
-
 import os
-
-#import src_util_pkg as util
-#current_dir = os.path.dirname(__file__)
-#modules_path = os.path.join(current_dir, 'modules')
-#sys.path.append(modules_path)
-#print('\n'.join(sys.path))
-
-#import tests.cvc as cvc
 
 from tests.conftest import root_dir
 
-import logging as log
-#import plot_func
-#import FFTPlot
-#import math
+import logging
+# give this module its own logger, tied to its namespace.
+# This will inherit the output location of the module that calls this
+log = logging.getLogger(__name__) 
 
-#module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),"../rtl")
 
 ###################################################################################
 ## pytest entry point
@@ -88,7 +74,7 @@ async def check_telemetry_serialize(dut):
 
 
     # Clocks are created in testbench for speed
-    #clk_in = Clock(dut.clk, 10, units="ns")
+    #clk_in = Clock(dut.clk, 10, unit="ns")
     
     # Start the clocks
     #cocotb.start_soon(clk_in.start())
@@ -101,7 +87,7 @@ async def check_telemetry_serialize(dut):
     #cocotb.start_soon(telem_bytes_collect(dut.telemetry_serialize_inst, fifo_list))
     #cocotb.start_soon(telem_bytes_inject(dut.unpack_telemetry_inst, fifo_list))
 
-    await Timer(1, units="ps")  # wait to prevent crash at start line
+    await Timer(1, unit="ps")  # wait to prevent crash at start line
 
     # Apply input data
     #for data in test_data:
@@ -133,7 +119,7 @@ async def check_telemetry_serialize(dut):
     # dut.data_128MHz.value.value = data
     #    await RisingEdge(dut.telemetry_serialize_inst.clk)
 
-    await Timer(10, units="us")  # sim for a bit to inspect output
+    await Timer(10, unit="us")  # sim for a bit to inspect output
 
 
     #assert "passed" in results, f"Not all checks passed."
@@ -255,7 +241,7 @@ async def check_outputs(dut, results, expected_data):
     await RisingEdge(dut.clk)
     assert dut.valid_out == 0, "valid stayed high for more than one clock edge"       
 
-    #await Timer(10, units='us') # sim for a bit to inspect output
+    #await Timer(10, unit='us') # sim for a bit to inspect output
 
     assert output_data == expected_data, (
         f"Data not as expected: got {output_data} expected {expected_data}"

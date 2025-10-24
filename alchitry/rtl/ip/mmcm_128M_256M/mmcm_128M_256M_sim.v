@@ -43,10 +43,14 @@ module mmcm_128M_256M
   end
 
   /* verilator lint_off BLKSEQ */
+  //always @(posedge clk_in1, negedge clk_in1) // this approach also works
   always @(posedge clk_in1)
   begin
-    clk_out2 = 1;
-    #1.953 clk_out2 = 0;
+    // use = or <= here?
+    clk_out2 <= 1;
+    #1.953 clk_out2 <= 0; // timing is from the last #number
+    #1.953 clk_out2 <= 1;
+    #1.953 clk_out2 <= 0; 
   end
   /* verilator lint_on BLKSEQ */
 

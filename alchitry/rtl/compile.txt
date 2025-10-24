@@ -6,7 +6,7 @@
 ######################################
 reset_conditioner.v
 async_fifo.sv
-ft.v
+ft.sv
 #lucid_globals.v
 simple_dual_port_ram.v
 

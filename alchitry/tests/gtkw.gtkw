@@ -1,0 +1,36 @@
+[*]
+[*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
+[*] Fri Oct 24 19:01:10 2025
+[*]
+[dumpfile] "/home/poleguy/fpga-data/2025/protonpack/alchitry/tests/wave1.vcd"
+[dumpfile_mtime] "Fri Oct 24 18:58:06 2025"
+[dumpfile_size] 25149
+[savefile] "/home/poleguy/fpga-data/2025/protonpack/alchitry/tests/gtkw.gtkw"
+[timestart] 0
+[size] 2560 1394
+[pos] -1 -1
+*-22.142952 3030000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top_level_tb.
+[treeopen] top_level_tb.dut.
+[sst_width] 254
+[signals_width] 286
+[sst_expanded] 1
+[sst_vpaned_height] 484
+@28
+top_level_tb.rst_n
+top_level_tb.dut.clk_128M
+top_level_tb.dut.clk_256M
+top_level_tb.dut.clk_wiz_locked
+top_level_tb.dut.r1_clk_wiz_locked_125M
+top_level_tb.dut.r1_clk_wiz_locked_128M
+top_level_tb.dut.r1_clk_wiz_locked_256M
+top_level_tb.dut.r1_soft_reset_125M
+top_level_tb.dut.r_clk_wiz_locked_125M
+top_level_tb.dut.r_clk_wiz_locked_128M
+top_level_tb.dut.clk_wiz_100M_i.locked
+top_level_tb.dut.clk_wiz_100M_i.clk_in1
+top_level_tb.dut.clk_wiz_100M_i.clk_out1
+@29
+top_level_tb.dut.r_rst_128M
+[pattern_trace] 1
+[pattern_trace] 0

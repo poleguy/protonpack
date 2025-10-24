@@ -134,12 +134,15 @@ def run_rtl_sim_verilator(
     This function stands-alone and doesn't necessarily need other function calls prior to this one.
     However often setup_sim_dir would be called prior with the run execution path passed into this function via rtl_run_path input.
     """
+    # logging is handled by magic in pytest, so this isn't what we want:
+    # https://stackoverflow.com/questions/4673373/logging-within-pytest-tests
     # if called as top level, configure root logger
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        filename="log.txt",   # send to a file instead of stderr
-    )
+    # logging.basicConfig(
+    #     level=logging.DEBUG,
+    #     format="%(asctime)s [%(levelname)s] %(message)s",
+    #     filename="log.txt",   # send to a file instead of stderr
+    # )
+
     ## if no rtl_run_path is input, try env variable, else set current directory
     if rtl_run_path == None:
         if os.environ.get("SIM_RUN_DIR") is not None:
@@ -228,13 +231,8 @@ def run_rtl_sim_verilator(
     ## now execute compile and sim commands generated for CVC
     #######################################################
 
-    # in cvc all source is compiled at once
-    # get xilinx path
-    vivado_path = which("vivado")
-    assert vivado_path != None, "Cannot find Vivado on path."
-    xil_basepath = os.path.split(os.path.split(vivado_path)[0])[0]
-    xil_unisims = "-y %s/data/verilog/src/unisims" % (xil_basepath)
-    xil_unisims = "-y /home/poleguy/fpga-data/2025/protonpack/alchitry/verilator-unisims"
+    # in verilator all source is compiled at once
+    
     # todo: use https://github.com/uwsampl/verilator-unisims
 
     # todo: there is no check for duplicate glbl.v files and the error message is not caught.
@@ -247,8 +245,8 @@ def run_rtl_sim_verilator(
     #os.environ["VERILOG_SOURCES"] = "/home/poleguy/fpga-data/2025/protonpack/alchitry/tests/my_design.sv"
     
 
-# /home/poleguy/.virtualenvs/home__poleguy__fpga-data__2025__protonpack__alchitry/lib/python3.11/site-packages/cocotb/libs
-# `cocotb-config --lib-dir `
+    # /home/poleguy/.virtualenvs/home__poleguy__fpga-data__2025__protonpack__alchitry/lib/python3.11/site-packages/cocotb/libs
+    # `cocotb-config --lib-dir `
     command = ( "make -C /home/poleguy/fpga-data/2025/protonpack/alchitry/tests"
 
         # +interp +verbose -informs
@@ -287,7 +285,7 @@ def compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame):
         + caller_module
     )
     os.environ["MODULE"] = caller_module  # point to this file as the cocotb module
-    os.environ["COCOTB_TOPLEVEL"] = "alchitry_top"
+    os.environ["COCOTB_TOPLEVEL"] = "top_level_tb" # todo: fix this to be programmatic
     os.environ["PYTHONPATH"] = (
         caller_dir  # this is required so that the cocotb library can find this module
     )
@@ -295,13 +293,6 @@ def compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame):
     # os.environ['LIBPYTHON_LOC'] = '/home/fpga/workspace/telemetry/cenv/lib/libpython3.8.so.1.0'
     os.environ["NO_COLOR"] = "1"
     os.environ["COCOTB_REDUCED_LOG_FMT"] = "1"
-
-    vpi = (
-        "+loadvpi="
-        + cocotb_lib_dir
-        + "/libcocotbvpi_modelsim.so:vlog_startup_routines_bootstrap"
-    )
-    # vpi = '+loadvpi=$(shell cocotb-config --lib-name-path vpi cvc):vlog_startup_routines_bootstrap'
 
     # command = f"{command} {vpi} > tmp.txt"
 
