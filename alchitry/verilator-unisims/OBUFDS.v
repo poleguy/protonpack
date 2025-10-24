@@ -7,9 +7,9 @@ module OBUFDS (O, OB, I);
     parameter IOSTANDARD = "DEFAULT";
     parameter SLEW = "SLOW";
 
-    output O, OB;
+    output wire O, OB;
 
-    input  I;
+    input  wire I;
    assign O=I;
    assign OB =!I;
 

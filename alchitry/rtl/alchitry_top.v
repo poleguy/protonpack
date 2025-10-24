@@ -1,69 +1,60 @@
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
 module alchitry_top (
-    clk,
-    rst_n,
-    led,
-    usb_rx,
-    usb_tx,
-    ft_clk,
-    ft_rxf,
-    ft_txe,
-    ft_data,
-    ft_be,
-    ft_rd,
-    ft_wr,
-    ft_oe,
-    ft_wakeup,
-    ft_reset,
-    RXN_I,
-    RXP_I,
-    GTREFCLK1P_I,
-    GTREFCLK1N_I,
-    REC_CLOCK_P,
-    REC_CLOCK_N
+  input wire clk,
+  input wire rst_n,
+  output reg [7:0] led,
+  input wire usb_rx,
+  output reg usb_tx,
+  input wire ft_clk,
+  input wire ft_rxf,
+  input wire ft_txe,
+  inout wire [15:0] ft_data,
+  inout wire [1:0] ft_be,
+  output reg ft_rd,
+  output reg ft_wr,
+  output reg ft_oe,
+  output reg ft_wakeup,
+  output reg ft_reset,
+  input wire RXN_I,
+  input wire RXP_I,
+  input wire [0:0] GTREFCLK1P_I,
+  input wire [0:0] GTREFCLK1N_I,
+  output wire REC_CLOCK_P,
+  output wire REC_CLOCK_N
   );
-  input wire clk;
-  input wire rst_n;
-  output reg [7:0] led;
-  input wire usb_rx;
-  output reg usb_tx;
-  input wire ft_clk;
-  input wire ft_rxf;
-  input wire ft_txe;
-  inout wire [15:0] ft_data;
-  inout wire [1:0] ft_be;
-  output reg ft_rd;
-  output reg ft_wr;
-  output reg ft_oe;
-  output reg ft_wakeup;
-  output reg ft_reset;
-  input wire RXN_I;
-  input wire RXP_I;
-  input wire [0:0] GTREFCLK1P_I;
-  input wire [0:0] GTREFCLK1N_I;
-  output wire REC_CLOCK_P;
-  output wire REC_CLOCK_N;
   reg rst;
   localparam _MP_STAGES_1420874663 = 3'h4;
   reg M_reset_cond_in;
   wire M_reset_cond_out;
+  wire clk_100M;
+  wire clk_128M;
+  wire clk_wiz_locked;
+  reg r_clk_wiz_locked_128M = 1'b0;
+  reg r1_clk_wiz_locked_128M = 1'b0;
+  reg r_clk_wiz_locked_256M = 1'b0;
+  reg r1_clk_wiz_locked_256M = 1'b0;
+  reg r_rst_128M = 1'b0;
+  reg r_rst_256M = 1'b0;
+  wire clk_256M;
+  wire [31:0] gt_data;
+  wire [3:0] gt_data_is_k;
+  wire [87:0] packet_data;
+  wire packet_valid;
+  // wire stream_clk0;
+  // wire stream_valid0;
+  // wire [31:0] stream_enable0;
+  // wire [87:0] stream_data0;
+  wire gt_clk;
+  reg reset_counters = 0;
+  wire [31:0] total_packets;
+  wire [31:0] mismatch_packets;
+  wire okay_led;
+  wire link_count_okay;
+  wire gt_soft_reset;
+  //wire [47:0] tx_mac_dest;
+  parameter FREQ_CNT_VAL = 16'h0800;
 
-
-  initial begin
-    //$dumpfile();                // default "dump.vcd"
-    $dumpfile("wave1.vcd");     // dumps into "wave1.vcd"
-  end
-
-  initial begin
-    $dumpvars (0);        // Dumps all variables from all module instances
-
-  end
-  reset_conditioner #(.STAGES(_MP_STAGES_1420874663)) reset_cond(
-                      .clk(clk),
-                      .in(M_reset_cond_in),
-                      .out(M_reset_cond_out)
-                    );
   localparam _MP_BUS_WIDTH_528252186 = 5'h10;
   localparam _MP_TX_BUFFER_528252186 = 12'h800;
   localparam _MP_RX_BUFFER_528252186 = 12'h800;
@@ -82,6 +73,22 @@ module alchitry_top (
   wire [1:0] M_ft_ui_dout_be;
   wire M_ft_ui_dout_empty;
   reg M_ft_ui_dout_get;
+
+
+  initial begin
+    //$dumpfile();                // default "dump.vcd"
+    $dumpfile("wave1.vcd");     // dumps into "wave1.vcd"
+  end
+
+  initial begin
+    $dumpvars (0);        // Dumps all variables from all module instances
+
+  end
+  reset_conditioner #(.STAGES(_MP_STAGES_1420874663)) reset_cond(
+                      .clk(clk_100M),
+                      .in(M_reset_cond_in),
+                      .out(M_reset_cond_out)
+                    );
   ft #(
        .BUS_WIDTH(_MP_BUS_WIDTH_528252186),
        .TX_BUFFER(_MP_TX_BUFFER_528252186),
@@ -92,7 +99,7 @@ module alchitry_top (
        .ft_clk(ft_clk),
        .ft_data(ft_data),
        .ft_be(ft_be),
-       .clk(clk),
+       .clk(clk_100M),
        .rst(rst),
        .ft_rxf(M_ft_ft_rxf),
        .ft_txe(M_ft_ft_txe),
@@ -125,33 +132,6 @@ module alchitry_top (
     M_ft_ui_din = M_ft_ui_dout;
     M_ft_ui_din_be = M_ft_ui_dout_be;
   end
-  wire clk_100M;
-  wire clk_128M;
-  wire clk_wiz_locked;
-  reg r_clk_wiz_locked_128M = 1'b0;
-  reg r1_clk_wiz_locked_128M = 1'b0;
-  reg r_clk_wiz_locked_256M = 1'b0;
-  reg r1_clk_wiz_locked_256M = 1'b0;
-  reg r_rst_128M = 1'b0;
-  reg r_rst_256M = 1'b0;
-  wire clk_256M;
-  wire [31:0] gt_data;
-  wire [3:0] gt_data_is_k;
-  wire [87:0] packet_data;
-  wire packet_valid;
-  // wire stream_clk0;
-  // wire stream_valid0;
-  // wire [31:0] stream_enable0;
-  // wire [87:0] stream_data0;
-  wire gt_clk;
-  reg reset_counters = 0;
-  wire [31:0] total_packets;
-  wire [31:0] mismatch_packets;
-  wire okay_led;
-  wire link_count_okay;
-  wire gt_soft_reset;
-  //wire [47:0] tx_mac_dest;
-  parameter FREQ_CNT_VAL = 16'h0800;
 
   clk_wiz_100M clk_wiz_100M_i(
                  .clk_in1(clk_100M),
