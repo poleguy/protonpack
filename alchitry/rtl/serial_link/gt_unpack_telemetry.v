@@ -15,7 +15,7 @@
 //--------------------------------------------------
 
 module gt_unpack_telemetry #(
-  parameter G_DEBUG        = 1'b0,
+  //parameter G_DEBUG        = 1'b0,
   // turn on led after data is good for this number of valid periods
   // valid period of 1.6 usec means 500msec is about 4ffff
   parameter [19:0] G_MATCH_CNT   = 20'h4ffff,
@@ -65,7 +65,7 @@ module gt_unpack_telemetry #(
   reg [15:0]  r_timeout_cnt = 16'h0000;
   reg [19:0]  r_match_cnt   = 20'h00000;
 
-  reg         r_okay_led_out = 1'b0;
+  reg         r_okay_led_out;
 
   wire        pll_locked;
 
@@ -221,6 +221,8 @@ module gt_unpack_telemetry #(
     end
   end
 
+  initial r_okay_led_out = 1'b0;  
+
   // generate led that goes on if data is good for > 500 msec
   always @(posedge clk_256M) begin
     if (valid_unpack_out == 1'b1) begin
@@ -253,7 +255,10 @@ module gt_unpack_telemetry #(
   assign data_out       = data_unpack_out;
   assign valid_out      = valid_unpack_out;
 
-endmodule
+  wire _unused_ok = 1'b0 && &{1'b0,
+                    clk_128M_buf,
+                    1'b0};
 
+endmodule
 
 `resetall

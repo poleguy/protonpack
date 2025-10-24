@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`default_nettype none //do not use implicit wire for port connections
 module async_fifo (
 	wclk,
 	wrst,
@@ -78,7 +80,7 @@ module async_fifo (
 		M_ram_rclk = rclk;
 		M_ram_write_enable = 1'h0;
 		wnext = sv2v_cast_D8722(D_waddr_q + 1'h1);
-		waddr_gray = D_waddr_q[ADDR_SIZE - 1:1'h1] ^ D_waddr_q;
+		waddr_gray = 11'(D_waddr_q[ADDR_SIZE - 1:1'h1] ^ D_waddr_q);
 		wnext_gray = wnext[ADDR_SIZE - 1:1'h1] ^ wnext;
 		raddr_gray = D_raddr_q[ADDR_SIZE - 1:1'h1] ^ D_raddr_q;
 		D_gwsync_d = waddr_gray;
@@ -125,3 +127,5 @@ module async_fifo (
 			D_grsync_q <= D_grsync_d;
 		end
 endmodule
+
+`resetall

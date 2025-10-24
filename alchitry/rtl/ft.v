@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`default_nettype none //do not use implicit wire for port connections
 module ft (
 	clk,
 	rst,
@@ -49,17 +51,17 @@ module ft (
 	reg [1:0] L_0054483b_prefered_state;
 	reg L_0054483b_can_write;
 	reg L_0054483b_can_read;
-	localparam E_State_IDLE = 2'h0;
-	localparam E_State_BUS_SWITCH = 2'h1;
-	localparam E_State_READ = 2'h2;
-	localparam E_State_WRITE = 2'h3;
+	// localparam E_State_IDLE = 2'h0;
+	// localparam E_State_BUS_SWITCH = 2'h1;
+	// localparam E_State_READ = 2'h2;
+	// localparam E_State_WRITE = 2'h3;
 	reg [1:0] D_state_d;
 	reg [1:0] D_state_q = 0;
 	function automatic [5:0] sv2v_cast_A58F0;
 		input reg [5:0] inp;
 		sv2v_cast_A58F0 = inp;
 	endfunction
-	localparam _MP_WIDTH_28041744 = sv2v_cast_A58F0(BUS_WIDTH + (BUS_WIDTH / 4'h8));
+	localparam _MP_WIDTH_28041744 = sv2v_cast_A58F0(BUS_WIDTH + ({1'b0,BUS_WIDTH} / 6'h8));
 	localparam _MP_ENTRIES_28041744 = TX_BUFFER;
 	localparam _MP_SYNC_STAGES_28041744 = 2'h3;
 	reg [_MP_WIDTH_28041744 - 1:0] M_write_fifo_din;
@@ -84,7 +86,7 @@ module ft (
 		.rget(M_write_fifo_rget),
 		.empty(M_write_fifo_empty)
 	);
-	localparam _MP_WIDTH_462831266 = sv2v_cast_A58F0(BUS_WIDTH + (BUS_WIDTH / 4'h8));
+	localparam _MP_WIDTH_462831266 = sv2v_cast_A58F0(BUS_WIDTH + ({1'b0,BUS_WIDTH} / 6'h8));
 	localparam _MP_ENTRIES_462831266 = RX_BUFFER;
 	localparam _MP_SYNC_STAGES_462831266 = 2'h3;
 	reg [_MP_WIDTH_462831266 - 1:0] M_read_fifo_din;
@@ -161,3 +163,5 @@ module ft (
 	end
 	always @(posedge ft_clk) D_state_q <= D_state_d;
 endmodule
+
+`resetall

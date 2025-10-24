@@ -9,6 +9,7 @@ mkdir -p modules
  
 # also look in requirements.txt, because some tools are now pip installed
 
+#git clone git@github.com:uwsampl/verilator-unisims.git
 
 ##############################################################################
 # Main Modules
@@ -33,3 +34,4 @@ wget https://artifactory.shure.com/All_Shure_Components/Wideband/NGPSM_RX/7.9.98
 
 # to check latest version in repo:
 # svn info http://subversion.shure.com/Common/FPGA/IP/DataConverters/gigadac2/trunk | grep "Last Changed Rev"
+

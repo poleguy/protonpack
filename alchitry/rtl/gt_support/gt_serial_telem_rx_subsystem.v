@@ -48,7 +48,7 @@ module gt_serial_telem_rx_subsystem #(
 
   // DRP/system clock domain (~128 MHz)
   input  wire DRP_CLK_IN,
-  input  wire rst_128M,
+  input  wire RST_128M,
 
   // Serial I/O
   input  wire RXN_IN,
@@ -111,8 +111,8 @@ module gt_serial_telem_rx_subsystem #(
   wire        gt0_rxresetdone_i;
 
   // TX path
-  wire [31:0] gt0_txdata_i;
-  wire [3:0]  gt0_txcharisk_i;
+  wire [31:0] gt0_txdata_i = 0;
+  wire [3:0]  gt0_txcharisk_i = 0;
   wire        gt0_txoutclkfabric_i;
   wire        gt0_txoutclkpcs_i;
   wire        gt0_txresetdone_i;
@@ -127,7 +127,7 @@ module gt_serial_telem_rx_subsystem #(
   wire gt0_rxlpmreset_i;
 
   // Data valid path from checker to GT (as in VHDL; may be driven by checker)
-  wire gt0_track_data_i;
+  wire gt0_track_data_i = 0;
 
   // ---------------------------------------------------------------------------
   // Reset synchronization registers (modeled without delay)
@@ -147,11 +147,11 @@ module gt_serial_telem_rx_subsystem #(
   // ---------------------------------------------------------------------------
   // Frame checker-related (kept for parity; checker is commented out)
   // ---------------------------------------------------------------------------
-  wire        gt0_matchn_i;              // from frame checker (pattern match)
-  wire [7:0]  gt0_error_count_i;         // from frame checker
+  wire        gt0_matchn_i = 0;              // from frame checker (pattern match)
+  //wire [7:0]  gt0_error_count_i;         // from frame checker
   wire        gt0_frame_check_reset_i;   // reset control for checker
   wire        gt0_inc_in_i;              // increment control (tied low)
-  wire        gt0_inc_out_i;             // from checker
+  //wire        gt0_inc_out_i;             // from checker
   wire        reset_on_data_error_i;     // unused in current context (tie low)
 
   assign reset_on_data_error_i = 1'b0;
@@ -166,12 +166,12 @@ module gt_serial_telem_rx_subsystem #(
   // ---------------------------------------------------------------------------
   reg  [15:0] soft_reset_cnt  = 16'h0000;
   reg         soft_reset_auto = 1'b0;
-  wire [0:0]  soft_reset_vio_i;
+  wire [0:0]  soft_reset_vio_i = 0;
   wire        soft_reset_i;
 
   // Soft reset generation in DRP/system clock domain
   always @(posedge clk_128M) begin
-    if (rst_128M) begin
+    if (RST_128M) begin
       soft_reset_auto <= 1'b1;
       soft_reset_cnt  <= 16'h0000;
     end else if (soft_reset_cnt == 16'hFFFF) begin
@@ -260,24 +260,24 @@ module gt_serial_telem_rx_subsystem #(
 //   - Ensure the port list matches your generated wrapper.
 // ---------------------------------------------------------------------------
   gt_serial_telem_rx gt_serial_telem_rx_i (
-    .SOFT_RESET_TX_IN            (soft_reset_i),
-    .SOFT_RESET_RX_IN            (soft_reset_i),
-    .DONT_RESET_ON_DATA_ERROR_IN (tied_to_vcc_i),
-    .Q0_CLK1_GTREFCLK_PAD_N_IN   (Q0_CLK1_GTREFCLK_PAD_N_IN),
-    .Q0_CLK1_GTREFCLK_PAD_P_IN   (Q0_CLK1_GTREFCLK_PAD_P_IN),
+    .soft_reset_tx_in            (soft_reset_i),
+    .soft_reset_rx_in            (soft_reset_i),
+    .dont_reset_on_data_error_in (tied_to_vcc_i),
+    .q0_clk1_gtrefclk_pad_n_in   (Q0_CLK1_GTREFCLK_PAD_N_IN),
+    .q0_clk1_gtrefclk_pad_p_in   (Q0_CLK1_GTREFCLK_PAD_P_IN),
 
-    .GT0_TX_MMCM_LOCK_OUT        (gt0_txmmcm_lock_i),
-    .GT0_RX_MMCM_LOCK_OUT        (gt0_rxmmcm_lock_i),
-    .GT0_TX_FSM_RESET_DONE_OUT   (gt0_txfsmresetdone_i),
-    .GT0_RX_FSM_RESET_DONE_OUT   (gt0_rxfsmresetdone_i),
-    .GT0_DATA_VALID_IN           (gt0_track_data_i),
+    .gt0_tx_mmcm_lock_out        (gt0_txmmcm_lock_i),
+    .gt0_rx_mmcm_lock_out        (gt0_rxmmcm_lock_i),
+    .gt0_tx_fsm_reset_done_out   (gt0_txfsmresetdone_i),
+    .gt0_rx_fsm_reset_done_out   (gt0_rxfsmresetdone_i),
+    .gt0_data_valid_in           (gt0_track_data_i),
 
-    .GT0_TXUSRCLK_OUT            (gt0_txusrclk_i),
-    .GT0_TXUSRCLK2_OUT           (gt0_txusrclk2_i),
-    .GT0_RXUSRCLK_OUT            (gt0_rxusrclk_i),
-    .GT0_RXUSRCLK2_OUT           (gt0_rxusrclk2_i),
+    .gt0_txusrclk_out            (gt0_txusrclk_i),
+    .gt0_txusrclk2_out           (gt0_txusrclk2_i),
+    .gt0_rxusrclk_out            (gt0_rxusrclk_i),
+    .gt0_rxusrclk2_out           (gt0_rxusrclk2_i),
 
-    // Channel - DRP Ports
+    // channel - drp ports
     .gt0_drpaddr_in              (gt0_drpaddr_i),
     .gt0_drpdi_in                (gt0_drpdi_i),
     .gt0_drpdo_out               (gt0_drpdo_i),
@@ -285,7 +285,7 @@ module gt_serial_telem_rx_subsystem #(
     .gt0_drprdy_out              (gt0_drprdy_i),
     .gt0_drpwe_in                (gt0_drpwe_i),
 
-    // RX initialization/margin analysis
+    // rx initialization/margin analysis
     .gt0_eyescanreset_in         (tied_to_ground_i),
     .gt0_rxuserrdy_in            (tied_to_vcc_i),
     .gt0_eyescandataerror_out    (/* unused */),
@@ -340,13 +340,13 @@ module gt_serial_telem_rx_subsystem #(
     .gt0_txresetdone_out         (gt0_txresetdone_i),
 
     // Common/PLL ports (unused here)
-    .GT0_PLL0RESET_OUT           (/* open */),
-    .GT0_PLL0OUTCLK_OUT          (/* open */),
-    .GT0_PLL0OUTREFCLK_OUT       (/* open */),
-    .GT0_PLL0LOCK_OUT            (/* open */),
-    .GT0_PLL0REFCLKLOST_OUT      (/* open */),
-    .GT0_PLL1OUTCLK_OUT          (/* open */),
-    .GT0_PLL1OUTREFCLK_OUT       (/* open */),
+    .gt0_pll0reset_out           (/* open */),
+    .gt0_pll0outclk_out          (/* open */),
+    .gt0_pll0outrefclk_out       (/* open */),
+    .gt0_pll0lock_out            (/* open */),
+    .gt0_pll0refclklost_out      (/* open */),
+    .gt0_pll1outclk_out          (/* open */),
+    .gt0_pll1outrefclk_out       (/* open */),
 
     // RX polarity
     .gt0_rxpolarity_in           (1'b0),
@@ -359,26 +359,26 @@ module gt_serial_telem_rx_subsystem #(
   // Debug/ILA hookups
   // ---------------------------------------------------------------------------
 
-  // Pack RX data to 80b ( pad [79:32] with zeros, [31:0] data )
-  wire [79:0] gt0_rxdata_ila = {48'h0000_000000000, gt0_rxdata_i};
+  // // Pack RX data to 80b ( pad [79:32] with zeros, [31:0] data )
+  // wire [79:0] gt0_rxdata_ila = {48'h0000_000000000, gt0_rxdata_i};
 
-  // RX data valid (padding both bits to 0, consistent with VHDL)
-  wire [1:0]  gt0_rxdatavalid_ila = 2'b00;
+  // // RX data valid (padding both bits to 0, consistent with VHDL)
+  // wire [1:0]  gt0_rxdatavalid_ila = 2'b00;
 
-  // Pack RX charisk to 8b (pad upper nibble with zeros)
-  wire [7:0]  gt0_rxcharisk_ila = {4'b0000, gt0_rxcharisk_i};
+  // // Pack RX charisk to 8b (pad upper nibble with zeros)
+  // wire [7:0]  gt0_rxcharisk_ila = {4'b0000, gt0_rxcharisk_i};
 
-  // Single-bit vectors for ILA
-  wire [0:0]  gt0_txmmcm_lock_ila = {gt0_txmmcm_lock_i};
-  wire [0:0]  gt0_rxmmcm_lock_ila = {gt0_rxmmcm_lock_i};
-  wire [0:0]  gt0_rxresetdone_ila = {gt0_rxresetdone_i};
-  wire [0:0]  gt0_txresetdone_ila = {gt0_txresetdone_i};
+  // // Single-bit vectors for ILA
+  // wire [0:0]  gt0_txmmcm_lock_ila = {gt0_txmmcm_lock_i};
+  // wire [0:0]  gt0_rxmmcm_lock_ila = {gt0_rxmmcm_lock_i};
+  // wire [0:0]  gt0_rxresetdone_ila = {gt0_rxresetdone_i};
+  // wire [0:0]  gt0_txresetdone_ila = {gt0_txresetdone_i};
 
-  // Track data
-  wire        track_data_out_i    = gt0_track_data_i;
-  wire [0:0]  track_data_out_ila_i= {track_data_out_i};
+  // // Track data
+  // wire        track_data_out_i    = gt0_track_data_i;
+  // wire [0:0]  track_data_out_ila_i= {track_data_out_i};
 
-  // ILA for TX status (mmcm lock, resetdone)
+//  // ILA for TX status (mmcm lock, resetdone)
 //   ila_1 ila_tx0_inst (
 //     .clk   (gt0_txusrclk_i),
 //     .probe0(gt0_txmmcm_lock_ila),
@@ -397,17 +397,17 @@ module gt_serial_telem_rx_subsystem #(
 //     .probe6(gt0_rxresetdone_ila)
 //   );
 
-  // 8x8 ILAs for compact debug views
-  wire [7:0] probe0, probe1, probe2, probe3, probe4, probe5, probe6, probe7;
-  assign probe0 = { 1'b0, gt0_rxmmcm_lock_ila[0], gt0_rxresetdone_ila[0], track_data_out_ila_i[0],
-                    gt0_rxresetdone_ila[0], gt0_rxcommadet_out, gt0_rxbyterealign_out, gt0_rxbyteisaligned_out };
-  assign probe1 = gt0_error_count_i;
-  assign probe2 = gt0_rxcharisk_ila;
-  assign probe3 = {5'b00000, gt0_frame_check_reset_i, gt0_matchn_i, gt0_inc_out_i};
-  assign probe4 = 8'h00;
-  assign probe5 = 8'h00;
-  assign probe6 = 8'h00;
-  assign probe7 = 8'h00;
+  // // 8x8 ILAs for compact debug views
+  // wire [7:0] probe0, probe1, probe2, probe3, probe4, probe5, probe6, probe7;
+  // assign probe0 = { 1'b0, gt0_rxmmcm_lock_ila[0], gt0_rxresetdone_ila[0], track_data_out_ila_i[0],
+  //                   gt0_rxresetdone_ila[0], gt0_rxcommadet_out, gt0_rxbyterealign_out, gt0_rxbyteisaligned_out };
+  // assign probe1 = gt0_error_count_i;
+  // assign probe2 = gt0_rxcharisk_ila;
+  // assign probe3 = {5'b00000, gt0_frame_check_reset_i, gt0_matchn_i, gt0_inc_out_i};
+  // assign probe4 = 8'h00;
+  // assign probe5 = 8'h00;
+  // assign probe6 = 8'h00;
+  // assign probe7 = 8'h00;
 
 //   ila_8x8 ila_8x8_inst (
 //     .clk   (gt0_txusrclk_i),
@@ -421,16 +421,16 @@ module gt_serial_telem_rx_subsystem #(
 //     .probe7(probe7)
 //   );
 
-  wire [7:0] probe0_rx, probe1_rx, probe2_rx, probe3_rx, probe4_rx, probe5_rx, probe6_rx, probe7_rx;
-  assign probe0_rx = { 1'b0, gt0_rxmmcm_lock_ila[0], gt0_rxresetdone_ila[0], track_data_out_ila_i[0],
-                       gt0_rxresetdone_ila[0], gt0_rxcommadet_out, gt0_rxbyterealign_out, gt0_rxbyteisaligned_out };
-  assign probe1_rx = gt0_error_count_i;
-  assign probe2_rx = gt0_rxcharisk_ila;
-  assign probe3_rx = {5'b00000, gt0_frame_check_reset_i, gt0_matchn_i, gt0_inc_out_i};
-  assign probe4_rx = {gt0_rxnotintable_i, gt0_rxdisperr_i};
-  assign probe5_rx = 8'h00;
-  assign probe6_rx = 8'h00;
-  assign probe7_rx = 8'h00;
+  // wire [7:0] probe0_rx, probe1_rx, probe2_rx, probe3_rx, probe4_rx, probe5_rx, probe6_rx, probe7_rx;
+  // assign probe0_rx = { 1'b0, gt0_rxmmcm_lock_ila[0], gt0_rxresetdone_ila[0], track_data_out_ila_i[0],
+  //                      gt0_rxresetdone_ila[0], gt0_rxcommadet_out, gt0_rxbyterealign_out, gt0_rxbyteisaligned_out };
+  // assign probe1_rx = gt0_error_count_i;
+  // assign probe2_rx = gt0_rxcharisk_ila;
+  // assign probe3_rx = {5'b00000, gt0_frame_check_reset_i, gt0_matchn_i, gt0_inc_out_i};
+  // assign probe4_rx = {gt0_rxnotintable_i, gt0_rxdisperr_i};
+  // assign probe5_rx = 8'h00;
+  // assign probe6_rx = 8'h00;
+  // assign probe7_rx = 8'h00;
 
 //   ila_8x8 ila_8x8_rx_inst (
 //     .clk   (gt0_rxusrclk_i),
@@ -449,6 +449,45 @@ module gt_serial_telem_rx_subsystem #(
   // - gt0_txdata_i and gt0_txcharisk_i are declared but not driven here.
   //   If TX is not used, leave them unconnected or drive as needed elsewhere.
   // ---------------------------------------------------------------------------
+
+wire _unused_ok = 1'b0 && &{1'b0,
+                    gt0_frame_check_reset_i, // todo: hook up to something other than ila
+                    soft_reset_vio_i,
+                    gt0_rxfsmresetdone_s,                    
+                    gt0_inc_in_i,                    
+                    gt0_matchn_i,
+                    gt0_tx_system_reset_c,
+                    gt0_track_data_i,
+                    gt0_rxusrclk_i,
+                    gt0_txresetdone_i,
+                    gt0_txoutclkpcs_i,
+                    gt0_txoutclkfabric_i,
+                    gt0_txcharisk_i,
+                    gt0_txdata_i,   
+                    gt0_rx_system_reset_c,                   
+                    gt0_txusrclk_i,
+                    gt0_dmonitorout_i,
+                    gt0_rxcommadet_out,
+                    gt0_rxdisperr_i,
+                    gt0_rxnotintable_i,
+                    gt0_rxbyteisaligned_out,
+                    gt0_rxbyterealign_out,
+                    gt0_txmmcm_lock_i,
+                    gt0_drprdy_i,
+                    gt0_drpdo_i,
+                    tied_to_vcc_i,
+                    tied_to_vcc_vec_i,
+                    tied_to_ground_vec_i,
+                    //gt0_error_count_i,
+                    gt0_matchn_i,
+                    gt0_rxmmcm_lock_i,
+                    gt0_rxoutclkfabric_i,
+                    G_DEBUG,
+                    EXAMPLE_USE_CHIPSCOPE,
+                    STABLE_CLOCK_PERIOD,
+                    EXAMPLE_WORDS_IN_BRAM,
+                    EXAMPLE_LANE_WITH_START_CHAR,
+                    1'b0};
 
 endmodule
 

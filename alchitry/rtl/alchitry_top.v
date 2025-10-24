@@ -1,4 +1,5 @@
-`default_nettype none
+`timescale 1ns/1ps
+`default_nettype none //do not use implicit wire for port connections
 module alchitry_top (
 	clk,
 	rst_n,
@@ -22,8 +23,6 @@ module alchitry_top (
 	REC_CLOCK_P,
 	REC_CLOCK_N
 );
-	parameter g_SIM = 1'b0;
-	parameter g_debug = 1'b0;
 	input wire clk;
 	input wire rst_n;
 	output reg [7:0] led;
@@ -101,7 +100,7 @@ module alchitry_top (
 	always @(*) begin
 		M_reset_cond_in = ~rst_n;
 		rst = M_reset_cond_out;
-		led = {ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+		led = {4'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
 		usb_tx = usb_rx;
 		M_ft_ft_rxf = ft_rxf;
 		M_ft_ft_txe = ft_txe;
@@ -115,7 +114,6 @@ module alchitry_top (
 		M_ft_ui_din = M_ft_ui_dout;
 		M_ft_ui_din_be = M_ft_ui_dout_be;
 	end
-	wire g_link_wait;
 	wire clk_100M;
 	wire clk_128M;
 	wire clk_wiz_locked;
@@ -134,10 +132,10 @@ module alchitry_top (
 	wire [3:0] gt_data_is_k;
 	wire [87:0] packet_data;
 	wire packet_valid;
-	wire stream_clk0;
-	wire stream_valid0;
-	wire [31:0] stream_enable0;
-	wire [87:0] stream_data0;
+	// wire stream_clk0;
+	// wire stream_valid0;
+	// wire [31:0] stream_enable0;
+	// wire [87:0] stream_data0;
 	wire gt_clk;
 	reg reset_counters = 0;
 	wire [31:0] total_packets;
@@ -145,7 +143,7 @@ module alchitry_top (
 	wire okay_led;
 	wire link_count_okay;
 	wire gt_soft_reset;
-	wire [47:0] tx_mac_dest;
+	//wire [47:0] tx_mac_dest;
 	parameter FREQ_CNT_VAL = 16'h0800;
 	clk_wiz_100M clk_wiz_100M_i(
 		.clk_in1(clk_100M),
@@ -190,22 +188,22 @@ module alchitry_top (
 		.RXP_IN(RXP_I),
 		.TXN_OUT(),
 		.TXP_OUT(),
-		.data_clk_out(gt_clk),
-		.data_out(gt_data),
-		.data_is_k_out(gt_data_is_k)
+		.DATA_CLK_OUT(gt_clk),
+		.DATA_OUT(gt_data),
+		.DATA_IS_K_OUT(gt_data_is_k)
 	);
 	gt_unpack_telemetry gt_unpack_telemetry(
-		.CLK_128M(clk_128M),
-		.RST_128M(r_rst_128M),
+		.clk_128M(clk_128M),
+		.rst_128M(r_rst_128M),
 		.gt_clk(gt_clk),
 		.gt_data(gt_data),
 		.gt_data_is_k(gt_data_is_k),
-		.clk_256m_out(clk_256M),
+		.clk_256M_out(clk_256M),
 		.pll_locked_out(),
 		.okay_led_out(),
 		.cnt_led_out(),
-		.DATA_OUT(packet_data),
-		.VALID_OUT(packet_valid)
+		.data_out(packet_data),
+		.valid_out(packet_valid)
 	);
 	telemetry_check telemetry_check(
 		.clk_256M(clk_256M),
@@ -217,5 +215,24 @@ module alchitry_top (
 		.okay_led(okay_led),
 		.link_count_okay(link_count_okay)
 	);
-	assign g_link_wait = ~g_SIM;
+
+
+wire _unused_ok = 1'b0 && &{1'b0,
+					r_soft_reset_125M,
+					r1_soft_reset_125M,
+					r_clk_wiz_locked_125M,
+					r1_clk_wiz_locked_125M,
+					r_rst_256M,
+					// stream_clk0,
+					// stream_valid0,
+					// stream_enable0,
+					// stream_data0,					
+                    mismatch_packets,
+					okay_led,
+					total_packets,
+					link_count_okay,
+					gt_soft_reset,
+					FREQ_CNT_VAL,
+                    1'b0};
+
 endmodule

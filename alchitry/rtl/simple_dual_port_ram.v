@@ -44,6 +44,10 @@
    You should avoid reading and writing to the same address simultaneously. The
    value read in this case is undefined.
 */
+
+`timescale 1ns/1ps
+`default_nettype none //do not use implicit wire for port connections
+
 module simple_dual_port_ram #(
     parameter WIDTH = 8,                // size of each entry
     parameter ENTRIES = 8               // number of entries
@@ -74,3 +78,5 @@ module simple_dual_port_ram #(
   end
   
 endmodule
+
+`resetall

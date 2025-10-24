@@ -6,6 +6,9 @@
 `define DLY #1
 
 //***************************** Entity Declaration ****************************
+/* verilator lint_off DECLFILENAME */
+/* verilator lint_off UNUSEDSIGNAL */ /* Because this is a dummy for sim */
+/* verilator lint_off UNDRIVEN */ /* Because this is a dummy for sim */
 module gt_serial_telem_rx 
 (
 input           soft_reset_tx_in,

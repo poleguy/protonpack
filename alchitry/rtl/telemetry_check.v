@@ -46,7 +46,7 @@ module telemetry_check #(
   reg [15:0] r_timeout_cnt = 0;
   reg [19:0] r_match_cnt = 0;
 
-  reg r_okay_led_out = 0;
+  reg r_okay_led_out;
   reg r_link_count_okay = 0;
 
   assign data_unpack_out = packet_data;
@@ -85,6 +85,8 @@ module telemetry_check #(
     end
   end
 
+  initial r_okay_led_out = 1'b0;
+
   // generate led that goes on if data is good for > 500 msec, and goes out
   // immediately on error
   // also one that goes on and off immediately
@@ -119,6 +121,11 @@ module telemetry_check #(
   assign link_count_okay = r_link_count_okay;  
   assign total_packets = r_total_packets;
   assign mismatch_packets = r_mismatch_packets;
+
+wire _unused_ok = 1'b0 && &{1'b0,
+                    data_unpack_out[87:84],
+                    data_unpack_out[79:10], 
+                    1'b0};
 
 endmodule
 

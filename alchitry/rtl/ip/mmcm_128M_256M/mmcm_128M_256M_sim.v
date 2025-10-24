@@ -19,9 +19,9 @@
 
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
-
+/* verilator lint_off DECLFILENAME */
 module mmcm_128M_256M 
-
+/* verilator lint_on DECLFILENAME */
  (// Clock in ports
   // Clock out ports
   output  wire      clk_out1,
@@ -42,12 +42,13 @@ module mmcm_128M_256M
     clk_out2 = 0;
   end
 
+  /* verilator lint_off BLKSEQ */
   always @(posedge clk_in1)
   begin
     clk_out2 = 1;
     #1.953 clk_out2 = 0;
   end
-
+  /* verilator lint_on BLKSEQ */
 
 
   always @(posedge clk_in1)
@@ -64,6 +65,10 @@ module mmcm_128M_256M
 
   assign locked = r_locked;
 
+
+  wire _unused_ok = 1'b0 && &{1'b0,
+                    reset,
+                    1'b0};
 endmodule
 `resetall
 

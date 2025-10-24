@@ -5,7 +5,7 @@
 ## source files
 ######################################
 reset_conditioner.v
-async_fifo.v
+async_fifo.sv
 ft.v
 #lucid_globals.v
 simple_dual_port_ram.v

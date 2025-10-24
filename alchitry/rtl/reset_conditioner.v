@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`default_nettype none //do not use implicit wire for port connections
 module reset_conditioner (
 	clk,
 	in,
@@ -28,3 +30,5 @@ module reset_conditioner (
 		else
 			D_stage_q <= D_stage_d;
 endmodule
+
+`resetall
