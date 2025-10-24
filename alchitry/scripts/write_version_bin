@@ -8,7 +8,6 @@
 #################################################################################
 import os
 from fpgabuild import fpga_build
-import pickle
 
 def main():
     rtl_version_file="rtl/version_pkg.v"
@@ -19,12 +18,9 @@ def main():
         os.remove(version_bin_filename)
     
     ## instantiate the helper build scripts
-    build = fpga_build.fpga_build()
-    
-    
-    # call the parts of read_pkg_version_and_update one at a time to allow for modification of patch portion
-    build.read_pkg_version(rtl_version_file=rtl_version_file)
-    
+    ## This reads the current revision from the rtl version package file
+    build = fpga_build.fpga_build(rtl_version_file=rtl_version_file)
+           
     # convert to bcd
     def bcd(decimal_int):
         decimal_string = str(decimal_int)
