@@ -73,7 +73,7 @@ module alchitry_top (
   wire [1:0] M_ft_ui_dout_be;
   wire M_ft_ui_dout_empty;
   reg M_ft_ui_dout_get;
-
+  wire blinky_led;
 
   initial begin
     //$dumpfile();                // default "dump.vcd"
@@ -115,10 +115,12 @@ module alchitry_top (
        .ui_dout_empty(M_ft_ui_dout_empty),
        .ui_dout_get(M_ft_ui_dout_get)
      );
+
+
   always @(*) begin
     M_reset_cond_in = ~rst_n;
     rst = M_reset_cond_out;
-    led = {4'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    led = {led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     usb_tx = usb_rx;
     M_ft_ft_rxf = ft_rxf;
     M_ft_ft_txe = ft_txe;
@@ -204,6 +206,11 @@ module alchitry_top (
                     .okay_led(okay_led),
                     .link_count_okay(link_count_okay)
                   );
+
+  blink_led blink_led(
+    .clk_128M(clk_128M),
+    .led(blinky_led)
+  );
 
 
   wire _unused_ok = 1'b0 && &{1'b0,

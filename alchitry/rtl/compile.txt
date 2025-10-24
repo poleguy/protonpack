@@ -9,6 +9,7 @@ async_fifo.sv
 ft.sv
 #lucid_globals.v
 simple_dual_port_ram.v
+blink_led.v
 
 #regs/telemetry_pkg.vhd -library shure
 #regs/telemetry.vhd  -library shure
