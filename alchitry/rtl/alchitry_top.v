@@ -120,7 +120,7 @@ module alchitry_top (
   always @(*) begin
     M_reset_cond_in = ~rst_n;
     rst = M_reset_cond_out;
-    led = {led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    led = {blinky_led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     usb_tx = usb_rx;
     M_ft_ft_rxf = ft_rxf;
     M_ft_ft_txe = ft_txe;
