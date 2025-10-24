@@ -139,7 +139,10 @@ par/constraints/au_props.xdc
 ##par/constraints/dpsm_rx_resource_opt.xdc
 ##par/constraints/ila.xdc
 `END
+
+`IF SIM
 verilator-unisims/OBUFDS.v
 verilator-unisims/BUFG.v
-
 tests/top_level_tb.v
+`END
+
