@@ -53,15 +53,15 @@ module simple_dual_port_ram #(
     parameter ENTRIES = 8               // number of entries
   )(
     // write interface
-    input wclk,                         // write clock
-    input [$clog2(ENTRIES)-1:0] waddr,  // write address
-    input [WIDTH-1:0] write_data,       // write data
-    input write_enable,                 // write enable (1 = write)
+    input wire wclk,                         // write clock
+    input wire [$clog2(ENTRIES)-1:0] waddr,  // write address
+    input wire [WIDTH-1:0] write_data,       // write data
+    input wire write_enable,                 // write enable (1 = write)
     
     // read interface
-    input rclk,                         // read clock
-    input [$clog2(ENTRIES)-1:0] raddr,  // read address
-    output reg [WIDTH-1:0] read_data    // read data
+    input wire rclk,                         // read clock
+    input wire [$clog2(ENTRIES)-1:0] raddr,  // read address
+    output wire reg [WIDTH-1:0] read_data    // read data
   );
   
   reg [WIDTH-1:0] mem [ENTRIES-1:0];    // memory array
