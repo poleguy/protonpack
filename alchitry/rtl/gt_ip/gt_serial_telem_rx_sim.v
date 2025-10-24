@@ -103,3 +103,4 @@ input           gt0_data_valid_in,
 
 endmodule
 
+`resetall

@@ -128,12 +128,8 @@ module alchitry_top (
   wire clk_100M;
   wire clk_128M;
   wire clk_wiz_locked;
-  reg r_soft_reset_125M = 1'b0;
-  reg r1_soft_reset_125M = 1'b0;
   reg r_clk_wiz_locked_128M = 1'b0;
   reg r1_clk_wiz_locked_128M = 1'b0;
-  reg r_clk_wiz_locked_125M = 1'b0;
-  reg r1_clk_wiz_locked_125M = 1'b0;
   reg r_clk_wiz_locked_256M = 1'b0;
   reg r1_clk_wiz_locked_256M = 1'b0;
   reg r_rst_128M = 1'b0;
@@ -156,11 +152,13 @@ module alchitry_top (
   wire gt_soft_reset;
   //wire [47:0] tx_mac_dest;
   parameter FREQ_CNT_VAL = 16'h0800;
+
   clk_wiz_100M clk_wiz_100M_i(
                  .clk_in1(clk_100M),
                  .clk_out1(clk_128M),
                  .locked(clk_wiz_locked)
                );
+
   always @(posedge clk_128M) begin
     r_clk_wiz_locked_128M <= clk_wiz_locked;
     r1_clk_wiz_locked_128M <= r_clk_wiz_locked_128M;
@@ -229,10 +227,6 @@ module alchitry_top (
 
 
   wire _unused_ok = 1'b0 && &{1'b0,
-                              r_soft_reset_125M,
-                              r1_soft_reset_125M,
-                              r_clk_wiz_locked_125M,
-                              r1_clk_wiz_locked_125M,
                               r_rst_256M,
                               // stream_clk0,
                               // stream_valid0,
@@ -247,3 +241,5 @@ module alchitry_top (
                               1'b0};
 
 endmodule
+
+`resetall

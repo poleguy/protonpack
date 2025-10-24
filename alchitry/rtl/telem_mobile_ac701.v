@@ -688,3 +688,5 @@ always @(posedge clk_125M)
 
 
 endmodule
+
+`resetall

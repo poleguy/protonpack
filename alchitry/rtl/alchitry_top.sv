@@ -533,3 +533,4 @@ module alchitry_top #(
 
 
 endmodule
+`resetall
