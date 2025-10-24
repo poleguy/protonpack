@@ -92,7 +92,7 @@ def main(
     )
 
 
-    print("Build version: "+build.get_version()+"  Artifact URL: "+build.get_artifactory_url_all_shure())
+    print("Build version: "+build.get_version()+"  Artifact URL: "+build.get_artifactory_url_all_shure(artifact_component))
     
     return status
 
