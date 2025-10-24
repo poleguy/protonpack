@@ -85,7 +85,7 @@ module alchitry_top (
 
   end
   reset_conditioner #(.STAGES(_MP_STAGES_1420874663)) reset_cond(
-                      .clk(clk_100M),
+                      .clk(clk_128M),
                       .in(M_reset_cond_in),
                       .out(M_reset_cond_out)
                     );
@@ -99,7 +99,7 @@ module alchitry_top (
        .ft_clk(ft_clk),
        .ft_data(ft_data),
        .ft_be(ft_be),
-       .clk(clk_100M),
+       .clk(clk_128M),
        .rst(rst),
        .ft_rxf(M_ft_ft_rxf),
        .ft_txe(M_ft_ft_txe),
@@ -134,7 +134,7 @@ module alchitry_top (
   end
 
   clk_wiz_100M clk_wiz_100M_i(
-                 .clk_in1(clk_100M),
+                 .clk_in1(clk),
                  .clk_out1(clk_128M),
                  .locked(clk_wiz_locked)
                );
@@ -155,10 +155,10 @@ module alchitry_top (
     else
       r_rst_256M <= 0;
   end
-  BUFG bufg_clk(
-         .O(clk_100M),
-         .I(clk)
-       );
+//   BUFG bufg_clk(
+//          .O(clk_100M),
+//          .I(clk)
+//        );
   OBUFDS #(
            .IOSTANDARD("DEFAULT"),
            .SLEW("FAST")
