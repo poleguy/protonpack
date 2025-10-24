@@ -6,14 +6,14 @@ package version_pkg_v;
   localparam logic [7:0]  C_VERSION_MAJOR  = 8'd0;
   localparam logic [7:0]  C_VERSION_MINOR  = 8'd0;
   localparam logic [7:0]  C_VERSION_PATCH  = 8'd0;
-  localparam logic [7:0]  C_VERSION_BUILD  = 8'd3;
+  localparam logic [7:0]  C_VERSION_BUILD  = 8'd5;
 
   localparam logic [15:0] C_VERSION_YEAR   = 16'h2025;
   localparam logic [7:0]  C_VERSION_MONTH  = 8'h10;
   localparam logic [7:0]  C_VERSION_DAY    = 8'h24;
   localparam logic [7:0]  C_VERSION_HOUR   = 8'h14;
-  localparam logic [7:0]  C_VERSION_MINUTE = 8'h47;
-  localparam logic [7:0]  C_VERSION_SECOND = 8'h34;
+  localparam logic [7:0]  C_VERSION_MINUTE = 8'h50;
+  localparam logic [7:0]  C_VERSION_SECOND = 8'h26;
   // END_VERSION_BLOCK
 
 endpackage : version_pkg_v

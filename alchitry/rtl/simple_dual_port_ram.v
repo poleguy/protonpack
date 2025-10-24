@@ -61,7 +61,7 @@ module simple_dual_port_ram #(
     // read interface
     input wire rclk,                         // read clock
     input wire [$clog2(ENTRIES)-1:0] raddr,  // read address
-    output wire reg [WIDTH-1:0] read_data    // read data
+    output reg [WIDTH-1:0] read_data    // read data
   );
   
   reg [WIDTH-1:0] mem [ENTRIES-1:0];    // memory array
