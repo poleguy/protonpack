@@ -67,7 +67,7 @@ cp par/vivado.log artifactory/staging/meta/log
 cp requirements-export.txt artifactory/staging/meta/log
 
 # generated intermediate files
-cp rtl/version_pkg.vhd artifactory/staging/meta/gen
+cp rtl/version_pkg.v artifactory/staging/meta/gen
 
 
 # add --developer if you need to deploy a local build as your user

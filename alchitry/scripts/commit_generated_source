@@ -23,11 +23,11 @@ git status
 # So all generated intermediate .vhd files go back in.
 # To analyze old code without re-running the generation, etc.
 
-git add rtl/version_pkg.vhd
+git add rtl/version_pkg.v
 
 # all .vhd/.v generated files are now in a .zip
 # some generated files change on every build, causing git conflicts of little value
-# the source is really from rtl/version_pkg.vhd, etc.
+# the source is really from rtl/version_pkg.v, etc.
 # but this is a safety copy for when IT inevitably deletes stuff from artifactory that we need.
 # or if we question if something is really what we built with.
 #git add rtl/regs/generated_rtl.zip
@@ -49,7 +49,7 @@ git fetch
 git stash
 
 ## This will take the local changes and be able to commit them, even if this checkout was out of date.  We want
-## to commit the version_pkg.vhd used for this build with the artifactory commit.
+## to commit the version_pkg.v used for this build with the artifactory commit.
 ## the "theirs" in this rebase command is confusing since we are actually keeping "ours" (local) with this command.
 ## see https://stackoverflow.com/questions/16825849/choose-git-merge-strategy-for-specific-files-ours-mine-theirs
 git rebase -X theirs

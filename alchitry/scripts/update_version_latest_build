@@ -13,7 +13,7 @@ def main():
 
     # Replace with your Git repository path
     repo_path = '..'
-    rtl_version_file="rtl/version_pkg.vhd"
+    rtl_version_file="rtl/version_pkg.v"
     
     ## instantiate the helper build scripts
     build = fpga_build.fpga_build()

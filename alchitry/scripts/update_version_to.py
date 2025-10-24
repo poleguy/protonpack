@@ -5,11 +5,9 @@
 #################################################################################
 import os
 from fpgabuild import fpga_build
-import bash
-import re
 
 def update_to(version="0.0.0.0"):
-    rtl_version_file="rtl/version_pkg.vhd"
+    rtl_version_file="rtl/version_pkg.v"
     
     
     version_bin_filename = "par/version.bin"
@@ -17,12 +15,9 @@ def update_to(version="0.0.0.0"):
         os.remove(version_bin_filename)
     
     ## instantiate the helper build scripts
+    ## Read the current revision from the rtl version package file version_pkg.v
     build = fpga_build.fpga_build()
-    
-    
-    ## Read the current revision from the rtl version package file, update the version (build# incr, 99 patch if branch), then recreate the version package file
-    #build.read_pkg_version_and_update(rtl_version_file="rtl/version_pkg.vhd")
-    
+        
     # call the parts of read_pkg_version_and_update one at a time to allow for modification of patch portion
     build.read_pkg_version(rtl_version_file=rtl_version_file)
 
@@ -63,9 +58,6 @@ def update_to(version="0.0.0.0"):
         file.write(date)
         file.write(time)
     
-    # call this alternatively to not update
-    #build.read_pkg_version(rtl_version_file="rtl/version_pkg.vhd")
-
 if __name__ == '__main__':
     import typer
     typer.run(update_to)

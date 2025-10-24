@@ -1,6 +1,6 @@
 [*]
 [*] GTKWave Analyzer v3.3.116 (w)1999-2023 BSI
-[*] Fri Oct 24 19:01:10 2025
+[*] Fri Oct 24 19:17:30 2025
 [*]
 [dumpfile] "/home/poleguy/fpga-data/2025/protonpack/alchitry/tests/wave1.vcd"
 [dumpfile_mtime] "Fri Oct 24 18:58:06 2025"
@@ -9,7 +9,7 @@
 [timestart] 0
 [size] 2560 1394
 [pos] -1 -1
-*-22.142952 3030000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-22.142952 10000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] top_level_tb.
 [treeopen] top_level_tb.dut.
 [sst_width] 254
@@ -30,7 +30,59 @@ top_level_tb.dut.r_clk_wiz_locked_128M
 top_level_tb.dut.clk_wiz_100M_i.locked
 top_level_tb.dut.clk_wiz_100M_i.clk_in1
 top_level_tb.dut.clk_wiz_100M_i.clk_out1
-@29
 top_level_tb.dut.r_rst_128M
+top_level_tb.dut.reset_cond.clk
+top_level_tb.dut.reset_cond.in
+top_level_tb.dut.reset_cond.out
+top_level_tb.dut.telemetry_check.clk_256M
+@22
+top_level_tb.dut.telemetry_check.packet_data[87:0]
+@28
+top_level_tb.dut.telemetry_check.packet_valid
+top_level_tb.dut.telemetry_check.reset_counters
+@22
+top_level_tb.dut.telemetry_check.total_packets[31:0]
+@28
+top_level_tb.dut.telemetry_check.okay_led
+@22
+top_level_tb.dut.telemetry_check.mismatch_packets[31:0]
+@28
+top_level_tb.dut.telemetry_check.link_count_okay
+top_level_tb.dut.gt_unpack_telemetry.clk_128M
+top_level_tb.dut.gt_unpack_telemetry.clk_256M_out
+top_level_tb.dut.gt_unpack_telemetry.cnt_led_out
+top_level_tb.dut.gt_unpack_telemetry.gt_clk
+@22
+top_level_tb.dut.gt_unpack_telemetry.gt_data[31:0]
+top_level_tb.dut.gt_unpack_telemetry.gt_data_is_k[3:0]
+@28
+top_level_tb.dut.gt_unpack_telemetry.okay_led_out
+top_level_tb.dut.gt_unpack_telemetry.pll_locked_out
+top_level_tb.dut.ft.clk
+top_level_tb.dut.ft.ft_be[1:0]
+top_level_tb.dut.ft.ft_clk
+@22
+top_level_tb.dut.ft.ft_data[15:0]
+@28
+top_level_tb.dut.ft.ft_oe
+top_level_tb.dut.ft.ft_rd
+top_level_tb.dut.ft.ft_rxf
+top_level_tb.dut.ft.ft_txe
+top_level_tb.dut.ft.ft_wr
+top_level_tb.dut.ft.rst
+@22
+top_level_tb.dut.ft.ui_din[15:0]
+top_level_tb.dut.ft.ui_din[15:0]
+@28
+top_level_tb.dut.ft.ui_din_be[1:0]
+top_level_tb.dut.ft.ui_din_full
+top_level_tb.dut.ft.ui_din_valid
+@22
+top_level_tb.dut.ft.ui_dout[15:0]
+@28
+top_level_tb.dut.ft.ui_dout_be[1:0]
+top_level_tb.dut.ft.ui_dout_empty
+@29
+top_level_tb.dut.ft.ui_dout_get
 [pattern_trace] 1
 [pattern_trace] 0
