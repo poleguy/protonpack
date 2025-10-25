@@ -19,7 +19,7 @@ from shutil import which
 import shutil
 import logging as log
 import time
-
+import scripts.bash as bash
 
 def _get_test_module(num_callers_back=2):
     ## get some details about the module that called this
@@ -270,7 +270,8 @@ def compile_and_run_cvc(compile_list, cocotb_lib_dir, command, frame):
     # os.environ['LIBPYTHON_LOC'] = '/home/fpga/workspace/telemetry/cenv/lib/libpython3.8.so.1.0'
     os.environ["NO_COLOR"] = "1"
     os.environ["COCOTB_REDUCED_LOG_FMT"] = "1"
-
+    os.environ["PYGPI_PYTHON_BIN"] = bash.bash('which python')
+    os.environ["COCOTB_TEST_MODULES"] = caller_module
     vpi = (
         "+loadvpi="
         + cocotb_lib_dir

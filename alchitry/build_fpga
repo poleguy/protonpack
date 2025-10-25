@@ -196,6 +196,10 @@ COMMIT_SUFFIX="$BRANCH"
 # test debug package on hardware regression test.
 #scripts/regression_test
 
+# run sim
+
+time ./run_sim
+
 # return exit code to indicate pass/fail
 FILE=par/output/result_pass.txt
 if test -f "$FILE"; then

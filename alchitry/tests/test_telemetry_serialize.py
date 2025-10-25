@@ -86,7 +86,7 @@ async def check_telemetry_serialize(dut):
 
 
     # Clocks are created in testbench for speed
-    #clk_in = Clock(dut.clk, 10, units="ns")
+    #clk_in = Clock(dut.clk, 10, unit="ns")
     
     # Start the clocks
     #cocotb.start_soon(clk_in.start())
@@ -99,7 +99,7 @@ async def check_telemetry_serialize(dut):
     cocotb.start_soon(telem_bytes_collect(dut.telemetry_serialize_inst, fifo_list))
     cocotb.start_soon(telem_bytes_inject(dut.unpack_telemetry_inst, fifo_list))
 
-    await Timer(1, units="ps")  # wait to prevent crash at start line
+    await Timer(1, unit="ps")  # wait to prevent crash at start line
 
     # Apply input data
     #for data in test_data:
@@ -131,7 +131,7 @@ async def check_telemetry_serialize(dut):
     # dut.data_128MHz.value.value = data
     #    await RisingEdge(dut.telemetry_serialize_inst.clk)
 
-    await Timer(10, units="us")  # sim for a bit to inspect output
+    await Timer(10, unit="us")  # sim for a bit to inspect output
 
 
     assert "passed" in results, f"Not all checks passed."
@@ -244,16 +244,22 @@ async def check_outputs(dut, results, expected_data):
 
     output_data = 0
     # dummy data at start to align phase
-    
-    await RisingEdge(dut.valid_out)
-    await RisingEdge(dut.clk)
-    assert dut.valid_out == 1, "valid was no longer high at the clock edge"       
-    output_data = dut.data_out
 
-    await RisingEdge(dut.clk)
-    assert dut.valid_out == 0, "valid stayed high for more than one clock edge"       
+    for i in range(10000):
+        await RisingEdge(dut.clk)
+        if dut.valid_out.value == 1:
+            dut._log.info("rising edge")
+            output_data = dut.data_out.value
+            #await Timer(4, unit='ns')
+            await RisingEdge(dut.clk)
+            dut._log.info("rising edge")
+            assert dut.valid_out.value == 0, "valid stayed high for more than one clock edge"       
+            break
+    assert i != 999, "timeout"
+        
 
-    #await Timer(10, units='us') # sim for a bit to inspect output
+
+    await Timer(100, unit='ns') # sim for a bit to inspect output
 
     assert output_data == expected_data, (
         f"Data not as expected: got {output_data} expected {expected_data}"
