@@ -78,6 +78,7 @@ module ft #(
     logic M_read_fifo_wput;
     logic M_read_fifo_full;
     logic [(_MP_WIDTH_462831266)-1:0] M_read_fifo_dout;
+/* verilator lint_off UNOPTFLAT */
     logic M_read_fifo_rget;
     logic M_read_fifo_empty;
     
@@ -154,7 +155,7 @@ module ft #(
         endcase
     end
     
-    
+    /* verilator lint_on UNOPTFLAT */
     always @(posedge (ft_clk)) begin
         D_state_q <= D_state_d;
         
