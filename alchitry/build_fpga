@@ -198,7 +198,7 @@ COMMIT_SUFFIX="$BRANCH"
 
 # run sim
 
-time ./run_sim
+time ./run_sim --force
 
 # return exit code to indicate pass/fail
 FILE=par/output/result_pass.txt
