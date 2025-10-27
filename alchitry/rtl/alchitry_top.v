@@ -3,19 +3,19 @@
 module alchitry_top (
     input wire clk,
     input wire rst_n,
-    output wire [7:0] led,
+    output reg [7:0] led,
     input wire usb_rx,
-    output wire usb_tx,
+    output reg usb_tx,
     input wire ft_clk,
     input wire ft_rxf,
     input wire ft_txe,
     inout wire [15:0] ft_data,
     inout wire [1:0] ft_be,
-    output wire ft_rd,
-    output wire ft_wr,
-    output wire ft_oe,
-    output wire ft_wakeup,
-    output wire ft_reset,
+    output reg ft_rd,
+    output reg ft_wr,
+    output reg ft_oe,
+    output reg ft_wakeup,
+    output reg ft_reset,
     input wire RXN_I,
     input wire RXP_I,
     input wire [0:0] GTREFCLK1P_I,
@@ -23,10 +23,10 @@ module alchitry_top (
     output wire REC_CLOCK_P,
     output wire REC_CLOCK_N
   );
-  wire rst;
+  reg rst;
   wire clk_wiz_reset;
   localparam _MP_STAGES_1420874663 = 3'h4;
-  wire M_reset_cond_in;
+  reg M_reset_cond_in;
   wire M_reset_cond_out;
   //wire clk_100M;
   wire clk_128M;
@@ -61,8 +61,8 @@ module alchitry_top (
   localparam _MP_RX_BUFFER_528252186 = 12'h800;
   localparam _MP_PRIORITY_528252186 = 16'h5258;
   localparam _MP_PREEMPT_528252186 = 1'h0;
-  wire M_ft_ft_rxf;
-  wire M_ft_ft_txe;
+  reg M_ft_ft_rxf;
+  reg M_ft_ft_txe;
   wire M_ft_ft_rd;
   wire M_ft_ft_wr;
   wire M_ft_ft_oe;
@@ -70,12 +70,13 @@ module alchitry_top (
   reg [15:0] M_ft_ui_din;
   reg [1:0] M_ft_ui_din_be;
   reg M_ft_ui_din_valid;
+  /* verilator lint_off UNOPTFLAT */
   wire M_ft_ui_din_full;
 
   wire [15:0] M_ft_ui_dout;
   wire [1:0] M_ft_ui_dout_be;
   wire M_ft_ui_dout_empty;
-  wire M_ft_ui_dout_get;
+  reg M_ft_ui_dout_get;
   wire blinky_led;
   wire blinky_led_ft;
 
@@ -120,32 +121,27 @@ module alchitry_top (
        .ui_dout_get(M_ft_ui_dout_get)
      );
 
+  /* verilator lint_on UNOPTFLAT */
 
-  //always @(*) begin
-  assign M_reset_cond_in = !rst_n;
-  assign rst = M_reset_cond_out;
-  assign clk_wiz_reset = !rst_n;
-  assign led = {blinky_led, blinky_led_ft, 2'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
-  assign usb_tx = usb_rx;
-  assign M_ft_ft_rxf = ft_rxf;
-  assign M_ft_ft_txe = ft_txe;
-  assign ft_rd = M_ft_ft_rd;
-  assign ft_wr = M_ft_ft_wr;
-  assign ft_oe = M_ft_ft_oe;
-  assign ft_wakeup = 1'h1;
-  assign ft_reset = !rst;
-  assign clk_wiz_reset = !rst;
-  assign M_ft_ui_dout_get = !M_ft_ui_din_full;
-
-
-//  // register to make sim happy about same cycle feedback: Warning-UNOPTFLAT
-//  always @(posedge clk_128M) begin
   always @(*) begin
+    M_reset_cond_in = ~rst_n;
+    rst = M_reset_cond_out;
+    led = {blinky_led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    usb_tx = usb_rx;
+    M_ft_ft_rxf = ft_rxf;
+    M_ft_ft_txe = ft_txe;
+    ft_rd = M_ft_ft_rd;
+    ft_wr = M_ft_ft_wr;
+    ft_oe = M_ft_ft_oe;
+    ft_wakeup = 1'h1;
+    ft_reset = !rst;
+    M_ft_ui_dout_get = !M_ft_ui_din_full;
     M_ft_ui_din_valid = !M_ft_ui_dout_empty;
     M_ft_ui_din = M_ft_ui_dout;
     M_ft_ui_din_be = M_ft_ui_dout_be;
   end
-  //end
+
+  assign clk_wiz_reset = !rst_n;
 
   clk_wiz_100M clk_wiz_100M_i(
                  .clk_in1(clk),
