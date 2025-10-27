@@ -67,9 +67,9 @@ module alchitry_top (
   wire M_ft_ft_wr;
   wire M_ft_ft_oe;
 
-  reg [15:0] M_ft_ui_din;
-  reg [1:0] M_ft_ui_din_be;
-  reg M_ft_ui_din_valid;
+  wire [15:0] M_ft_ui_din;
+  wire [1:0] M_ft_ui_din_be;
+  wire M_ft_ui_din_valid;
   /* verilator lint_off UNOPTFLAT */
   wire M_ft_ui_din_full;
 
