@@ -1,3 +1,4 @@
+do not use
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
 module reset_conditioner (

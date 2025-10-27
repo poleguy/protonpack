@@ -4,7 +4,7 @@
 ######################################
 ## source files
 ######################################
-reset_conditioner.v
+reset_conditioner.sv
 async_fifo.sv
 ft.sv
 #lucid_globals.v

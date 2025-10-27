@@ -71,10 +71,10 @@ def setup_sim_dir(run_dir_common="sim_build", delete_existing=True, num_callers_
     # caller_module=get_module_name(num_callers_back)
 
     ## setup directories
-    run_dir_common = _get_test_dir(num_callers_back) + "/" + run_dir_common
+    run_dir_common = os.path.join(_get_test_dir(num_callers_back), run_dir_common)
     ## the run_dir will be the test_* file + the test function name
-    run_dir_group = run_dir_common + "/" + _get_test_module(num_callers_back)
-    run_dir = run_dir_group + "/" + _get_test_function(num_callers_back)
+    run_dir_group = os.path.join(run_dir_common, _get_test_module(num_callers_back))
+    run_dir = os.path.join(run_dir_group, _get_test_function(num_callers_back))
 
     """
     eg for path   sim_build/test_datapath/test_datapath_rbw_cnt
@@ -168,7 +168,7 @@ def run_rtl_sim_cvc(
     os.chdir(rtl_run_path)
 
     log.info("all commands are logged to go_sim.tcl file for debugging in gui mode")
-    f_go_sim_tcl = open(rtl_run_path + "/go_sim.tcl", "w")
+    f_go_sim_tcl = open(os.path.join(rtl_run_path, "go_sim.tcl"), "w")
     f_go_sim_tcl.write("##  go_sim.tcl auto-generated for test case \n")
     f_go_sim_tcl.write(
         "##    This tcl file can be sourced from Modelsim or Vivado GUIs\n"

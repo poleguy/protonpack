@@ -7,4 +7,4 @@ rtl/gt_support/vio_0
 rtl/debug/ila_0
 rtl/debug/ila_8x8
 rtl/debug/vio_eth
-
+rtl/gt_ip

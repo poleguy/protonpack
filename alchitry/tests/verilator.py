@@ -11,7 +11,7 @@ import cocotb
 #from coctob_test.simulator import run
 #from cocotb_tools.runner import get_runner
 from pathlib import Path
-
+import shutil 
 
 import os
 import inspect
@@ -115,10 +115,11 @@ def setup_sim_dir(run_dir_common="sim_build", delete_existing=True, num_callers_
 # careful: order is not important in the compile.txt list for CVC (but is important for vivado)
 # cocotb is always enabled
 def run_rtl_sim_verilator(
-    compile_txt_files_list=[],  ## REQUIRED provide at least one or more compile.txt files as a python list
-    rtl_run_path=None,  ## REQUIRED rtl run path, where libraries should be compiled to and simulation executed from
+    compile_txt_files_list:list[str],  ## REQUIRED provide at least one or more compile.txt files as a python list
+    rtl_run_path:str,  ## REQUIRED rtl run path, where libraries should be compiled to and simulation executed from
+    cocotb_toplevel:str, ## required top level module name for cocotb
     compile_rtl=True,  ## optional to disable compiling step
-    compile_recent_rtl=False,  ## will not compile old files (use with compile_rtl=False)
+    compile_recent_rtl=False,  ## will not compile old files (use with compile_rtl=False)    
     do_argument="run -a; quit",  ## optional when in batch mode (not gui), run this do_argument could be commands or a do file.. if gui this is not used and must be set to ''
 ):
     """Function for compiling and executing an rtl simulation.
@@ -143,12 +144,13 @@ def run_rtl_sim_verilator(
     #     filename="log.txt",   # send to a file instead of stderr
     # )
 
+    # remove: we only want to set things via the api, not env variables
     ## if no rtl_run_path is input, try env variable, else set current directory
-    if rtl_run_path == None:
-        if os.environ.get("SIM_RUN_DIR") is not None:
-            rtl_run_path = os.environ.get("SIM_RUN_DIR")
-        else:
-            rtl_run_path = "./"
+    #if rtl_run_path == None:
+    #    if os.environ.get("SIM_RUN_DIR") is not None:
+    #        rtl_run_path = os.environ.get("SIM_RUN_DIR")
+    #    else:
+    #        rtl_run_path = "./"
 
     #######################################################
     ## Validate and check inputs
@@ -245,9 +247,14 @@ def run_rtl_sim_verilator(
     #os.environ["VERILOG_SOURCES"] = "/home/poleguy/fpga-data/2025/protonpack/alchitry/tests/my_design.sv"
     
 
+    # copy template code into place for Makefile
+    makefile_template = os.path.abspath(os.path.join(__file__, '..', 'Makefile.template'))
+    shutil.copy(makefile_template, os.path.join(rtl_run_path, "Makefile"))
+    
+    
     # /home/poleguy/.virtualenvs/home__poleguy__fpga-data__2025__protonpack__alchitry/lib/python3.11/site-packages/cocotb/libs
     # `cocotb-config --lib-dir `
-    command = ( "make -C /home/poleguy/fpga-data/2025/protonpack/alchitry/tests"
+    command = ( f"make -C {rtl_run_path}"
 
         # +interp +verbose -informs
         #f"verilator -cc --build -exe --trace -DCOCOTB_SIM=1 -DVM_TRACE_FST --trace-fst --timing --vpi -j 0 -Wall -Wno-PINCONNECTEMPTY -Wno-PROCASSINIT -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC " \
@@ -262,12 +269,12 @@ def run_rtl_sim_verilator(
     # todo: this needs a comment! It can't be moved into the compile_and_run_cvc function because it is magic
     frame = inspect.stack()[1]
 
-    compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame)
+    compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame, cocotb_toplevel)
     # must restore directory here, because it might (will?) get deleted by pytest , and break everything!
     os.chdir(starting_cwd)
 
 
-def compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame):
+def compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame, cocotb_toplevel):
     module = inspect.getmodule(frame[0])
     caller_filename = module.__file__
     caller_module = module.__name__
@@ -285,7 +292,7 @@ def compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame):
         + caller_module
     )
     os.environ["MODULE"] = caller_module  # point to this file as the cocotb module
-    os.environ["COCOTB_TOPLEVEL"] = "top_level_tb" # todo: fix this to be programmatic
+    os.environ["COCOTB_TOPLEVEL"] = cocotb_toplevel # todo: fix this to be programmatic
     os.environ["PYTHONPATH"] = (
         caller_dir  # this is required so that the cocotb library can find this module
     )

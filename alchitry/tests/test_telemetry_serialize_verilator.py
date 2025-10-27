@@ -5,11 +5,15 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, RisingEdge, Timer
-#from cocotb_test.simulator import run
-import tests.verilator as verilator
+
 # can't use the format from cocotb.result import TestFailure because it trys to collect it as a test.
 import cocotb.result 
+#   /home/poleguy/.virtualenvs/home__poleguy__fpga-data__2024__dpsm_rx/lib/python3.11/site-packages/cocotb/result.py:175: PytestCollectionWarning: cannot collect test class 'TestFailure' because it has a __init__ constructor (from: tests/test_spi_word_write_dual.py)
+#    class TestFailure(TestComplete, AssertionError):
+
+
 import os
+import tests.verilator as verilator
 
 from tests.conftest import root_dir
 
@@ -18,6 +22,7 @@ import logging
 # This will inherit the output location of the module that calls this
 log = logging.getLogger(__name__) 
 
+#module_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),"../rtl")
 
 ###################################################################################
 ## pytest entry point
@@ -37,12 +42,12 @@ def test_main(no_compile, waves):
     verilator.run_rtl_sim_verilator(
         compile_txt_files_list=[  # root_dir+"/modules/telemetry/compile.txt",
             # root_dir+"/rtl/xapp523/compile.txt",
-            os.path.join(root_dir, "compile.txt")
+            os.path.join(root_dir, "rtl/serial_link/compile_telemetry_serialize.txt")
             #root_dir + "/rtl/xapp523/glbl.v",
             # root_dir+"/tests/compile_unisim_lib.txt"
         ],
+        cocotb_toplevel="tb_telemetry_serialize",
         #top_level="shure.tb_telemetry_serialize shure.glbl",
-        cocotb_toplevel="top_level_tb",
         rtl_run_path           = run_dir,
         #simulator              = "cvc",
         do_argument=do,
@@ -79,14 +84,14 @@ async def check_telemetry_serialize(dut):
     
     # Start the clocks
     #cocotb.start_soon(clk_in.start())
-    #cocotb.start_soon(check_outputs(dut.unpack_telemetry_inst, results, expected_data))
+    cocotb.start_soon(check_outputs(dut.unpack_telemetry_inst, results, expected_data))
 
     ######################################
     ## Telemetry - serial bypass
     ######################################
     fifo_list=[]
-    #cocotb.start_soon(telem_bytes_collect(dut.telemetry_serialize_inst, fifo_list))
-    #cocotb.start_soon(telem_bytes_inject(dut.unpack_telemetry_inst, fifo_list))
+    cocotb.start_soon(telem_bytes_collect(dut.telemetry_serialize_inst, fifo_list))
+    cocotb.start_soon(telem_bytes_inject(dut.unpack_telemetry_inst, fifo_list))
 
     await Timer(1, unit="ps")  # wait to prevent crash at start line
 
@@ -99,22 +104,22 @@ async def check_telemetry_serialize(dut):
     #dut.spi_word1 = 0xa6f3
     
     # initial values
-    # dut.telemetry_serialize_inst.packet_valid.value = 0
-    # dut.telemetry_serialize_inst.reset_clk.value = 1
+    dut.telemetry_serialize_inst.packet_valid.value = 0
+    dut.telemetry_serialize_inst.reset_clk.value = 1
 
-    # # start data
-    # await RisingEdge(dut.telemetry_serialize_inst.clk)
-    # dut.telemetry_serialize_inst.reset_clk.value = 1
-    # dut.telemetry_serialize_inst.packet.value = 1
-    # await RisingEdge(dut.telemetry_serialize_inst.clk)
-    # dut.telemetry_serialize_inst.reset_clk.value = 0
-    # dut.telemetry_serialize_inst.packet.value = 2
-    # await RisingEdge(dut.telemetry_serialize_inst.clk)
-    # dut.telemetry_serialize_inst.packet.value = expected_data
-    # dut.telemetry_serialize_inst.packet_valid.value = 1
-    # await RisingEdge(dut.telemetry_serialize_inst.clk)
-    # dut.telemetry_serialize_inst.packet.value = 4
-    # dut.telemetry_serialize_inst.packet_valid.value = 0
+    # start data
+    await RisingEdge(dut.telemetry_serialize_inst.clk)
+    dut.telemetry_serialize_inst.reset_clk.value = 1
+    dut.telemetry_serialize_inst.packet.value = 1
+    await RisingEdge(dut.telemetry_serialize_inst.clk)
+    dut.telemetry_serialize_inst.reset_clk.value = 0
+    dut.telemetry_serialize_inst.packet.value = 2
+    await RisingEdge(dut.telemetry_serialize_inst.clk)
+    dut.telemetry_serialize_inst.packet.value = expected_data
+    dut.telemetry_serialize_inst.packet_valid.value = 1
+    await RisingEdge(dut.telemetry_serialize_inst.clk)
+    dut.telemetry_serialize_inst.packet.value = 4
+    dut.telemetry_serialize_inst.packet_valid.value = 0
 
     #for data in test_data:
     # dut.data_128MHz.value.value = data
@@ -123,7 +128,7 @@ async def check_telemetry_serialize(dut):
     await Timer(10, unit="us")  # sim for a bit to inspect output
 
 
-    #assert "passed" in results, f"Not all checks passed."
+    assert "passed" in results, f"Not all checks passed."
     
 
 ##############################################################
@@ -233,16 +238,22 @@ async def check_outputs(dut, results, expected_data):
 
     output_data = 0
     # dummy data at start to align phase
-    
-    await RisingEdge(dut.valid_out)
-    await RisingEdge(dut.clk)
-    assert dut.valid_out == 1, "valid was no longer high at the clock edge"       
-    output_data = dut.data_out
 
-    await RisingEdge(dut.clk)
-    assert dut.valid_out == 0, "valid stayed high for more than one clock edge"       
+    for i in range(10000):
+        await RisingEdge(dut.clk)
+        if dut.valid_out.value == 1:
+            dut._log.info("rising edge")
+            output_data = dut.data_out.value
+            #await Timer(4, unit='ns')
+            await RisingEdge(dut.clk)
+            dut._log.info("rising edge")
+            assert dut.valid_out.value == 0, "valid stayed high for more than one clock edge"       
+            break
+    assert i != 999, "timeout"
+        
 
-    #await Timer(10, unit='us') # sim for a bit to inspect output
+
+    await Timer(100, unit='ns') # sim for a bit to inspect output
 
     assert output_data == expected_data, (
         f"Data not as expected: got {output_data} expected {expected_data}"

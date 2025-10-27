@@ -1,31 +1,32 @@
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
 module alchitry_top (
-  input wire clk,
-  input wire rst_n,
-  output reg [7:0] led,
-  input wire usb_rx,
-  output reg usb_tx,
-  input wire ft_clk,
-  input wire ft_rxf,
-  input wire ft_txe,
-  inout wire [15:0] ft_data,
-  inout wire [1:0] ft_be,
-  output reg ft_rd,
-  output reg ft_wr,
-  output reg ft_oe,
-  output reg ft_wakeup,
-  output reg ft_reset,
-  input wire RXN_I,
-  input wire RXP_I,
-  input wire [0:0] GTREFCLK1P_I,
-  input wire [0:0] GTREFCLK1N_I,
-  output wire REC_CLOCK_P,
-  output wire REC_CLOCK_N
+    input wire clk,
+    input wire rst_n,
+    output wire [7:0] led,
+    input wire usb_rx,
+    output wire usb_tx,
+    input wire ft_clk,
+    input wire ft_rxf,
+    input wire ft_txe,
+    inout wire [15:0] ft_data,
+    inout wire [1:0] ft_be,
+    output wire ft_rd,
+    output wire ft_wr,
+    output wire ft_oe,
+    output wire ft_wakeup,
+    output wire ft_reset,
+    input wire RXN_I,
+    input wire RXP_I,
+    input wire [0:0] GTREFCLK1P_I,
+    input wire [0:0] GTREFCLK1N_I,
+    output wire REC_CLOCK_P,
+    output wire REC_CLOCK_N
   );
-  reg rst;
+  wire rst;
+  wire clk_wiz_reset;
   localparam _MP_STAGES_1420874663 = 3'h4;
-  reg M_reset_cond_in;
+  wire M_reset_cond_in;
   wire M_reset_cond_out;
   wire clk_100M;
   wire clk_128M;
@@ -60,24 +61,26 @@ module alchitry_top (
   localparam _MP_RX_BUFFER_528252186 = 12'h800;
   localparam _MP_PRIORITY_528252186 = 16'h5258;
   localparam _MP_PREEMPT_528252186 = 1'h0;
-  reg M_ft_ft_rxf;
-  reg M_ft_ft_txe;
+  wire M_ft_ft_rxf;
+  wire M_ft_ft_txe;
   wire M_ft_ft_rd;
   wire M_ft_ft_wr;
   wire M_ft_ft_oe;
+
   reg [15:0] M_ft_ui_din;
   reg [1:0] M_ft_ui_din_be;
   reg M_ft_ui_din_valid;
   wire M_ft_ui_din_full;
+
   wire [15:0] M_ft_ui_dout;
   wire [1:0] M_ft_ui_dout_be;
   wire M_ft_ui_dout_empty;
-  reg M_ft_ui_dout_get;
+  wire M_ft_ui_dout_get;
   wire blinky_led;
 
   initial begin
     //$dumpfile();                // default "dump.vcd"
-    $dumpfile("wave1.vcd");     // dumps into "wave1.vcd"
+    $dumpfile("wave1.fst");     // dumps into "wave1.gst"
   end
 
   initial begin
@@ -117,26 +120,34 @@ module alchitry_top (
      );
 
 
-  always @(*) begin
-    M_reset_cond_in = ~rst_n;
-    rst = M_reset_cond_out;
-    led = {blinky_led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
-    usb_tx = usb_rx;
-    M_ft_ft_rxf = ft_rxf;
-    M_ft_ft_txe = ft_txe;
-    ft_rd = M_ft_ft_rd;
-    ft_wr = M_ft_ft_wr;
-    ft_oe = M_ft_ft_oe;
-    ft_wakeup = 1'h1;
-    ft_reset = !rst;
-    M_ft_ui_dout_get = !M_ft_ui_din_full;
+  //always @(*) begin
+  assign M_reset_cond_in = !rst_n;
+  assign rst = M_reset_cond_out;
+  assign clk_wiz_reset = !rst_n;
+  assign led = {blinky_led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+  assign usb_tx = usb_rx;
+  assign M_ft_ft_rxf = ft_rxf;
+  assign M_ft_ft_txe = ft_txe;
+  assign ft_rd = M_ft_ft_rd;
+  assign ft_wr = M_ft_ft_wr;
+  assign ft_oe = M_ft_ft_oe;
+  assign ft_wakeup = 1'h1;
+  assign ft_reset = !rst;
+  assign clk_wiz_reset = !rst;
+  assign M_ft_ui_dout_get = !M_ft_ui_din_full;
+
+
+  // register to make sim happy about same cycle feedback: Warning-UNOPTFLAT
+  always @(posedge clk_128M) begin
     M_ft_ui_din_valid = !M_ft_ui_dout_empty;
     M_ft_ui_din = M_ft_ui_dout;
     M_ft_ui_din_be = M_ft_ui_dout_be;
   end
+  //end
 
   clk_wiz_100M clk_wiz_100M_i(
                  .clk_in1(clk),
+                 .reset(rst),
                  .clk_out1(clk_128M),
                  .locked(clk_wiz_locked)
                );
@@ -157,10 +168,10 @@ module alchitry_top (
     else
       r_rst_256M <= 0;
   end
-//   BUFG bufg_clk(
-//          .O(clk_100M),
-//          .I(clk)
-//        );
+  //   BUFG bufg_clk(
+  //          .O(clk_100M),
+  //          .I(clk)
+  //        );
   OBUFDS #(
            .IOSTANDARD("DEFAULT"),
            .SLEW("FAST")
@@ -208,9 +219,9 @@ module alchitry_top (
                   );
 
   blink_led blink_led(
-    .clk_128M(clk_128M),
-    .led(blinky_led)
-  );
+              .clk_128M(clk_128M),
+              .led(blinky_led)
+            );
 
 
   wire _unused_ok = 1'b0 && &{1'b0,

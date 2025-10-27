@@ -27,8 +27,7 @@ module buffer_10bit_to_8bit (
     output reg [7:0] data_out   // byte output
   );
 
-  reg [3:0] cnt_valid = 4'b0000;
-  reg [3:0] cnt_output = 4'b0000;
+  reg [2:0] cnt_valid = 3'b000;  
   reg [23:0] r_data_shift = 24'b0;
   reg [7:0] r_byte = 8'b0;
   reg [7:0] r1_byte = 8'b0;
@@ -41,9 +40,9 @@ module buffer_10bit_to_8bit (
   begin
     if (valid == 1'b1)
     begin
-      if (cnt_valid == 4'h7)
+      if (cnt_valid == 3'h7)
       begin
-        cnt_valid <= 4'h0;
+        cnt_valid <= 3'h0;
       end
       else
       begin
@@ -63,22 +62,24 @@ module buffer_10bit_to_8bit (
     if (r_valid == 1'b1)
     begin
       case (cnt_valid)
-        4'h0:
+        3'h0:
           r_data_shift[9:0] <= data_in;
-        4'h1:
+        3'h1:
           r_data_shift[11:2] <= data_in;
-        4'h2:
+        3'h2:
           r_data_shift[13:4] <= data_in;
-        4'h3:
+        3'h3:
           r_data_shift[15:6] <= data_in;
-        4'h4:
+        3'h4:
           r_data_shift[17:8] <= data_in;
-        4'h5:
+        3'h5:
           r_data_shift[19:10] <= data_in;
-        4'h6:
+        3'h6:
           r_data_shift[21:12] <= data_in;
-        4'h7:
+        3'h7:
           r_data_shift[23:14] <= data_in;
+        //default:
+        //  r_data_shift[23:14] <= 'x;
       endcase
     end
   end
