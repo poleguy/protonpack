@@ -137,8 +137,9 @@ module alchitry_top (
   assign M_ft_ui_dout_get = !M_ft_ui_din_full;
 
 
-  // register to make sim happy about same cycle feedback: Warning-UNOPTFLAT
-  always @(posedge clk_128M) begin
+//  // register to make sim happy about same cycle feedback: Warning-UNOPTFLAT
+//  always @(posedge clk_128M) begin
+  always @(*) begin
     M_ft_ui_din_valid = !M_ft_ui_dout_empty;
     M_ft_ui_din = M_ft_ui_dout;
     M_ft_ui_din_be = M_ft_ui_dout_be;
