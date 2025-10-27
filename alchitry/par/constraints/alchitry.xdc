@@ -1,8 +1,9 @@
 set_property PACKAGE_PIN W19 [get_ports {clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {clk}]
 # clk => 100000000Hz
-create_clock -period 10.0 -name clk_0 -waveform {0.000 5.0} [get_ports clk]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks clk_0]
+# don't use name clk_0 because it collides with clk_wiz naming
+create_clock -period 10.0 -name clk_12 -waveform {0.000 5.0} [get_ports clk]
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks clk_12]
 
 set_property PACKAGE_PIN N15 [get_ports {rst_n}]
 set_property IOSTANDARD LVCMOS33 [get_ports {rst_n}]

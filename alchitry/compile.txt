@@ -69,10 +69,10 @@ rtl/gt_ip/gt_serial_telem_rx_sim.v
 
 # debug xci's from example design, etc.
 `IF BUILD
-rtl/gt_support/ila_gt_rx_0/ila_gt_rx_0.xci --dont_touch_xci
-rtl/gt_support/ila_1/ila_1.xci --dont_touch_xci
-rtl/gt_support/vio_0/vio_0.xci --dont_touch_xci
-rtl/debug/ila_8x8/ila_8x8.xci --dont_touch_xci
+#rtl/gt_support/ila_gt_rx_0/ila_gt_rx_0.xci --dont_touch_xci
+#rtl/gt_support/ila_1/ila_1.xci --dont_touch_xci
+#rtl/gt_support/vio_0/vio_0.xci --dont_touch_xci
+#rtl/debug/ila_8x8/ila_8x8.xci --dont_touch_xci
 `IF SIM
 # dummy black-box for sim
 #rtl/gt_support/ila_gt_rx_0/sim/ila_gt_rx_0.vhd
@@ -83,7 +83,7 @@ rtl/debug/ila_8x8/ila_8x8.xci --dont_touch_xci
 
 # vio for setting the destination mac address
 `IF BUILD
-rtl/debug/vio_eth/vio_eth.xci --dont_touch_xci
+#rtl/debug/vio_eth/vio_eth.xci --dont_touch_xci
 `IF SIM
 #rtl/debug/vio_eth/vio_eth.xci
 # dummy vio eth
