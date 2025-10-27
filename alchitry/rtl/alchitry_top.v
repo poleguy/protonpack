@@ -28,7 +28,7 @@ module alchitry_top (
   localparam _MP_STAGES_1420874663 = 3'h4;
   reg M_reset_cond_in;
   wire M_reset_cond_out;
-  //wire clk_100M;
+  wire clk_100M; // to rename it
   wire clk_128M;
   wire clk_wiz_locked;
   reg r_clk_wiz_locked_128M = 1'b0;
@@ -78,6 +78,7 @@ module alchitry_top (
   wire M_ft_ui_dout_empty;
   reg M_ft_ui_dout_get;
   wire blinky_led;
+  wire blinky_led_100M;
   wire blinky_led_ft;
 
   initial begin
@@ -104,7 +105,7 @@ module alchitry_top (
        .ft_clk(ft_clk),
        .ft_data(ft_data),
        .ft_be(ft_be),
-       .clk(clk_128M),
+       .clk(clk_100M),
        .rst(rst),
        .ft_rxf(M_ft_ft_rxf),
        .ft_txe(M_ft_ft_txe),
@@ -126,7 +127,7 @@ module alchitry_top (
   always @(*) begin
     M_reset_cond_in = ~rst_n;
     rst = M_reset_cond_out;
-    led = {blinky_led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    led = {blinky_led,blinky_led_ft, blinky_led_100M,1'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     usb_tx = usb_rx;
     M_ft_ft_rxf = ft_rxf;
     M_ft_ft_txe = ft_txe;
@@ -143,12 +144,14 @@ module alchitry_top (
 
   assign clk_wiz_reset = !rst_n;
 
-  clk_wiz_100M clk_wiz_100M_i(
-                 .clk_in1(clk),
-                 .reset(clk_wiz_reset),
-                 .clk_out1(clk_128M),
-                 .locked(clk_wiz_locked)
-               );
+
+
+  //   clk_wiz_100M clk_wiz_100M_i(
+  //                  .clk_in1(clk),
+  //                  .reset(clk_wiz_reset),
+  //                  .clk_out1(clk_128M),
+  //                  .locked(clk_wiz_locked)
+  //                );
 
   always @(posedge clk_128M) begin
     r_clk_wiz_locked_128M <= clk_wiz_locked;
@@ -166,6 +169,9 @@ module alchitry_top (
     else
       r_rst_256M <= 0;
   end
+
+  assign clk_100M = clk;
+
   //   BUFG bufg_clk(
   //          .O(clk_100M),
   //          .I(clk)
@@ -224,6 +230,11 @@ module alchitry_top (
   blink_led blink_led_ft(
               .clk_128M(ft_clk),
               .led(blinky_led_ft)
+            );
+
+  blink_led blink_led_100M(
+              .clk_128M(clk_100M),
+              .led(blinky_led_100M)
             );
 
 
