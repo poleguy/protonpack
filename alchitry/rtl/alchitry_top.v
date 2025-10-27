@@ -28,7 +28,7 @@ module alchitry_top (
   localparam _MP_STAGES_1420874663 = 3'h4;
   wire M_reset_cond_in;
   wire M_reset_cond_out;
-  wire clk_100M;
+  //wire clk_100M;
   wire clk_128M;
   wire clk_wiz_locked;
   reg r_clk_wiz_locked_128M = 1'b0;
@@ -77,6 +77,7 @@ module alchitry_top (
   wire M_ft_ui_dout_empty;
   wire M_ft_ui_dout_get;
   wire blinky_led;
+  wire blinky_led_ft;
 
   initial begin
     //$dumpfile();                // default "dump.vcd"
@@ -124,7 +125,7 @@ module alchitry_top (
   assign M_reset_cond_in = !rst_n;
   assign rst = M_reset_cond_out;
   assign clk_wiz_reset = !rst_n;
-  assign led = {blinky_led,3'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+  assign led = {blinky_led, blinky_led_ft, 2'b0,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
   assign usb_tx = usb_rx;
   assign M_ft_ft_rxf = ft_rxf;
   assign M_ft_ft_txe = ft_txe;
@@ -148,7 +149,7 @@ module alchitry_top (
 
   clk_wiz_100M clk_wiz_100M_i(
                  .clk_in1(clk),
-                 .reset(rst),
+                 .reset(clk_wiz_reset),
                  .clk_out1(clk_128M),
                  .locked(clk_wiz_locked)
                );
@@ -222,6 +223,11 @@ module alchitry_top (
   blink_led blink_led(
               .clk_128M(clk_128M),
               .led(blinky_led)
+            );
+
+  blink_led blink_led_ft(
+              .clk_128M(ft_clk),
+              .led(blinky_led_ft)
             );
 
 
