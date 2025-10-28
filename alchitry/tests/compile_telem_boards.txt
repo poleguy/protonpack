@@ -1,0 +1,39 @@
+# this is a top level compile.txt file following the convention that src and modules are at the same level as rtl
+#
+#`default_library=ac701
+#../src/shurewireless-telemetry/fpga/testbench/pcapng_pkg.vhd
+
+# todo: be sure to regenerate this correctly!
+# note: this is also being included by the modules/dpsm_rx_datapath compile.txt file
+# so we won't include it here.
+# but it makes it hard to figure out where it is coming from
+#$dpsm_rx_datapath/rtl/telemetry_cfg_pkg.vhd
+#../modules/telem_mobile_ac701/tests/tb_rgmii_to_pcapng.vhd
+#../modules/telem_mobile_ac701/compile.txt
+
+#`default_library=shure
+#compile_unisim_lib.txt
+../compile.txt
+tb_telem_boards.sv
+
+
+
+# the serial link depends on xapp523
+#../xapp523/compile.txt
+
+# oserdes8x.v works in aldec, but must be dummied out for CVC
+../rtl/serial_link/oserdes8x_dummy.v
+../rtl/serial_link/buffer_10bit_to_8bit.v
+../rtl/serial_link/pack_10x_11byte.v
+
+../rtl/serial_link/encode.v
+../rtl/serial_link/enc_8b10b.v
+
+#../rtl/serial_link/unpack_telemetry.v
+
+../rtl/serial_link/telemetry_serialize.v
+
+# top level testbench
+#tb_telemetry_serialize.v
+
+../rtl/telemetry_test_counter.v

@@ -1,4 +1,5 @@
 # for testing ADXR/ATLAS telemetry
+# checks data from serialization through to deserialization 
 
 # open sim waveforms with:
 # gtkwave tests/sim_build/test_telemetry_serialize/test_main/verilog.dump

@@ -1,7 +1,9 @@
-# for testing ADXR/ATLAS telemetry
+# for testing ADXR/ATLAS telemetry. 
+# checks data from serialization through to deserialization 
 
 # open sim waveforms with:
-# gtkwave tests/sim_build/test_telemetry_serialize/test_main/verilog.dump
+# gtkwave tests/sim_build/tests.test_telemetry_serialize_verilator/test_main/dump.fst 
+
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, RisingEdge, Timer

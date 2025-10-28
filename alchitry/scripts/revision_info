@@ -32,7 +32,7 @@ def svn_report(dir):
 
 def git_report(dir):    
     #https://stackoverflow.com/questions/924574/git-alternatives-to-svn-info-that-can-be-included-in-a-build-for-traceability
-    bash.bash(f"cd {dir} && git remeote -v")
+    bash.bash(f"cd {dir} && git remote -v")
     bash.bash(f"cd {dir} && git rev-parse HEAD")
     bash.bash(f"cd {dir} && git diff --name-status HEAD")
 
