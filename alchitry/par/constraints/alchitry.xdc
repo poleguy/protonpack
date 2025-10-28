@@ -144,3 +144,9 @@ set_property IOSTANDARD LVDS_25      [get_ports {REC_CLOCK_N}]
 #set_property PACKAGE_PIN   H23     [get_ports {USER_SMA_CLK_N}]
 #set_property IOSTANDARD LVDS_25      [get_ports {USER_SMA_CLK_N}]
 
+#V7 34_L19_P 29
+#W7 34_L19_N 27
+set_property PACKAGE_PIN V7 [get_ports {B29}]
+set_property IOSTANDARD LVCMOS33 [get_ports {B29}]
+set_property PACKAGE_PIN W7 [get_ports {B27}]
+set_property IOSTANDARD LVCMOS33 [get_ports {B27}]

@@ -21,7 +21,9 @@ module alchitry_top (
     input wire [0:0] GTREFCLK1P_I,
     input wire [0:0] GTREFCLK1N_I,
     output wire REC_CLOCK_P,
-    output wire REC_CLOCK_N
+    output wire REC_CLOCK_N,
+    output wire B29,
+    output wire B27
   );
   wire rst;
   wire clk_wiz_reset;
@@ -228,10 +230,13 @@ module alchitry_top (
               .led(blinky_led_ft)
             );
 
-//  blink_led blink_led_100M(
-//              .clk_128M(clk_100M),
-//              .led(blinky_led_100M)
-//            );
+
+  assign B29 = blinky_led;
+  assign B27 = clk_128M;
+  //  blink_led blink_led_100M(
+  //              .clk_128M(clk_100M),
+  //              .led(blinky_led_100M)
+  //            );
 
 
   wire _unused_ok = 1'b0 && &{1'b0,
