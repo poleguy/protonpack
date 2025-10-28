@@ -5,7 +5,7 @@
 */
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
-
+/* verilator lint_off UNOPTFLAT */
 module async_fifo #(
         parameter WIDTH = 3'h4,
         parameter ENTRIES = 4'h8,
@@ -121,3 +121,4 @@ module async_fifo #(
     end
 endmodule
 `resetall
+/* verilator lint_on UNOPTFLAT */
