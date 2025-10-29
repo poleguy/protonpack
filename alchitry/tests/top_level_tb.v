@@ -56,7 +56,10 @@ module top_level_tb;
     .GTREFCLK1P_I(GTREFCLK1P_I),
     .GTREFCLK1N_I(GTREFCLK1N_I),
     .REC_CLOCK_P(REC_CLOCK_P),
-    .REC_CLOCK_N(REC_CLOCK_N)
+    .REC_CLOCK_N(REC_CLOCK_N),
+    .B29(),
+    .B27()
+
   );
 
   // Generate system clock: 100 MHz (10 ns period)

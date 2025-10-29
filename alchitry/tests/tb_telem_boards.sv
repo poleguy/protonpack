@@ -206,7 +206,9 @@ module tb_telem_boards;
                  .GTREFCLK1P_I(GTREFCLK1P_I),
                  .GTREFCLK1N_I(GTREFCLK1N_I),
                  .REC_CLOCK_P(REC_CLOCK_P),
-                 .REC_CLOCK_N(REC_CLOCK_N)
+                 .REC_CLOCK_N(REC_CLOCK_N),
+                 .B29(),
+                 .B27()
                );
 
 

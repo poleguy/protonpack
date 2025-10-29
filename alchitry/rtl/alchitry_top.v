@@ -83,6 +83,14 @@ module alchitry_top (
   wire blinky_led_100M;
   wire blinky_led_ft;
 
+  reg [15:0] r_serial_in;
+  reg r_serial_in_valid;
+
+  reg [3:0] r_cnt = 4'hf;
+  reg r_packet_valid;
+  reg r1_packet_valid;
+  reg r_packet_valid_128;
+
   initial begin
     //$dumpfile();                // default "dump.vcd"
     $dumpfile("wave1.fst");     // dumps into "wave1.gst"
@@ -139,9 +147,11 @@ module alchitry_top (
   assign ft_wakeup = 1'h1;
   assign ft_reset = !rst;
   assign M_ft_ui_dout_get = !M_ft_ui_din_full;
-  assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
-  assign M_ft_ui_din = M_ft_ui_dout;
-  assign M_ft_ui_din_be = M_ft_ui_dout_be;
+  //assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
+
+  //assign M_ft_ui_din = M_ft_ui_dout;
+
+  //assign M_ft_ui_din_be = M_ft_ui_dout_be;
   assign clk_wiz_reset = !rst_n;
 
   assign clk_100M = clk;
@@ -174,14 +184,14 @@ module alchitry_top (
   //          .O(clk_100M),
   //          .I(clk)
   //        );
-//   OBUFDS #(
-//            .IOSTANDARD("DEFAULT"),
-//            .SLEW("FAST")
-//          ) OBUFDS_REC_CLOCK(
-//            .O(REC_CLOCK_P),
-//            .OB(REC_CLOCK_N),
-//            .I(clk_128M)
-//          );
+  //   OBUFDS #(
+  //            .IOSTANDARD("DEFAULT"),
+  //            .SLEW("FAST")
+  //          ) OBUFDS_REC_CLOCK(
+  //            .O(REC_CLOCK_P),
+  //            .OB(REC_CLOCK_N),
+  //            .I(clk_128M)
+  //          );
 
   // it seems this stupid board doesn't have any non 3.3V banks. ugh.
   // try to fake differential for the clock:
@@ -245,6 +255,88 @@ module alchitry_top (
   //              .led(blinky_led_100M)
   //            );
 
+
+  // drive the serial data out of the FT interface for debug:
+
+  always @(posedge clk_128M) begin
+    if (r_cnt == 4'h0) begin
+      r_serial_in <= packet_data[7:0];
+      r_serial_in_valid <= 1'b1;
+    end
+    else if (r_cnt == 4'h1) begin
+      r_serial_in <= packet_data[15:8];
+    end
+    else if (r_cnt == 4'h2) begin
+      r_serial_in <= packet_data[23:16];
+    end
+    else if (r_cnt == 4'h3) begin
+      r_serial_in <= packet_data[31:24];
+    end
+    else if (r_cnt == 4'h4) begin
+      r_serial_in <= packet_data[39:32];
+    end
+    else if (r_cnt == 4'h5) begin
+      r_serial_in <= packet_data[47:40];
+    end
+    else if (r_cnt == 4'h6) begin
+      r_serial_in <= packet_data[55:48];
+    end
+    else if (r_cnt == 4'h7) begin
+      r_serial_in <= packet_data[63:56];
+    end
+    else if (r_cnt == 4'h8) begin
+      r_serial_in <= packet_data[71:64];
+    end
+    else if (r_cnt == 4'h9) begin
+      r_serial_in <= packet_data[79:72];
+    end
+    else if (r_cnt == 4'ha) begin
+      r_serial_in <= packet_data[87:80];
+    end
+    else begin
+      // send k character when idle (default)
+      r_serial_in <= 8'hBC;
+      r_serial_in_valid <= 1'b0;
+    end
+  end
+
+
+  // count bytes
+  always @(posedge clk_128M) begin
+    if (r_packet_valid_128) begin
+      // start count
+      r_cnt <= 4'h0;
+    end
+    else if (r_cnt > 4'ha) begin
+      // stop counting when all bytes are sent and wait for next valid_in
+      r_cnt <= 4'hb;
+    end
+    else begin
+      // count for each byte of data
+      r_cnt <= r_cnt + 4'h1;
+    end
+
+  end
+
+  //stretch into 128MHz clock domain
+
+  always @(posedge clk_256M) begin
+    if (packet_valid) begin
+      r_packet_valid <= 1'b1;
+    end
+    else begin
+      r_packet_valid <= 1'b0;
+    end
+    r1_packet_valid <= r_packet_valid;
+
+    r_packet_valid_128 <= r_packet_valid || r1_packet_valid;
+  end
+
+
+  assign M_ft_ui_din = r_serial_in;
+
+  assign M_ft_ui_din_be = 2'b11;
+  assign M_ft_ui_din_valid = r_serial_in_valid;
 
   wire _unused_ok = 1'b0 && &{1'b0,
                               r_rst_256M,
