@@ -77,8 +77,8 @@ module gt_unpack_telemetry #(
   (* ASYNC_REG = "TRUE" *) reg r_gt_clk        = 1'b0;
   (* ASYNC_REG = "TRUE" *) reg r1_gt_clk       = 1'b0;
                            reg r2_gt_clk       = 1'b0;
-                           reg [31:0] r_gt_data       = 32'h0000_0000;
-                           reg [3:0]  r_gt_data_is_k  = 4'b0000;
+  (* ASYNC_REG = "TRUE" *) reg [31:0] r_gt_data       = 32'h0000_0000;
+  (* ASYNC_REG = "TRUE" *) reg [3:0]  r_gt_data_is_k  = 4'b0000;
                            reg        r_gt_data_valid = 1'b0;
 
 

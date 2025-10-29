@@ -209,7 +209,7 @@ module alchitry_top (
                                  .RXP_IN(RXP_I),
                                  .TXN_OUT(),
                                  .TXP_OUT(),
-                                 .DATA_CLK_OUT(gt_clk),
+                                 .DATA_CLK_OUT(gt_clk), //RXUSRCLK2
                                  .DATA_OUT(gt_data),
                                  .DATA_IS_K_OUT(gt_data_is_k)
                                );
@@ -260,37 +260,22 @@ module alchitry_top (
 
   always @(posedge clk_128M) begin
     if (r_cnt == 4'h0) begin
-      r_serial_in <= packet_data[7:0];
+      r_serial_in <= packet_data[15:0];
       r_serial_in_valid <= 1'b1;
     end
     else if (r_cnt == 4'h1) begin
-      r_serial_in <= packet_data[15:8];
+      r_serial_in <= packet_data[31:16];
     end
     else if (r_cnt == 4'h2) begin
-      r_serial_in <= packet_data[23:16];
+      r_serial_in <= packet_data[47:32];
     end
     else if (r_cnt == 4'h3) begin
-      r_serial_in <= packet_data[31:24];
+      r_serial_in <= packet_data[63:48];
     end
     else if (r_cnt == 4'h4) begin
-      r_serial_in <= packet_data[39:32];
+      r_serial_in <= packet_data[79:64];
     end
     else if (r_cnt == 4'h5) begin
-      r_serial_in <= packet_data[47:40];
-    end
-    else if (r_cnt == 4'h6) begin
-      r_serial_in <= packet_data[55:48];
-    end
-    else if (r_cnt == 4'h7) begin
-      r_serial_in <= packet_data[63:56];
-    end
-    else if (r_cnt == 4'h8) begin
-      r_serial_in <= packet_data[71:64];
-    end
-    else if (r_cnt == 4'h9) begin
-      r_serial_in <= packet_data[79:72];
-    end
-    else if (r_cnt == 4'ha) begin
       r_serial_in <= packet_data[87:80];
     end
     else begin
@@ -307,9 +292,9 @@ module alchitry_top (
       // start count
       r_cnt <= 4'h0;
     end
-    else if (r_cnt > 4'ha) begin
+    else if (r_cnt > 4'h5) begin
       // stop counting when all bytes are sent and wait for next valid_in
-      r_cnt <= 4'hb;
+      r_cnt <= 4'h6;
     end
     else begin
       // count for each byte of data
