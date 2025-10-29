@@ -174,14 +174,21 @@ module alchitry_top (
   //          .O(clk_100M),
   //          .I(clk)
   //        );
-  OBUFDS #(
-           .IOSTANDARD("DEFAULT"),
-           .SLEW("FAST")
-         ) OBUFDS_REC_CLOCK(
-           .O(REC_CLOCK_P),
-           .OB(REC_CLOCK_N),
-           .I(clk_128M)
-         );
+//   OBUFDS #(
+//            .IOSTANDARD("DEFAULT"),
+//            .SLEW("FAST")
+//          ) OBUFDS_REC_CLOCK(
+//            .O(REC_CLOCK_P),
+//            .OB(REC_CLOCK_N),
+//            .I(clk_128M)
+//          );
+
+  // it seems this stupid board doesn't have any non 3.3V banks. ugh.
+  // try to fake differential for the clock:
+
+  assign REC_CLOCK_P = clk_128M;
+  assign REC_CLOCK_N = ~clk_128M;
+
   gt_serial_telem_rx_subsystem gt_serial_telem_rx_subsystem(
                                  .Q0_CLK1_GTREFCLK_PAD_N_IN(GTREFCLK1N_I[0]),
                                  .Q0_CLK1_GTREFCLK_PAD_P_IN(GTREFCLK1P_I[0]),
