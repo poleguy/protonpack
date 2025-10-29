@@ -105,7 +105,7 @@ rtl/ip/mmcm_128M_256M/mmcm_128M_256M_sim.v
 rtl/serial_link/unpack_telemetry.v
 
 `IF BUILD
-rtl/serial_link/gt_unpack_telemetry.vhd
+rtl/serial_link/gt_unpack_telemetry.v
 
 # subsystem top file
 
