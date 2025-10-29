@@ -135,9 +135,9 @@ set_property PACKAGE_PIN D9 [get_ports {RXP_I}]
 
 # Route out 128MHz to drive GTREFCLK1P_I[0]
 set_property PACKAGE_PIN  U6      [get_ports {REC_CLOCK_P}]
-set_property IOSTANDARD LVDS_25 [get_ports {REC_CLOCK_P}]
+set_property IOSTANDARD LVDS_33 [get_ports {REC_CLOCK_P}]
 set_property PACKAGE_PIN  V5      [get_ports {REC_CLOCK_N}]
-set_property IOSTANDARD LVDS_25      [get_ports {REC_CLOCK_N}]
+set_property IOSTANDARD LVDS_33      [get_ports {REC_CLOCK_N}]
 
 #set_property PACKAGE_PIN   W15     [get_ports {USER_SMA_CLK_P}]
 #set_property IOSTANDARD LVDS_25      [get_ports {USER_SMA_CLK_P}]
