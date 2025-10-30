@@ -163,7 +163,6 @@ set_property IOSTANDARD LVCMOS33 [get_ports {B27}]
 ##
 set_clock_groups -name async_groups -asynchronous \
     -group [get_clocks {clkfbout_clk_wiz_100M clk_out1_clk_wiz_100M}] \
-    -group [get_clocks {gtrefclk0_0 gtrefclk1_1}] \
     -group [get_clocks {clkfbout clkout0 clkout1}] \
     -group [get_clocks {clkfbout_1 clkout0_1 clkout1_1}] \
     -group [get_clocks ft_clk_12] \
