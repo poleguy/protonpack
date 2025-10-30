@@ -150,3 +150,21 @@ set_property PACKAGE_PIN V7 [get_ports {B29}]
 set_property IOSTANDARD LVCMOS33 [get_ports {B29}]
 set_property PACKAGE_PIN W7 [get_ports {B27}]
 set_property IOSTANDARD LVCMOS33 [get_ports {B27}]
+
+
+## Set clock groups for timing analysis.
+## This tells Vivado to time paths internal to a clock group
+## but do not time paths that go between clock groups.
+## Paths between clock groups are CDC and should be handled by
+## rtl cdc approaches and validated via report_cdc flow.
+##
+## All the mmcm outputs for a given instantiation are sync
+## to one another and can be treated as such.
+##
+set_clock_groups -name async_groups -asynchronous \
+    -group [get_clocks {clkfbout_clk_wiz_100M clk_out1_clk_wiz_100M}] \
+    -group [get_clocks {gtrefclk0_0 gtrefclk1_1}] \
+    -group [get_clocks {clkfbout clkout0 clkout1}] \
+    -group [get_clocks {clkfbout_1 clkout0_1 clkout1_1}] \
+    -group [get_clocks ft_clk_12] \
+    -group [get_clocks {clkfbout_mmcm_128M_256M clk_out2_mmcm_128M_256M}]

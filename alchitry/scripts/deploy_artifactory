@@ -36,6 +36,8 @@ set +e
    
 cp par/output/*_working.bin artifactory/staging/dist
 cp par/output/*_working.mcs artifactory/staging/dist
+cp par/output/*_working_FAILED.bin artifactory/staging/dist # in case it fails timing we don't want it to be loaded onto a board without manual intervention, so append _FAILED to break the pipeline
+cp par/output/*_working_FAILED.mcs artifactory/staging/dist
 
 # then select meta files
 # sort-lines alphabetize
