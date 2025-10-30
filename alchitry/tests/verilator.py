@@ -5,7 +5,6 @@ import logging
 # This will inherit the output location of the module that calls this
 log = logging.getLogger(__name__) 
 
-
 # see readme.txt for more documentation
 import cocotb
 #from coctob_test.simulator import run
@@ -26,7 +25,7 @@ from shutil import which
 import shutil
 #import logging as log
 import time
-
+import scripts.bash as bash
 
 def _get_test_module(num_callers_back=2):
     ## get some details about the module that called this
@@ -300,6 +299,7 @@ def compile_and_run_verilator(compile_list, cocotb_lib_dir, command, frame, coco
     # os.environ['LIBPYTHON_LOC'] = '/home/fpga/workspace/telemetry/cenv/lib/libpython3.8.so.1.0'
     os.environ["NO_COLOR"] = "1"
     os.environ["COCOTB_REDUCED_LOG_FMT"] = "1"
+    os.environ["CCACHE_PREFIX"] = str.strip(bash.bash("which g++-13"));
 
     # command = f"{command} {vpi} > tmp.txt"
 
