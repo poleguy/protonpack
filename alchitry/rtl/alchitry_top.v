@@ -276,7 +276,16 @@ module alchitry_top (
       r_serial_in <= packet_data[79:64];
     end
     else if (r_cnt == 4'h5) begin
-      r_serial_in <= packet_data[87:80];
+      // insert "|" character to make it easier to debug.
+      r_serial_in <= {8'h7C, packet_data[87:80]};
+    end
+    else if (r_cnt == 4'h6) begin
+        // extra magic words for debug      
+      r_serial_in <= {16'hF00D};
+    end
+    else if (r_cnt == 4'h7) begin      
+        // extra magic words for debug      
+      r_serial_in <= {16'hC0DE};
     end
     else begin
       // send k character when idle (default)
@@ -292,9 +301,9 @@ module alchitry_top (
       // start count
       r_cnt <= 4'h0;
     end
-    else if (r_cnt > 4'h5) begin
+    else if (r_cnt > 4'h7) begin
       // stop counting when all bytes are sent and wait for next valid_in
-      r_cnt <= 4'h6;
+      r_cnt <= 4'h8;
     end
     else begin
       // count for each byte of data
