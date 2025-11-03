@@ -248,8 +248,8 @@ module alchitry_top (
             );
 
 
-  assign B29 = r_serial_in[0];
-  assign B27 = r_serial_in_valid;
+  assign B29 = gt_data[0];
+  assign B27 = gt_data_is_k;
   //  blink_led blink_led_100M(
   //              .clk_128M(clk_100M),
   //              .led(blinky_led_100M)
