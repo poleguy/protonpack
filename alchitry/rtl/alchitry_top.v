@@ -35,8 +35,8 @@ module alchitry_top (
   wire clk_wiz_locked;
   reg r_clk_wiz_locked_128M = 1'b0;
   reg r1_clk_wiz_locked_128M = 1'b0;
-  reg r_clk_wiz_locked_256M = 1'b0;
-  reg r1_clk_wiz_locked_256M = 1'b0;
+//   reg r_clk_wiz_locked_256M = 1'b0;
+//   reg r1_clk_wiz_locked_256M = 1'b0;
   reg r_rst_128M = 1'b0;
   reg r_rst_256M = 1'b0;
   wire clk_256M;
@@ -80,7 +80,7 @@ module alchitry_top (
   wire M_ft_ui_dout_empty;
   wire M_ft_ui_dout_get;
   wire blinky_led;
-  wire blinky_led_100M;
+//  wire blinky_led_100M;
   wire blinky_led_ft;
 
   reg [15:0] r_serial_in;
@@ -137,7 +137,7 @@ module alchitry_top (
   //always @(*) begin
   assign M_reset_cond_in = !rst_n;
   assign rst = M_reset_cond_out;
-  assign led = {blinky_led,blinky_led_ft, blinky_led_100M,clk_wiz_locked,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+  assign led = {blinky_led,blinky_led_ft, 1'b0,clk_wiz_locked,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
   assign usb_tx = usb_rx;
   assign M_ft_ft_rxf = ft_rxf;
   assign M_ft_ft_txe = ft_txe;
@@ -171,14 +171,14 @@ module alchitry_top (
     else
       r_rst_128M <= 0;
   end
-  always @(posedge clk_256M) begin
-    r_clk_wiz_locked_256M <= clk_wiz_locked;
-    r1_clk_wiz_locked_256M <= r_clk_wiz_locked_256M;
-    if (r1_clk_wiz_locked_256M == 0)
-      r_rst_256M <= 1;
-    else
-      r_rst_256M <= 0;
-  end
+//   always @(posedge clk_256M) begin
+//     r_clk_wiz_locked_256M <= clk_wiz_locked;
+//     r1_clk_wiz_locked_256M <= r_clk_wiz_locked_256M;
+//     if (r1_clk_wiz_locked_256M == 0)
+//       r_rst_256M <= 1;
+//     else
+//       r_rst_256M <= 0;
+//   end
 
   //   BUFG bufg_clk(
   //          .O(clk_100M),
@@ -248,8 +248,8 @@ module alchitry_top (
             );
 
 
-  assign B29 = blinky_led;
-  assign B27 = clk_128M;
+  assign B29 = r_serial_in[0];
+  assign B27 = r_serial_in_valid;
   //  blink_led blink_led_100M(
   //              .clk_128M(clk_100M),
   //              .led(blinky_led_100M)

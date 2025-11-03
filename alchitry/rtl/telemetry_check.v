@@ -125,6 +125,8 @@ module telemetry_check #(
 wire _unused_ok = 1'b0 && &{1'b0,
                     data_unpack_out[87:84],
                     data_unpack_out[79:10], 
+                    packet_data[87:84],
+                    packet_data[79:10], 
                     1'b0};
 
 endmodule
