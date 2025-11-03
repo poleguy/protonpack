@@ -248,7 +248,7 @@ module alchitry_top (
             );
 
 
-  assign B29 = gt_data[0];
+  assign B29 = gt_clk;
   assign B27 = gt_data_is_k;
   //  blink_led blink_led_100M(
   //              .clk_128M(clk_100M),
