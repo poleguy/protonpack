@@ -132,6 +132,9 @@ if [ $status -ne 0 ]; then
     exit $status
 fi
 
+# generate svg files for documentation, etc.
+scripts/make_docs
+
 # alternatively, you can interactively run these steps:
 # cd par
 # vivado -mode tcl
