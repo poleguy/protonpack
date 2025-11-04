@@ -135,6 +135,12 @@ fi
 # generate svg files for documentation, etc.
 scripts/make_docs
 
+# be sure to assemble esm code every time
+# todo: should we bother with make files or just do a full rebuild every time
+#make -f Makefile clean
+make -C rtl/esm_dir -f Makefile
+
+
 # alternatively, you can interactively run these steps:
 # cd par
 # vivado -mode tcl

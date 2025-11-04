@@ -1,5 +1,5 @@
 TARGETS = asm \
-	motor_rev.hex \
+	main.hex \
 	rs232io_32bit_dump.hex
 
 all: $(TARGETS)
