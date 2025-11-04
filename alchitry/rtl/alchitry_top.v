@@ -87,6 +87,7 @@ module alchitry_top (
   reg r_serial_in_valid;
 
   reg [3:0] r_cnt = 4'hf;
+  reg [15:0] r_packet_cnt = 16'h0;
   reg r_packet_valid;
   reg r1_packet_valid;
   reg r_packet_valid_128;
@@ -279,13 +280,12 @@ module alchitry_top (
       // insert "|" character to make it easier to debug.
       r_serial_in <= {8'h7C, packet_data[87:80]};
     end
-    else if (r_cnt == 4'h6) begin
-        // extra magic words for debug      
-      r_serial_in <= {16'hF00D};
+    else if (r_cnt == 4'h6) begin        
+       // extra magic word for debug: "CODE"
+      r_serial_in <= {16'hDEC0};
     end
     else if (r_cnt == 4'h7) begin      
-        // extra magic words for debug      
-      r_serial_in <= {16'hC0DE};
+      r_serial_in <= r_packet_cnt;
     end
     else begin
       // send k character when idle (default)
@@ -311,6 +311,16 @@ module alchitry_top (
     end
 
   end
+
+
+    // count packets to see if FT600 is dropping words.
+  always @(posedge clk_128M) begin
+    if (r_packet_valid_128) begin
+      r_packet_cnt <= r_packet_cnt + 16'h1;
+    end
+
+  end
+
 
   //stretch into 128MHz clock domain
 
