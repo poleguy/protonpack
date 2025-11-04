@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2025-11-04T17:09:29.328Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.6.1 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="sSnansOISfZdeBlJOI11" version="24.6.1" type="device">
+<mxfile host="Electron" modified="2025-11-04T20:03:10.296Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.6.1 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="32-ja_wCE6onlGQwPGqW" version="24.6.1" type="device">
   <diagram id="NSa18aZEY6gylXyAxlEX" name="Page-1">
-    <mxGraphModel dx="2051" dy="2666" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+    <mxGraphModel dx="2074" dy="2143" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -105,8 +105,8 @@
         <mxCell id="Y9yN1bhmZpT2N5PvJ_w0-30" value="SFP" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="465" y="860" width="50" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="Y9yN1bhmZpT2N5PvJ_w0-31" value="Ethernet Telemetry" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-          <mxGeometry x="550" y="680" width="120" height="20" as="geometry" />
+        <mxCell id="Y9yN1bhmZpT2N5PvJ_w0-31" value="Ethernet Telemetry (UDP)" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="550" y="675" width="160" height="30" as="geometry" />
         </mxCell>
         <mxCell id="Y9yN1bhmZpT2N5PvJ_w0-32" value="Serial Telemetry" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
           <mxGeometry x="490" y="30" width="110" height="30" as="geometry" />
@@ -166,8 +166,8 @@
         <mxCell id="hh4loPX20WWpKF6f5-4p-3" value="Serial Telemetry" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="525" y="895" width="110" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-6" value="&lt;p&gt;Proton Packs for DUT 1-N&lt;/p&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="560" y="-70" width="160" height="50" as="geometry" />
+        <mxCell id="hh4loPX20WWpKF6f5-4p-6" value="&lt;p&gt;Proton Packs for DUT 1..n&lt;/p&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="660" y="-100" width="160" height="50" as="geometry" />
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-8" value="Stereo Audio" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="690" y="775" width="90" height="30" as="geometry" />
@@ -227,7 +227,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-33" value="USB3 (2)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="hh4loPX20WWpKF6f5-4p-33" value="USB3 (2)&lt;div&gt;SSH/TCP/IP OTG&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="1730" y="290" width="120" height="65" as="geometry" />
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-34" value="&lt;p&gt;&lt;font style=&quot;font-size: 30px;&quot;&gt;Proton Pack System Block Diagram&lt;/font&gt;&lt;/p&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
@@ -251,7 +251,7 @@
         <mxCell id="hh4loPX20WWpKF6f5-4p-40" value="LEDs" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="680" y="450" width="50" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.018;entryY=0.679;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" source="hh4loPX20WWpKF6f5-4p-42" target="hh4loPX20WWpKF6f5-4p-46" parent="1">
+        <mxCell id="hh4loPX20WWpKF6f5-4p-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="hh4loPX20WWpKF6f5-4p-42" target="hh4loPX20WWpKF6f5-4p-44" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="690" y="1037.53" as="targetPoint" />
           </mxGeometry>
@@ -262,20 +262,20 @@
         <mxCell id="hh4loPX20WWpKF6f5-4p-43" value="Proton Pack #4&lt;br&gt;(Custom FPGA image with Head-Link Protocol)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
           <mxGeometry x="690" y="1057.53" width="490" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-44" value="Ethernet" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="690" y="1092.53" width="60" height="20" as="geometry" />
+        <mxCell id="hh4loPX20WWpKF6f5-4p-44" value="Ethernet (to FPGA)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1087.53" width="130" height="30" as="geometry" />
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-45" value="USB" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="1130" y="1092.53" width="40" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-46" value="Serial Coax" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="690" y="1067.53" width="80" height="20" as="geometry" />
+        <mxCell id="hh4loPX20WWpKF6f5-4p-46" value="Serial Coax" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1072.53" width="80" height="20" as="geometry" />
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-48" value="Ethernet Head-Link Protocol" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="495" y="1092.53" width="170" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-49" value="Stereo Audio" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="685" y="1117.53" width="90" height="30" as="geometry" />
+        <mxCell id="hh4loPX20WWpKF6f5-4p-49" value="Stereo Audio" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="690" y="1117.53" width="90" height="30" as="geometry" />
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" target="hh4loPX20WWpKF6f5-4p-43" parent="1" source="Y9yN1bhmZpT2N5PvJ_w0-15">
           <mxGeometry relative="1" as="geometry">
@@ -286,8 +286,8 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="hh4loPX20WWpKF6f5-4p-51" value="Base DUT" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-          <mxGeometry x="385" y="600" width="80" height="30" as="geometry" />
+        <mxCell id="hh4loPX20WWpKF6f5-4p-51" value="Base DUT&lt;div&gt;(Versal FGPA)&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="375" y="595" width="100" height="40" as="geometry" />
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-52" value="Unused Head Link RJ45" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="385" y="685" width="150" height="30" as="geometry" />
@@ -309,6 +309,69 @@
         </mxCell>
         <mxCell id="hh4loPX20WWpKF6f5-4p-57" value="RJ45" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="420" y="1076.26" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-58" value="USB uart&lt;div&gt;FTDI FT600&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="150" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-60" value="USB3 (1)&lt;div&gt;USB2?&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-61" value="ESM cli" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="1330" y="85" width="120" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-63" value="Ethernet??" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="810" y="-20" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-64" value="Ethernet Phy for Head-Link?" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="90" width="90" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" source="hh4loPX20WWpKF6f5-4p-66" target="hh4loPX20WWpKF6f5-4p-68" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="670" y="1175" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="450" y="1240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-66" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="330" y="1170" width="120" height="117.47" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-67" value="Proton Pack #4&lt;br&gt;(Proton Packt #2 style)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="1220" y="1200" width="490" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-68" value="Ethernet (to FPGA)" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1225" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-70" value="Serial Coax" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1210" width="80" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-71" value="Ethernet Head-Link Protocol" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="480" y="1245.03" width="170" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-72" value="Stereo Audio" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="670" y="1255" width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-73" value="Node DUT" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="350" y="1170" width="80" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-74" value="RJ45" style="text;html=1;align=right;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="400" y="1225" width="50" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-75" value="&lt;span style=&quot;text-wrap: nowrap;&quot;&gt;Xilinx FPGA&lt;/span&gt;&lt;br&gt;&lt;div&gt;&lt;span style=&quot;text-wrap: nowrap;&quot;&gt;XC7A100T-2FGG841&amp;nbsp;&lt;br&gt;&lt;/span&gt;&lt;span style=&quot;text-wrap: nowrap;&quot;&gt;Or Versal Eval Kit?&lt;/span&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="660" y="1160" width="400" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1250" y="1255.03" as="targetPoint" />
+            <mxPoint x="1030" y="1244.03" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="1141" y="1245" />
+              <mxPoint x="1251" y="1245" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="hh4loPX20WWpKF6f5-4p-77" value="Ethernet UDP" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1090" y="1245.03" width="100" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

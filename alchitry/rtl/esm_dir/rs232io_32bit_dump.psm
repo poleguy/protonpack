@@ -1,0 +1,1166 @@
+	;USB control endpoint 0 code
+
+	;USB Core/MPU constant declarations
+	CONSTANT	UARTFIFO, 00		;output/input
+	CONSTANT	unused1,01
+	CONSTANT	unused2,02
+	CONSTANT	interrupt,03		;output/input
+	CONSTANT	unused3,04
+	CONSTANT	unused4,05
+	CONSTANT	offset,06		;output
+	CONSTANT	status,07		;input
+	
+	CONSTANT	dt_rst,08		;single bit out
+	CONSTANT	ep0out_rst,09		;single bit out
+	CONSTANT	ep0in_rst,0a		;single bit out
+	CONSTANT	ep1out_rst,0b		;single bit out
+	CONSTANT	ep1in_rst,0c		;single bit out
+
+
+	;SDRAM controller constant declarations
+	CONSTANT	sdramrdwr,19		;write data to the SDRAM, uses write/read strobe 
+
+
+	;32 bit register control
+	CONSTANT	addr_3,10		;fifo memory (31:24)
+	CONSTANT	addr_2,11		;fifo memory (23:16)
+	CONSTANT	addr_1,12		;fifo memory (15:8)
+	CONSTANT	addr_0,13		;fifo memory (7:0) (a write to this causes a 32 bit read to the data registers)
+	CONSTANT	data_3,14		;fifo memory (31:24)
+	CONSTANT	data_2,15		;fifo memory (23:16)
+	CONSTANT	data_1,16		;fifo memory (15:8)
+	CONSTANT	data_0,17		;fifo memory (7:0) (a write to this causes a 32 bit write)
+
+
+	;GSM modulator/Upconverter control (20's)
+	CONSTANT	freq_4,20		;frequency control word (31:24)
+	CONSTANT	freq_3,21		;frequency control word (23:16)
+	CONSTANT	freq_2,22		;frequency control word (15:8)
+	CONSTANT	freq_1,23		;frequency control word (7:0)
+	CONSTANT	amp_2,24		;amplitude control word (15:8)
+	CONSTANT	amp_1,25		;amplitude control word (7:0)
+	CONSTANT	symbol,26		;symbol output for IQ modulator 3bits for 8-PSK
+
+	CONSTANT	ts_rst,29		;reset at beginning of new timeslot
+	CONSTANT	frm_rst,2a		;reset at beginning of new TDMA frame
+	CONSTANT	clk1x_rst,2b		;timeslot clock reset flag
+
+	CONSTANT	ramptrig,2c		;trigger to start ramp
+	CONSTANT	pn_inc,2d		;increment pn generator
+	CONSTANT	rom_inc,2e		;increment rom address/location
+
+
+
+	;Misc. constant declarations
+	CONSTANT	gpio1,10		;(7:4)capture size output/(1:0)LED output
+	CONSTANT	gpio2,11		;(7)datain_cntrl reset/(6:4) datain_cntrl select
+	CONSTANT	gpio3,12		;dll144lck,dllextlck,0,0,0,0,0,dip1
+	CONSTANT	rs232,1f		;rs232 debug port
+
+	namereg s00,s0
+	namereg s01,s1
+	namereg s02,s2
+	namereg s03,s3
+	namereg s04,s4
+	namereg s05,s5
+	namereg s06,s6
+	namereg s07,s7
+	namereg s08,s8
+	namereg s09,s9
+	namereg s0a,sa
+	namereg s0b,sb
+	namereg s0c,sc
+	namereg s0d,sd
+	namereg s0e,se
+	namereg s0f,sf
+
+	;register s0 contains device state/status info.
+	;bit - function
+	;0 - data to send
+	;1 - write file flag
+	;2 - read file flag
+
+	;register s1 contains input character counter
+	;
+
+	;register s2 contains ?
+	;
+
+	;register s3 contains ascii code of letter passed to 'send_letter'
+	;
+	
+	;register s4 contains 1st char from char buffer, passed to 'ishex2digit'
+	;is hex digit returns a true/false flag in s4 
+
+	;register s5 contains 2nd char from char buffer, passed to 'ishex2digit'
+	;is hex digit returns number value in s5 if successful
+
+	;register s6 used by interrupt handlers
+
+	;register s7 used by uart
+	;register s8 used by uart
+	;register s9 used by uart (word counter)
+
+	;register s9 contains write to file counter 
+
+
+	;register sa,sb are used as general varibles in various
+	;jumps/subroutines
+
+	;register sc is used in functions
+
+	;register sd is used in functions
+	;register se is used in functions
+
+
+    ;register sf contains 1 for binary mode for dump
+	;register s10-s13 contain dump start address
+	;register s14-s17 contain dump end address
+	;register s18-s1b contain dump length
+    ;register s1c-s1f contain address offset
+
+	ADDRESS 000
+	jump start
+;	jump rx_rdy		;jump table for selecting interrupt
+;	jump tx_done
+;	jump noint
+;	jump extint
+;	jump noint
+;	jump noint
+;	jump noint
+;	jump noint
+
+	ADDRESS 009		;jump table for selecting control cmd
+;	jump get_status
+;	jump clr_fetr
+;	jump noinstr
+;	jump set_fetr
+;	jump noinstr
+;	jump set_addr
+;	jump get_dscrip
+;	jump noinstr
+;	jump get_config
+;	jump set_config		;0x09
+;	jump noinstr		;0x0a
+;	jump noinstr		;0x0b
+;	jump noinstr		;0x0c	stops at addr 15h
+
+	ADDRESS 016		;Vendor requests
+;	jump write		;write memory location
+;	jump read		;read memory location
+;	jump capture		;capture data macro
+
+	ADDRESS 020		;program can start after address 32d		
+
+start:
+    load s0, 00
+	output s0,interrupt	;clear interrupt register
+	call send_CRLF
+	call send_prompt
+
+	load s0,00		;initialize status register flags so interrupt will not see a file flag set
+	load s1,00		;initialize character count
+
+	enable interrupt
+
+
+;registers used in main shouldn't be used anywhere else
+;becuase interrupts are enabled
+main:
+	
+	jump main
+
+
+
+
+;########################### ISRs #################################
+intrp:
+;	input sa,interrupt	;get interrupt register
+;	output sa,offset	;write interrupt register to offset
+;	jump 000
+	input sa,interrupt	;read interrupt register
+	and sa,80		;unused
+	jump nz,noint
+	input sa,interrupt	;
+	and sa,20		;unused
+	jump nz,noint
+	input sa,interrupt	;
+	and sa,20		;unused
+	jump nz,noint
+	input sa,interrupt
+	and sa,10		;unused
+	jump nz,noint
+	input sa,interrupt
+	and sa,08		;check for external interrupt
+	jump nz,extint
+	input sa,interrupt
+	and sa,04		;unused
+	jump nz,noint
+	input sa,interrupt
+	and sa,02		;check for tx_done interrupt
+	jump nz,tx_done
+	input sa,interrupt
+	and sa,01		;check for rx_rdy interrupt
+	jump nz,rx_rdy
+	jump noint
+
+
+;==================================================================
+; interrupt handler that puts incoming characters into a buffer
+; and calls process_cmd if a CR is detected
+; uses s1, s7, s8, s0
+rx_rdy:
+	input s7,UARTFIFO
+	load s8,s0		;get status byte
+	and s8,02		;check if write flag set
+	jump z,regcmd
+;	load s8,13		;base address for 32 bit fifo word
+;	add s8,s9		;add index to base word
+;	output s7,(s08)		;send received byte out
+;	sub s9,01		;decrement word counter
+;	jump nc,finish_intrp
+;	load s9,03		;reset word counter
+	output s7,18		;write 32 bit word to fifo
+	add s9,00		;NOP
+	add s9,00		;NOP
+	input s8,17		;get fifo status
+	and s8,20		;get full bit
+	jump z,finish_intrp
+	and s0,FD		;clear write flag
+	call send_CRLF
+	call send_prompt
+	jump finish_intrp
+regcmd:
+	;load s8,s7		;store input byte
+	;sub s7,0A      ;check for LF
+    call check_CRLF
+	jump nz,nocrdet		;no carriage return detected
+    call process_cmd	;process received cmd
+	load s1,00		;reset char cnt
+	load s8,s0		;check for read/write flag
+	and s8,06		;if flag don't send CR/LF and >>
+	jump nz,no_crlf	;if not zero, flag set, don't send
+    and sf,sf			  ; check for binary dump
+    jump nz,no_crlf      ; skip CRLF and prompt if binary dump
+	call send_CRLF
+	call send_prompt
+no_crlf:
+    load sf,00      ;revert to normal prompt after dump
+	jump finish_intrp
+nocrdet:
+	load s7,s8		;restore value
+	sub s7,08		;check for backspace
+	jump nz,nobsdet		;no backspace detected
+	add s1,00		;get char cnt
+	jump z,finish_intrp	;if char cnt = 0, nothing to backspace
+	sub s1,01		;decrement char cnt
+	call waitforfifo
+	output s8,UARTFIFO
+	jump finish_intrp
+nobsdet:
+	load s7,s8		;restore value
+	sub s7,20		;check for chars below decimal 32
+	jump nc,chargt19	;char above 19 which is in range
+	jump finish_intrp	;return without doing anything
+chargt19:
+	load s7,s8		;restore value
+	sub s7,7F		;check for chars above decimal 126
+	jump c,charlt127	;char below 127 which is in range
+	jump finish_intrp	;return without doing anything
+charlt127:
+	load s7,s1		;get char cnt
+	add s7,80		;set to char buffer
+	output s8,(s07)		;write char to buffer
+	add s1,01		;increment character cnt
+	call waitforfifo
+	output s8,UARTFIFO
+	jump finish_intrp
+
+
+;==================================================================
+tx_done:
+	load s7,s0		;check for read file flag
+	and s7,04
+	jump z,finish_intrp
+	call readword		;get byte and send out fifo
+	jump finish_intrp
+
+
+;==================================================================
+extint:
+	input s7,gpio1
+	xor s7,ff
+	output s7,gpio1
+	or s0,04		;set bit 2 of s0, read file flag
+	load s9,03		;reset word counter
+	call readword		;get byte and send out fifo
+	jump finish_intrp
+
+
+;==================================================================
+noint:
+	jump finish_intrp
+
+
+;###################### FUNcTIONS #################################
+finish_intrp:	
+    load sa,00
+	output sa,interrupt	;clear interrupt register
+	returni enable
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; process_cmd ---  uses s2,s4,s5,sc,sa
+; parses commands and runs them
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+process_cmd:
+	load s2,80		;set s2 to first char in buffer
+	input sc,(s02)		;get character	
+	sub sc,77		;check for 'w'
+	jump nz,nowrdet
+	add s2,01
+	input sc,(s02)		;get character
+	sub sc,72		;check for 'r'
+	jump nz,nowrdet
+	add s2,01
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,nowrdet
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;check if valid digits
+	jump z,nowrdet
+	load sa,s5		;store address value
+	add s2,01
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,nowrdet
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;dummy add, check if valid
+	jump z,nowrdet
+	add s2,01
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,nowrdet
+	output s5,(s0a)		;write address/data out
+	return
+nowrdet:
+	load s2,80		;set s2 to first char in buffer
+	input sc,(s02)		;get character	
+	sub sc,72		;check for 'r'
+	jump nz,norddet
+	add s2,01
+	input sc,(s02)		;get character
+	sub sc,64		;check for 'd'
+	jump nz,norddet
+	add s2,01
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,norddet
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;check if valid digits
+	jump z,norddet
+	add s2,01
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,norddet
+	call send_CRLF
+	call send_addr
+	sub s2,02		;go back to first hex char
+	input s3,(s02)		;get char from buffer
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	load s3,20
+	call send_letter
+	load s3,3D
+	call send_letter
+	load s3,20
+	call send_letter
+	input s3,(s05)
+	load s4,s3		;store value
+	and s3,F0		;get rid of first 4 bits
+	sr0 s3
+	sr0 s3
+	sr0 s3
+	sr0 s3
+	load sc,s3
+	sub sc,0A		;check for alpha digit
+	jump c,decdigit1
+	add s3,27
+decdigit1:
+	add s3,30
+	call send_letter
+	load s3,s4		;restore
+	and s3,0F		;get rid of last 4 bits
+	load sc,s3
+	sub sc,0A		;check for alpha digit
+	jump c,decdigit2
+	add s3,27
+decdigit2:
+	add s3,30
+	call send_letter
+	return
+norddet:
+	load s2,80		;set s2 to first char in buffer
+	input sc,(s02)		;get character	
+	sub sc,77		;check for 'w'
+	jump nz,nowfdet
+	add s2,01
+	input sc,(s02)		;get character
+	sub sc,66		;check for 'f'
+	jump nz,nowfdet
+	add s2,01
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,nowfdet
+	or s0,02		;set bit 1 of s0, write file flag
+	load s9,03		;reset word counter
+	return
+nowfdet:
+	load s2,80		;set s2 to first char in buffer
+	input sc,(s02)		;get character	
+	sub sc,72		;check for 'r'
+	jump nz,norfdet
+	add s2,01
+	input sc,(s02)		;get character
+	sub sc,66		;check for 'f'
+	jump nz,norfdet
+	add s2,01
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,norfdet
+	or s0,04		;set bit 2 of s0, read file flag
+	load s9,03		;reset word counter
+	call readword
+	return
+norfdet:		
+    ; sf contains 1 if binary or 0 if regular ascii hex dump
+	load s2,80		;set s2 to first char in buffer
+	input s4,(s02)		;get character	    
+	sub s4,64		;check for 'd'
+	jump z,dump_hex
+	add s4,64		;restore after compare
+	sub s4,62		;check for 'b'
+	jump nz,noddet
+    load sf,1       ; binary mode
+dump_hex:
+
+	add s2,01
+	input s5,(s02)   ; eat space
+
+	;get starting address
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (3)
+	add s4,00		;check if valid digits
+	jump z,noddet
+	output s5,addr_3	;store address value
+    load s10,s5         ;track starting address
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (2)
+	add s4,00		;check if valid digits
+	jump z,noddet
+	output s5,addr_2	;store address value
+    load s11,s5         ;track starting address
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (1)
+	add s4,00		;check if valid digits
+	jump z,noddet
+	output s5,addr_1	;store address value
+    load s12,s5         ;track starting address
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (0)
+	add s4,00		;check if valid digits
+	jump z,noddet
+	output s5,addr_0	;store address value
+    load s13,s5         ;track starting address
+
+	add s2,01       ; get next char
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,noddet
+
+	;get ending address
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (3)
+	add s4,00           ;check if valid digits
+	jump z,noddet
+    load s14,s5         ;track ending address
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (2)
+	add s4,00		;check if valid digits
+	jump z,noddet
+    load s15,s5         ;track ending address
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (1)
+	add s4,00		;check if valid digits
+	jump z,noddet
+    load s16,s5         ;track ending address
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (0)
+	add s4,00		;check if valid digits
+	jump z,noddet
+    load s17,s5         ;track ending address
+
+	add s2,01       ; get next char
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,noddet
+
+	;get dump repeat counter
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (3)
+	add s4,00           ;check if valid digits
+	jump z,noddet
+    load s18,s5         ;track repeat counter
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (2)
+	add s4,00		;check if valid digits
+	jump z,noddet
+    load s19,s5         ;track repeat counter
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (1)
+	add s4,00		;check if valid digits
+	jump z,noddet
+    load s1a,s5         ;track repeat counter
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (0)
+	add s4,00		;check if valid digits
+	jump z,noddet
+    load s1b,s5         ;track repeat counter
+
+	add s2,01       ; get next char
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,noddet
+
+    ; add one to final address to wrap correctly
+	add s17,01            ; add one
+    addcy s16,00          ; add with carry
+    addcy s15,00          ; add with carry
+    addcy s14,00          ; add with carry
+
+
+first_addr:
+    ; start at first address
+    load s1f,s13
+    load s1e,s12
+    load s1d,s11
+    load s1c,s10
+
+	; loop and read all data
+    ;read and send
+
+count_down:
+    ; if word counter is not zero, read data    
+	sub s1b,00            ; noop
+    jump z,borrow1        ; if 00, borrow from next higher byte counter
+    jump decwordcount
+borrow1:
+	sub s1a,00            ; noop
+    jump z,borrow2        ; if 00, borrow from next higher byte counter
+    sub s1a,01            ; borrow 1
+    jump decwordcount
+borrow2:
+	sub s19,00            ; noop
+    jump z,borrow3        ; if 00, borrow from next higher byte counter
+    sub s19,01            ; borrow 1
+    sub s1a,01            ; borrow 1
+    jump decwordcount
+borrow3:
+	sub s18,00            ; noop
+    jump z,dumpdone       ; if 00, we're done, because we can't borrow.
+    sub s18,01            ; borrow 1
+    sub s19,01            ; borrow 1
+    sub s1a,01            ; borrow 1
+decwordcount:  
+	sub s1b,01	          ; decrement word counter (subtract 1)    
+	;jump count_down      
+
+dump_word:
+
+	output s1c,addr_3	;store address value
+	output s1d,addr_2	;store address value
+	output s1e,addr_1	;store address value
+	output s1f,addr_0	;store address value
+	;be sure to delay here before read
+
+	; send CR LF
+    and sf,sf			  ; check for zero
+    jump nz,no_crlf_dump      ; skip CRLF if binary dump
+	call send_CRLF
+no_crlf_dump:
+	
+	input s3,data_3       ; actually do read
+    call send_hex_or_letter        ; sends s3 as hex or letter depending on mode (sf=1 for binary)
+	input s3,data_2       ; actually do read
+    call send_hex_or_letter        ; sends s3 as hex or letter depending on mode
+	input s3,data_1       ; actually do read
+    call send_hex_or_letter        ; sends s3 as hex or letter depending on mode
+	input s3,data_0       ; actually do read
+    call send_hex_or_letter        ; sends s3 as hex or letter depending on mode
+	;if address does not equal max
+	;increment address and dump another word
+count_up:
+    ; if address is not zero, read data    
+	add s1f,01            ; try to add one
+    addcy s1e,00          ; add with carry
+    addcy s1d,00          ; add with carry
+    addcy s1c,00          ; add with carry
+
+	; compare word to see if we should wrap
+    ; use s3 as temporary storage
+    load s3,s1f
+    sub s3,s17
+    jump nz,no_match
+    load s3,s1e
+    sub s3,s16
+    jump nz,no_match
+    load s3,s1d
+    sub s3,s15
+    jump nz,no_match
+    load s3,s1c
+    sub s3,s14
+    jump nz,no_match
+
+	; full match
+    ; we will wrap when we restart the loop
+    jump first_addr  ; check word counter and read another word
+
+no_match:
+    jump dump_word      ; no match, so read next word
+
+    
+
+dumpdone:
+	return
+
+noddet:		
+	load s2,80		;set s2 to first char in buffer
+	input sc,(s02)		;get character	
+	sub sc,77		;check for 'w'
+	jump nz,nowdet
+	add s2,01
+	input sc,(s02)	        ;get character
+	sub sc,20		;check for 'space'
+	jump nz,nowdet
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (3)
+	add s4,00		;check if valid digits
+	jump z,nowdet
+	output s5,addr_3	;store address value
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (2)
+	add s4,00		;check if valid digits
+	jump z,nowdet
+	output s5,addr_2	;store address value
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (1)
+	add s4,00		;check if valid digits
+	jump z,nowdet
+	output s5,addr_1	;store address value
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (0)
+	add s4,00		;check if valid digits
+	jump z,nowdet
+	output s5,addr_0	;store address value
+
+	add s2,01
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,nowdet
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;dummy add, check if valid
+	jump z,nowdet
+	output s5,data_3	;store data byte
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;dummy add, check if valid
+	jump z,nowdet
+	output s5,data_2	;store data byte
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;dummy add, check if valid
+	jump z,nowdet
+	output s5,data_1	;store data byte
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits
+	add s4,00		;dummy add, check if valid
+	jump z,nowdet
+
+	add s2,01
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,nowdet
+	output s5,data_0	;store data byte (triggering actual write)
+	return
+
+nowdet:
+	load s2,80		;set s2 to first char in buffer
+	input sc,(s02)		;get character	
+	sub sc,72		;check for 'r'
+	jump nz,nordet
+	add s2,01
+	input sc,(s02)
+	sub sc,20		;check for 'space'
+	jump nz,nordet
+
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (3)
+	add s4,00		;check if valid digits
+	jump z,nordet
+	output s5,addr_3	;store address value
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (2)
+	add s4,00		;check if valid digits
+	jump z,nordet
+	output s5,addr_2	;store address value
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (1)
+	add s4,00		;check if valid digits
+	jump z,nordet
+	output s5,addr_1	;store address value
+	add s2,01
+	input s4,(s02)
+	add s2,01
+	input s5,(s02)
+	call ishex2digit	;check for 2 hex digits (0)
+	add s4,00		;check if valid digits
+	jump z,nordet
+	output s5,addr_0	;store address value (causes read)
+
+
+	add s2,01
+	input sc,(s02)
+	sub sc,0A      ;check for LF
+	jump nz,nordet
+	call send_CRLF
+	call send_addr
+	sub s2,08		;go back to first hex char
+	input s3,(s02)		;get char from buffer
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+	add s2,01
+	input s3,(s02)
+	call send_letter
+
+	load s3,20              ; (space)
+	call send_letter
+	load s3,3D              ; =
+	call send_letter
+	load s3,20              ; (space)
+	call send_letter 
+
+	input s3,data_3       ; actually do read
+        call send_s3            ; sends s3 as hex
+	input s3,data_2       ; actually do read
+        call send_s3            ; sends s3 as hex
+	input s3,data_1       ; actually do read
+        call send_s3            ; sends s3 as hex
+	input s3,data_0       ; actually do read
+        call send_s3            ; sends s3 as hex
+	return
+
+nordet:
+invalid_det:
+	call send_CRLF
+	call send_invalid
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_invalid ---  uses s3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_invalid:
+	load s3,69		; i
+	call send_letter
+	load s3,6E		; n
+	call send_letter
+	load s3,76		; v
+	call send_letter
+	load s3,61		; a
+	call send_letter
+	load s3,6C		; l
+	call send_letter
+	load s3,69		; i
+	call send_letter
+	load s3,64		; d
+	call send_letter
+	load s3,20		;
+	call send_letter
+	load s3,63		; c
+	call send_letter
+	load s3,6D		; m
+	call send_letter
+	load s3,64		; d
+	call send_letter
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_addr ---  uses s3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_addr:
+	load s3,61		; a
+	call send_letter
+	load s3,64		; d
+	call send_letter
+	load s3,64		; d
+	call send_letter
+	load s3,72		; r
+	call send_letter
+	load s3,3A		; :
+	call send_letter
+	load s3,20		;
+	call send_letter
+	return	
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_prompt ---  uses s3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_prompt:
+	load s3,3E		; >
+	call send_letter
+	load s3,3E		; >
+	call send_letter
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_CRLF ---  uses s3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_CRLF:
+	load s3,0D
+	call send_letter
+	load s3,0A
+	call send_letter
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; check_CRLF ---  uses s2 as index into buffer
+; reads input character from s7
+; checks to see if CR or LF or CR+LF are received
+; puts LF in buffer if any eol is detected
+; sets z flag if any type of eol is found
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+check_CRLF:
+	;if CR received, put LF in buffer
+    ;if LF received, check if previous was CR and ignore 
+    ;if previous was not CR, put LF in buffer.
+    ;add s2,01       ; get next char
+    
+    load s8,s7		;store input byte
+    sub s7,0D      ;check for CR
+    jump nz,check_CRLF_nocrdet		;no carriage return detected
+        ; if cr detected        
+        call write_eol_to_buffer
+        load s6, 01 ; flag to indicate CR detected, to help with CRLF detection
+        jump check_CRLF_done   ; don't do else if or else
+    check_CRLF_nocrdet:    
+        ; else check for LF
+        add s7,0D		;uncheck CR    
+        sub s7,0A		;check for LF
+        jump nz,check_CRLF_nolfdet		;no LF detected
+            ; LF detected
+            ; see if previous was CR                
+            sub s6, 00  ;test for zero indicating previous character was not a cr            
+            jump z,bare_LF_det
+                ; CRLF detected, since LF was written for CR, don't write extra LF to buffer                
+                ; this will return and swallow the extra LF
+                jump bare_LF_end ; jump over else
+            bare_LF_det:
+                call write_eol_to_buffer
+            bare_LF_end:
+            jump check_CRLF_lf_done ; jump over else
+        check_CRLF_nolfdet: ; neither CR nor LF character            
+            ; do nothing.
+            ; call write_eol_to_buffer
+            ; end of else
+        check_CRLF_lf_done:
+        ; load doesn't clobber flags
+        load s6, 00 ; save flag to indicate CR not detected, to help with next CRLF detection
+    check_CRLF_done:
+    load s7,s8		;restore value
+	return
+
+write_eol_to_buffer:
+    ; write to buffer
+    load s7,s1		;get char cnt
+    add s7,80		;set to char buffer
+    load s8,0A      ;load LF character
+    output s8,(s07)		;write LF char to buffer
+    sub s7,s7       ; zero flag indicates eol detected        
+    return
+    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_hex_or_letter ---  uses s3,s4,sf
+; sf contains 0 to send ascii hex, other to send letter as binary
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_hex_or_letter:
+    and sf,sf		; test for zero
+	call z,send_s3
+	call nz,send_letter
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_letter ---  uses s3
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_letter:
+	call waitforfifo
+	output s3,UARTFIFO
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; send_s3 ---  uses s3,s4
+; sends s3 as hex
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+send_s3:
+	load s4,s3		;store value
+	and s3,F0		;get rid of first 4 bits
+	sr0 s3
+	sr0 s3
+	sr0 s3
+	sr0 s3
+	load sc,s3
+	sub sc,0A		;check for alpha digit
+	jump c,decdigit1a
+	add s3,27
+decdigit1a:
+	add s3,30
+	call send_letter
+	load s3,s4		;restore
+	and s3,0F		;get rid of last 4 bits
+	load sc,s3
+	sub sc,0A		;check for alpha digit
+	jump c,decdigit2a
+	add s3,27
+decdigit2a:
+	add s3,30
+	call send_letter
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; waitforfifo ---  uses se
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+waitforfifo:
+	input se,status		;get UART status
+	and se,01		;clear all bits except LSB
+	return z		;return if TX is idle
+	jump waitforfifo	;otherwise wait for TX to finish
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ishex2digit ---  uses s4,s5,sd,se
+; output in s5
+; flag for valid in s4
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ishex2digit:
+	load sd,s4		;store char
+	sub sd,3A		;check if decimal
+	jump nc,nodec1
+	load sd,s4		;restore char
+	sub sd,30		;check if decimal
+	jump c,nodigit
+	jump checkdigit2
+nodec1:
+	load sd,s4		;restore char
+	sub sd,67		;check if alpha
+	jump nc,nodigit
+	load sd,s4		;restore char
+	sub sd,61
+	jump c,nodigit
+	add sd,0A		;add 10 to sd
+checkdigit2:
+	load se,s5		;store char
+	sub se,3A		;check if decimal
+	jump nc,nodec2
+	load se,s5		;restore char
+	sub se,30		;check if decimal
+	jump c,nodigit
+	jump finishdigit
+nodec2:
+	load se,s5		;restore char
+	sub se,67		;check if alpha
+	jump nc,nodigit
+	load se,s5		;restore char
+	sub se,61
+	jump c,nodigit
+	add se,0A		;add 10 to se
+finishdigit:
+	sl0 sd
+	sl0 sd
+	sl0 sd
+	sl0 sd			;shift sd 4 places to the right
+	load s5,se
+	add s5,sd		;add shifted # to s5
+	load s4,01		;s4 --> 1 --> success
+	return
+nodigit:
+	load s4,00
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; readword ---  uses s3,sd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+readword:
+
+	input s9,18			; read FIFO and get word size in bytes
+	and s9,07			; clear other bits except for LSBs
+
+fifonoread:
+	add	s3,00
+	add	s3,00
+	add	s3,00
+	add	s3,00
+
+	sub s9,01			; decrement byte counter
+	load sd,13			; load base address of memory
+	add sd,s9			; relative address from base
+	input s3,sd			; get byte
+	call send_letter	; send byte out port
+
+	add s9,00			; set flags
+	jump nz,fifonoread	; if not zero read in another byte
+
+	input sd,17			;get fifo status to check for empty
+	and sd,10			;clear other bits
+	return z
+	and s0,FB			;clear read fifo flag
+	return
+	
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	ADDRESS 3FF
+	jump intrp

@@ -1,0 +1,912 @@
+	;control for motor controller	
+	; ADC control
+	; if this doesn't compile try converting line endings to unix
+	; in emacs use M-x RET f utf-8-unix 
+
+	; output port definition CONSTANTS (labeled ending in _port)
+
+	;USB Core/MPU constant declarations
+	CONSTANT	interrupt_port,00		;output/input
+	CONSTANT	unused_01_port,01
+	CONSTANT	unused_02_port,02
+	CONSTANT	unused_03_port,03		;output/input
+	CONSTANT	unused_04_port,04
+	CONSTANT	unused_05_port,05
+	CONSTANT	unused_06_port,06
+	CONSTANT	unused_07_port,07
+
+
+	;32 bit register control
+	CONSTANT	addr_3_port,10		;32 bit register memory (31:24)
+	CONSTANT	addr_2_port,11		;32 bit register memory (23:16)
+	CONSTANT	addr_1_port,12		;32 bit register memory (15:8)
+	; write to this causes a 32 bit read to the data registers)
+	CONSTANT	addr_0_port,13		;32 bit register memory (7:0) 
+
+	CONSTANT	data_3_port,14		;32 bit register memory (31:24)
+	CONSTANT	data_2_port,15		;32 bit register memory (23:16)
+	CONSTANT	data_1_port,16		;32 bit register memory (15:8)
+	; (a write to this causes a 32 bit write)
+	CONSTANT	data_0_port,17		;32 bit register memory (7:0)
+
+	CONSTANT	mux_select_port,18		;ADC mux select output
+	CONSTANT	bit_input_port,19		;general input bits (bit 0 = reverse)
+	CONSTANT	pwm_1_port,1a		;input pwm 1
+	CONSTANT	pwm_2_port,1b		;input pwm 2
+	CONSTANT	motor_i_1_port,1c		;input motor current 1
+	CONSTANT	motor_i_2_port,1d		;input motor current 2
+	CONSTANT	out0_port,1e		;general output bits 0 (bit 1 = safe_reverse, 0 = force regen)
+	CONSTANT	out1_port,1f		;general output bits 1 (bit 1 = safe_reverse, 0 = force regen)
+
+
+	; 32 bit output port definition CONSTANTS (labeled ending in _32port)
+
+	CONSTANT	mux_filt_32port,10	; input
+	CONSTANT	throttle_raw_32port,11   ; output
+	CONSTANT	brk1_raw_32port,12
+	CONSTANT	valet_raw_32port,13
+	CONSTANT	brk2_raw_32port,14
+	CONSTANT	batt_i_raw_32port,15
+	CONSTANT	neutral_raw_32port,16
+	CONSTANT	throttle_32port,17   ; output
+	CONSTANT	brk1_32port,18
+	CONSTANT	valet_32port,19
+	CONSTANT	brk2_32port,1a
+	CONSTANT	batt_i_32port,1b
+	CONSTANT	neutral_32port,1c
+	CONSTANT	debug_32port,1d
+	CONSTANT	throttle_limit_32port,1e ; has gain*64, max, and min limit	
+
+
+	; generic register names (s##) can be used anywhere
+    ; specific register names (s_*) are reserved and should not be reused
+	namereg s00,s_addr0
+	namereg s01,s_addr1
+	namereg s02,s_addr2
+	namereg s03,s_addr3
+	namereg s04,s_data0
+	namereg s05,s_data1
+	namereg s06,s_data2
+	namereg s07,s_data3
+	namereg s08,s_reverse
+	namereg s09,s_pwm
+	namereg s0a,s_mux_select
+	namereg s0b,s_adc_result
+	namereg s0c,sc
+	namereg s0d,s_compare
+	namereg s0e,s_isr
+	namereg s0f,s_zero ; holds constant zero... never set
+    namereg s10,s_motor_i
+    namereg s11,s_count
+    namereg s12,s_i1_count
+    namereg s13,s_i2_count
+    namereg s14,s_rev
+    namereg s15,s_brk1
+    namereg s16,s_brk2
+      ;namereg s16
+	;s17
+	;S18
+	;S19
+	namereg s1a,s_state
+	namereg s1b,s_state_0
+	namereg s1c,s_state_1
+	namereg s1d,safe_reverse
+	namereg s1e,force_regen
+
+	;s1f reserved for function call
+
+	; state machine
+	CONSTANT	STATE_FWD,00
+	CONSTANT	STATE_TRY_REV,01
+	CONSTANT	STATE_REV,02
+	CONSTANT	STATE_TRY_FWD,03
+
+    CONSTANT	throttle_limit_min,20
+    CONSTANT	throttle_00,56
+    CONSTANT	throttle_10,5D
+    CONSTANT	throttle_20,64
+    CONSTANT	throttle_30,6B
+    CONSTANT	throttle_40,72
+    CONSTANT	throttle_50,79
+    CONSTANT	throttle_60,80
+    CONSTANT	throttle_70,87
+    CONSTANT	throttle_80,8E
+    CONSTANT	throttle_90,95
+    CONSTANT	throttle_a0,9C
+    CONSTANT	throttle_b0,A3
+    CONSTANT	throttle_c0,AA
+    CONSTANT	throttle_d0,B1
+    CONSTANT	throttle_e0,B8
+    CONSTANT	throttle_f0,BF    
+    CONSTANT	throttle_limit_max,D0
+
+
+	ADDRESS 000
+	jump start
+;	jump rx_rdy		;jump table for selecting interrupt
+;	jump tx_done
+;	jump noint
+;	jump extint
+;	jump noint
+;	jump noint
+;	jump noint
+;	jump noint
+
+	ADDRESS 009		;jump table for selecting control cmd
+;	jump get_status
+;	jump clr_fetr
+;	jump noinstr
+;	jump set_fetr
+;	jump noinstr
+;	jump set_addr
+;	jump get_dscrip
+;	jump noinstr
+;	jump get_config
+;	jump set_config		;0x09
+;	jump noinstr		;0x0a
+;	jump noinstr		;0x0b
+;	jump noinstr		;0x0c	stops at addr 15h
+
+	ADDRESS 016		;Vendor requests
+;	jump write		;write memory location
+;	jump read		;read memory location
+;	jump capture		;capture data macro
+
+	ADDRESS 020		;program can start after address 32d		
+start:
+	output s_zero,interrupt_port	;clear interrupt register
+	enable interrupt
+
+;registers used in main shouldn't be used anywhere else
+;because interrupts are enabled
+main:
+	; endless loop	
+	; all processing is done in isr
+	jump main
+
+
+;########################### ISRs #################################
+isr:
+	; determine interrupt source from bits set in external register
+	input s_isr,interrupt_port	;read interrupt register
+	and s_isr,80		;unused
+	jump nz,noint
+	input s_isr,interrupt_port	;
+	and s_isr,40		;unused
+	jump nz,noint
+	input s_isr,interrupt_port	;
+	and s_isr,20		;unused
+	jump nz,noint
+	input s_isr,interrupt_port
+	and s_isr,10		;unused
+	jump nz,noint
+	input s_isr,interrupt_port
+	and s_isr,08		;check for external interrupt
+	jump nz,extint
+	input s_isr,interrupt_port
+	and s_isr,04		;unused
+	jump nz,noint
+	input s_isr,interrupt_port
+	and s_isr,02		;unused
+	jump nz,noint
+	input s_isr,interrupt_port
+	and s_isr,01		;unused
+	jump nz,noint
+	jump noint
+
+
+;==================================================================
+extint:
+	; external interrupt occurred
+	; start processing ADCs
+    call adc_mux
+    call reverse_safety_check
+    jump finish_isr
+
+
+;==================================================================
+noint:
+	jump finish_isr
+
+
+;###################### FUNcTIONS #################################
+finish_isr:	
+	output s_zero,interrupt_port	;clear interrupt register
+	returni enable
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; adc_mux ---  uses sc
+; controls mux timing and saturates/scales/calibrates 
+; and maybe limits outputs
+;
+; Inputs:
+; Mux Cycle Timing Pulse
+; ADC Filter
+; valet
+; scale_data
+; 
+; Constants:
+; ADC saturation max
+; throttle_limit_min
+; throttle_limit_max
+; boolean threshold
+; throttle_current_limit_scale
+; 
+; state:
+; mux_select
+; 
+; Outputs:
+; ADC Mux select 
+; ADC raw values for monitoring
+; 0 Throttle (scaled for calibration, scaled down to current limit/valet)
+; 1 Brake1 (boolean) debounced
+; 2 Valet (boolean)
+; 3 Brake2 (boolean) debounced
+; 4 Batt
+; 5 Neutral (boolean) debounced
+; scale_addr
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+adc_mux:
+	; first order of business:
+	; record data from previous period from 32 bit port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, mux_filt_32port
+	call read32 ; read data into s_data3..0
+
+	; store current s_mux_select for later processing
+	load s_adc_result, s_mux_select
+	
+	; change the mux output to the next mux input, round robin style
+	add s_mux_select, 01		; increment mux address
+	sub s_mux_select, 06        ; test if at maximum
+    jump z,output_mux_select    ; address was at maximum and wrapped
+	add s_mux_select, 06		; restore mux address since not at maximum
+output_mux_select:
+    output s_mux_select, mux_select_port ; output mux_select
+
+	; send adc data back out to current 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, throttle_raw_32port ; this is the first one
+	; add the correct offset
+	add s_addr0, s_adc_result
+	call write32 ; write s_data3..0 into s_addr3..0
+
+	; process current adc data
+	; if this is brk1, valet, brk2, or neutral boolean inputs,
+	; (inputs 1,2,3,5)
+    ; process them as booleans
+	load sc, s_adc_result ; copy for comparison
+	sub sc,01	; compare with constant
+	call z,process_bool ; process brk1 as boolean
+    load s_brk1, s_data3  ; top bit is brake 1
+
+	load sc, s_adc_result ; copy for comparison
+	sub sc,02	; compare with constant
+	call z,process_bool ; process valet as boolean
+
+	load sc, s_adc_result ; copy for comparison
+	sub sc,03	; compare with constant
+	call z,process_bool ; process brk2 as boolean
+    load s_brk2, s_data3  ; top bit is brake 2
+
+	load sc, s_adc_result ; copy for comparison
+	sub sc,05	; compare with constant
+	call z,process_bool ; process neutral as boolean
+
+	; process throttle 
+	load sc, s_adc_result ; copy for comparison
+	sub sc,00	; compare with constant
+	call z,process_throttle ; process throttle
+
+	; process batt_i
+	load sc, s_adc_result ; copy for comparison
+	sub sc,04	; compare with constant
+	call z,process_batt_i ; process batt_i
+
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; read32 -- input address in s_addr3..0
+; output data in s_data3..0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+read32:
+	output s_addr3,addr_3_port	;store address value
+	output s_addr2,addr_2_port	;store address value
+	output s_addr1,addr_1_port	;store address value
+	output s_addr0,addr_0_port	;store address value (causes read)
+
+	add s_data3,00
+	add s_data3,00
+	add s_data3,00
+	add s_data3,00
+	
+	input s_data3,data_3_port       ; read 8 bits of result from buffer
+	input s_data2,data_2_port       ; read 8 bits of result from buffer
+	input s_data1,data_1_port       ; read 8 bits of result from buffer
+	input s_data0,data_0_port       ; read 8 bits of result from buffer
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; write32 -- input address in s_addr3..0
+; input data in s_data3..0
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+write32:
+	output s_addr3,addr_3_port 	;store address value
+	output s_addr2,addr_2_port 	;store address value
+	output s_addr1,addr_1_port 	;store address value
+	output s_addr0,addr_0_port 	;store address value (causes read)
+
+	output s_data3,data_3_port   ; write 8 bits to buffer
+	output s_data2,data_2_port   ; write 8 bits to buffer
+	output s_data1,data_1_port   ; write 8 bits to buffer
+	output s_data0,data_0_port   ; write 8 bits to buffer (causes write)
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; process_bool -- uses s_compare
+; input data in s_data3..0
+; determines boolean value based on fixed threshold
+; debounces?
+; writes to correct output based on s_adc_result
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+process_bool:
+	; compare adc value to constant 
+	; data is only in top 12 bits, we'll only use top 8 to make this easy
+	load s_compare, s_data3
+	; switching threshold at about 25% of rail to deal with voltage divider and
+	; weak pull-up
+	; presume it is false
+	load s_data3, 00
+	sub s_compare, 40
+	jump nc, bool_false  ; if it is less than threshold
+	load s_data3, 80 ; it's true! set the top bit
+bool_false:
+	; send processed adc data to current 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, throttle_32port ; this is the first one
+	; add the correct offset
+	add s_addr0, s_adc_result
+	call write32 ;
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; process_throttle -- 
+; input data in s_data3..0
+; uses s16, s17, s18 internally
+; passes through 8 bits of input
+; writes to correct output based on s_adc_result
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+process_throttle:
+	; do any signal processing scaling/etc here.
+	; round?
+    ;  -- scale to calibrate
+    ; 
+    ; todo: if less than short or above open
+    ; set to 0 and set protect    
+    ; if less than min
+    ; set to 0
+   
+    ; compare raw value to each limit
+    ; if greater, set to corresponding output
+
+	load s16, s_data3 ; load throttle to temp reg
+	    
+	; load limits
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, throttle_limit_32port
+	call read32 ; read data into s_data3..0
+
+	load s17, s_data0 ; load throttle min
+	load s18, s_data1 ; load throttle max
+	load s19, s_data2 ; load throttle gain (256/(max-min)*64)
+	
+    load s_addr3, s16 ; load throttle to temp reg    	
+	sub s_addr3, throttle_limit_min ; subtract throttle safety limit min 
+    ; if <
+    jump c, throttle_too_low
+
+    load s_addr3, s16 ; load throttle to temp reg
+    sub s_addr3, throttle_limit_max ; subtract throttle safety limit max	
+    ; if >= 
+    jump nc, throttle_too_high
+
+    load s_addr3, s_brk1
+    load s_addr2, 0 ; set output value (min throttle for braking)    
+    ;or s_addr3, s_brk1 ; is either brake pulled?    
+    and s_addr3, s_brk1 ; is either brake pulled?    
+    ; if brk1 or brk2 != 0 
+	; jump if brk1 and brk2 == 0
+    jump z, throttle_safe
+    
+    load s_addr3, s16 ; load throttle to temp reg
+    load s_addr2, 0 ; set output value
+    sub s_addr3, s17  ; check agains throttle min
+    ; if < than
+    jump c, throttle_safe
+
+    ; compare with throttle max
+    load s_addr3, s16 ; load throttle to temp reg
+    load s_addr2, ff ; set output value
+    sub s_addr3, s18  ; check agains throttle max
+    ; if >= than
+    jump nc, throttle_safe
+
+	; calculate output as
+	; input - throttle min
+	; * gain*64
+	; /64
+	
+	load s_data2, s16
+	sub s_data2, s17 ; subtract throttle limit min 
+	; fill in data for mult
+	load s_data3, 00
+	load s_addr3, 00
+	load s_addr2, s19
+	call mult
+	; shift input right six times to divide by 64
+    srx s_data3
+    sra s_data2
+    sra s_data1
+    sra s_data0
+    srx s_data3
+    sra s_data2
+    sra s_data1
+    sra s_data0
+    srx s_data3
+    sra s_data2
+    sra s_data1
+    sra s_data0
+    srx s_data3
+    sra s_data2
+    sra s_data1
+    sra s_data0
+    srx s_data3
+    sra s_data2
+    sra s_data1
+    sra s_data0
+    srx s_data3
+    sra s_data2
+    sra s_data1
+    sra s_data0
+
+    load s_addr2, s_data0 ; set output value
+    jump throttle_safe
+
+    throttle_too_low:
+    throttle_too_high:
+        ; todo: SHOULD GO TO NEUTRAL HERE, not zero throttle!
+        ; this could force massive regen!
+        load s_addr2, 00
+    
+    throttle_safe:
+    ; load output value
+    load s_data3, s_addr2 
+	; send processed adc data to current 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, throttle_32port ; this is the first one
+	; add the correct offset
+	add s_addr0, s_adc_result
+	call write32 ;
+	; do any logical processing here
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; process_batt_i -- 
+; input data in s_data3..0
+; passes through 12 bits of input
+; writes to correct output based on s_adc_result
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+process_batt_i:
+	; do any signal processing scaling/etc here.
+	; round?
+	; send processed adc data to current 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, throttle_32port ; this is the first one
+	; add the correct offset
+	add s_addr0, s_adc_result
+	call write32 ;
+	; do any logical processing here
+	; coulumb counting
+	; safety limit
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; reverse safety helper for motor 0/1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+reverse_safety_check:
+	; set motor offset to 0
+	load s17, 00
+	call reverse_safety
+
+	; set motor offset to 1
+	load s17, 01
+	call reverse_safety
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; reverse safety process
+; input data in 
+; holds state 
+;  TYPE rev_machine IS(S_REV_FORWARD, S_REV_TRY_REV, S_REV_REVERSE, S_REV_TRY_FWD);
+; 
+; takes in reverse button input
+; takes in pwm rate
+; takes in motor current
+; takes in state1/2
+; takes in motor number in s17
+; uses s18 and s19 internally
+; outputs force_full_regen1/2
+; outputs reverse_safe_1/2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+reverse_safety:
+	; determine state of reverse button from external register
+	input s_reverse,bit_input_port	;read bit input register for reverse bit
+	and s_reverse, 01; mask off reverse bit
+
+	;read pwm input register
+	load s18, pwm_1_port
+	add s18, s17 ; add motor offset
+	input s_pwm, s18
+
+	;read motor current input register
+	load s18, motor_i_1_port
+	add s18, s17 ; add motor offset
+	input s_motor_i, s18
+
+	; load state and count registers for this motor	
+	load s_state, s_state_0  ; predictive load
+	load s_count, s_i1_count ; predictive load
+	sub s17, 00
+	jump z, use_state_0
+	; overwrite with motor 2 values
+	load s_state, s_state_1
+	load s_count, s_i2_count
+use_state_0:
+	
+	; check state register for reverse motor 1
+	; if s_rev1 is STATE_FWD (00)
+	sub s_state, STATE_FWD
+	jump nz, no_fwd
+	; no need to restore state because STATE_FWD=0
+	
+	; *************************************
+	; STATE_FWD (00)
+	; *************************************
+	; debug output
+	load s_data2, 80
+	load s_data1, s_state_1
+	load s_data0, s_state_0
+
+	; send data out to 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, debug_32port ; this is the first one
+	call write32 ; write s_data3..0 into s_addr3..0
+
+	; output reverse_safe_1 <= '0'
+	load safe_reverse, 00
+	; output force_full_regen_1 <= '0'
+	load force_regen, 00
+	; if s_bits.reverse_n = '0'
+	sub s_reverse, 00
+	jump nz, state_done
+	; s_rev1 <= STATE_TRY_REV (01)
+	load s_state, STATE_TRY_REV
+	
+	; finish state processing
+	jump state_done
+
+
+no_fwd:
+	; no need to restore s_state because STATE_FWD = 0
+	sub s_state, STATE_TRY_REV ;01
+	jump nz, no_try_rev
+	; restore state after comparison
+	load s_state, STATE_TRY_REV 
+
+	; *************************************
+	; STATE_TRY_REV (01)
+	; *************************************
+	load s_data2, 81
+	load s_data1, s_state_1
+	load s_data0, s_state_0
+
+	; send data out to 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, debug_32port ; this is the first one
+	call write32 ; write s_data3..0 into s_addr3..0
+
+	; reverse_safe_1 <= '0';
+	load safe_reverse, 00
+	; drive current to zero
+ 	; force_full_regen_1 <= '1';
+	load force_regen, 01
+	; wait for PWM = 0 and current near 0
+	; if (reverse_n = '1') then
+	sub s_reverse, 00
+	jump z, check_i_rev
+	; not in reverse, so immediately revert to forward
+	; s_rev1 <= S_REV_FORWARD;
+	load s_state, STATE_FWD
+	jump state_done
+
+check_i_rev:
+	; call is_zero_current with current, pwm, count
+	load s1f, s_motor_i
+    load s15, s_pwm
+    load s16, s_count
+	call is_zero_current
+	; save result
+	load s_count, s16
+	sub s16, 0a
+	; if count > 0x0a
+	jump nc, state_done ; if it is less than threshold 
+	
+	; within limit	
+
+ 	;rev1_state <= S_REV_REVERSE;
+	load s_state, STATE_REV
+	;reverse_safe_1 <= '1';
+	;load safe_reverse, 01 ; not necessary, done in next state
+	;end if;
+
+	; finish state processing
+	jump state_done
+
+no_try_rev:
+	; restore state
+	add s_state, STATE_TRY_REV
+	sub s_state, STATE_REV
+	jump nz, no_rev
+	; restore state after comparison
+	load s_state, STATE_REV 
+
+	; *************************************
+	; STATE_REV (02)
+	; *************************************
+	load s_data2, 82
+	load s_data1, s_state_1
+	load s_data0, s_state_0
+
+	; send data out to 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, debug_32port ; this is the first one
+	call write32 ; write s_data3..0 into s_addr3..0
+
+	; if s_rev1 is STATE_REV (02)
+	;reverse_safe_1 <= '1';
+	load safe_reverse, 01
+	;force_full_regen_1 <= '0';
+	load force_regen, 00
+	;if s_bits.reverse_n = '1'
+	sub s_reverse, 00
+	jump z, state_done
+	; not in reverse, so go to try forward state
+	;s_rev1 <= S_REV_TRY_FWD;	
+	load s_state, STATE_TRY_FWD
+
+	; finish state processing
+	jump state_done
+
+no_rev:
+	; restore state
+	add s_state, STATE_REV
+	; by process of elimination we must be in state_try_fwd
+	load s_state, STATE_TRY_FWD 
+
+	; *************************************
+	; STATE_TRY_FWD (03)
+	; *************************************
+	load s_data2, 83
+	load s_data1, s_state_1
+	load s_data0, s_state_0
+
+	; send data out to 32 bit output port
+	load s_addr3, 00
+	load s_addr2, 00
+	load s_addr1, 00
+	load s_addr0, debug_32port ; this is the first one
+	call write32 ; write s_data3..0 into s_addr3..0
+
+	; if s_rev1 is STATE_TRY_FWD (03)
+	;reverse_safe_1 <= '1';
+	load safe_reverse, 01
+	;-- drive current to zero
+	;force_full_regen_1 <= '1';
+	load force_regen, 01
+	;-- wait for PWM = 0 and current near 0
+	;if (reverse_n = '0') then
+	sub s_reverse, 00
+	jump nz, check_i_fwd
+	;-- switch in reverse so immediately revert to reverse
+	;rev1_state <= S_REV_REVERSE;				
+	load s_state, STATE_REV
+	jump state_done
+
+check_i_fwd:
+	; call is_zero_current with current, pwm, count
+	load s1f, s_motor_i
+    load s15, s_pwm
+    load s16, s_count
+	call is_zero_current
+	; save result
+	load s_count, s16
+	sub s16, 0a
+	; if count > 0x0a
+	jump nc, state_done ; if it is less than threshold 
+	
+	; within limit	
+	;rev1_state <= S_REV_FORWARD;
+	load s_state, STATE_FWD
+	;reverse_safe_1 <= '0';
+	;load safe_reverse, 00 ; handled in next state
+	;end if
+
+	; finish state processing
+
+state_done:
+	; state+motor <= state
+	; save state and count register for this motor
+	sub s17, 00
+	jump z, store_state_0
+	load s_state_1, s_state
+	load s_i2_count, s_count
+	jump store_done
+store_state_0:
+	load s_state_0, s_state
+	load s_i1_count, s_count
+store_done:
+
+	; force_full_regen+motor <= force_full_regen
+	; reverese_safe+motor <= reverse_safe
+	; write to output ports		
+	load s18, out0_port
+	add s18, s17 ; add motor offset
+	; shift bits into position
+	sl0 safe_reverse
+	and s19, 00 ; clear register
+	or s19, safe_reverse
+	or s19, force_regen
+
+	; Shift bits into position
+	; debug
+	;sl0 s_state_0
+	;sl0 s_state_0
+	;or s19, s_state_0
+
+	; write out value
+	output s19, s18
+
+	return
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; is_current_zero
+; input current in s1f
+; input pwm in s15
+; input count in s16
+; returns count in s16
+; counts number of samples at zero current and zero pwm in a row
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+is_zero_current:
+	
+	; elsif (b_pwm_rate_1 = x"00") and
+	sub s15, 00
+	jump nz, i_not_zero
+
+	; -- 10 amps
+	; if (signed(i1ab_filt_sat) < x"051") 
+	; only looking at top 8 bits
+	sub s1f, 05
+	jump c, i_not_zero  ; if it is greater than or equal to threshold
+
+	;and if (signed(i1ab_filt_sat) > x"FAF") 
+	add s1f, 05  ; restore value
+	; only looking at top 8 bits
+	sub s1f, FA
+	jump nc, i_not_zero  ; if it is less than threshold
+
+	; within limits
+
+	;count = count+1
+	add s16, 01
+	jump is_zero_current_done
+
+	;else
+i_not_zero:
+	; count = 0
+	load s16, 00
+	;end if;
+
+is_zero_current_done:
+	return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; multiply x by y (signed)
+; shift and add
+; input x in s_data3..2
+; input y in s_addr3..2
+; output data in s_data3..0
+; clobbers s17, s16, s18, s19
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+mult:
+    load s17, s_addr3
+    load s16, s_addr2
+
+    ; move data to lsbytes
+    load s_addr1, s_data3
+    load s_addr0, s_data2
+    ; clear upper bits of input data to make room for shift    
+    load s_addr3, 00 ; presume it's positive and zero extend
+    load s_addr2, 00
+    and s_data3, 80 ; check sign bit
+    jump z mult_pos ; jump if it's positive
+    load s_addr3, FF ; sign extend
+    load s_addr2, FF
+mult_pos:
+    
+    ; clear output accumulator
+    load s_data3, 00 
+    load s_data2, 00
+    load s_data1, 00
+    load s_data0, 00
+
+    
+    ; for i=0; i<16, i++
+    load s18, 00
+mult_for:
+    ; if constant bit is set add to accumulator 
+    ; shift constant right
+    sr0 s17 ; 
+    sra s16 ; 
+    jump nc, mult_no_add
+
+    add   s_data0, s_addr0
+    addcy s_data1, s_addr1
+    addcy s_data2, s_addr2
+    addcy s_data3, s_addr3
+
+mult_no_add:    
+    ; shift input left
+    sl0 s_addr0
+    sla s_addr1
+    sla s_addr2
+    sla s_addr3
+    
+    ;from above: for( i=0 ;i<16 ; i++ )
+    add s18, 01
+    load s19, s18
+    sub s19, 10
+    jump c, mult_for
+    
+    return
+
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; the ESM jumps to the last memory address (3FF) when the interrupt signal in active
+	ADDRESS 3FF
+	jump isr ; jump to interrupt service routine
