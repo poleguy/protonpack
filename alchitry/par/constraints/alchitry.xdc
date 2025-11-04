@@ -153,7 +153,9 @@ set_property PACKAGE_PIN W7 [get_ports {BOT_B28}]
 set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B28}]
 
 set_property PACKAGE_PIN Y2 [get_ports {BOT_B3}]
+set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B3}]
 set_property PACKAGE_PIN W2 [get_ports {BOT_B5}]
+set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B5}]
 
 # led outputs mimicked on connector C bottom side
 set_property PACKAGE_PIN U1 [get_ports {BOT_C_L[0]}]
