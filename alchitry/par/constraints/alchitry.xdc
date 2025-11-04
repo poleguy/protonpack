@@ -144,12 +144,22 @@ set_property IOSTANDARD LVCMOS33      [get_ports {REC_CLOCK_N}]
 #set_property PACKAGE_PIN   H23     [get_ports {USER_SMA_CLK_N}]
 #set_property IOSTANDARD LVDS_25      [get_ports {USER_SMA_CLK_N}]
 
-#V7 34_L19_P 29
-#W7 34_L19_N 27
-set_property PACKAGE_PIN V7 [get_ports {B29}]
-set_property IOSTANDARD LVCMOS33 [get_ports {B29}]
-set_property PACKAGE_PIN W7 [get_ports {B27}]
-set_property IOSTANDARD LVCMOS33 [get_ports {B27}]
+#V7 34_L19_P 30
+#W7 34_L19_N 28
+// labeled to match top side pin numbers and Br Breakout board silk screen
+set_property PACKAGE_PIN V7 [get_ports {B30}]
+set_property IOSTANDARD LVCMOS33 [get_ports {B30}]
+set_property PACKAGE_PIN W7 [get_ports {B28}]
+set_property IOSTANDARD LVCMOS33 [get_ports {B28}]
+
+set_property PACKAGE_PIN Y2 [get_ports {B3}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {B3}]
+set_property PACKAGE_PIN W2 [get_ports {B5}]
+#set_property IOSTANDARD LVCMOS33 [get_ports {B5}]
+
+# led outputs mimicked on connector C bottom side
+set_property PACKAGE_PIN Y2 [get_ports {B3}]
+set_property IOSTANDARD LVCMOS33 [get_ports {B3}]
 
 
 ## Set clock groups for timing analysis.

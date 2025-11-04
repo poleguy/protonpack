@@ -15,7 +15,7 @@ module ft #(
         input wire rst,
         input wire ft_clk,
         input wire ft_rxf,
-        input wire ft_txe,
+        input wire ft_txe, // low when there is space in the tx buffer
         inout wire [(BUS_WIDTH)-1:0] ft_data,
         inout wire [(BUS_WIDTH / 4'h8)-1:0] ft_be,
         output reg ft_rd,

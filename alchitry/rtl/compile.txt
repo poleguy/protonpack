@@ -10,6 +10,8 @@ ft.sv
 #lucid_globals.v
 simple_dual_port_ram.v
 blink_led.v
+toggle_debounce.v
+tick_gen.v
 
 #regs/telemetry_pkg.vhd -library shure
 #regs/telemetry.vhd  -library shure

@@ -35,7 +35,7 @@ rtl/compile.txt
 `IF BUILD
 rtl/clk_wiz_100M/clk_wiz_100M.xci --dont_touch_xci
 `IF SIM
-rtl/clk_wiz_100M/clk_wiz_100M_sim.v
+rtl/clk_wiz_100M/sim/clk_wiz_100M.v
 `END
 
 # debug comes first to avoid order dependence with telemetry and serial_link
