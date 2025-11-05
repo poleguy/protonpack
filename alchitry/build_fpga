@@ -107,10 +107,18 @@ scripts/write_version_bin
 #./build
 #cd ../..
 
+# be sure to assemble esm code every time
+# this generates the hex file, so must be run before running compile.txt flow
+# todo: should we bother with make files or just do a full rebuild every time
+#make -f Makefile clean
+make -C rtl/esm_dir -f Makefile
+
 #
 ### generate the telemetry package (so that rom files are in place for compile_file_generation step)
 #scripts/generate_telem_pkg
 #
+
+
 
 
 ## Run the build in Vivado
@@ -135,10 +143,6 @@ fi
 # generate svg files for documentation, etc.
 scripts/make_docs
 
-# be sure to assemble esm code every time
-# todo: should we bother with make files or just do a full rebuild every time
-#make -f Makefile clean
-make -C rtl/esm_dir -f Makefile
 
 
 # alternatively, you can interactively run these steps:
