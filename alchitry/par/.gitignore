@@ -1,5 +1,6 @@
 *.backup.*
 version.bin
+vivado.log
 
 compile_cmd_list.txt
 compile_parse_log.txt

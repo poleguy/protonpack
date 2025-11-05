@@ -1,6 +1,8 @@
 `timescale 1ns/1ps
 `default_nettype none
 
+is this used?
+
 module top_level_tb;
 
   // System clock and reset
@@ -61,6 +63,8 @@ module top_level_tb;
     .BOT_B28(),
     .BOT_B5(),
     .BOT_B3(),
+    .BOT_B6(),
+    .BOT_B4(),
     .BOT_C_L()
 
   );

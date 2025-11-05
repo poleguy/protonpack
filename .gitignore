@@ -186,3 +186,9 @@ snickerdoodle
 
 apt-list-installed.txt
 requirements-export.txt
+
+hardware/block_design*
+hardware/vivado_project
+ip_user_files
+
+\#*\#

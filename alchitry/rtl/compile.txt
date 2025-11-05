@@ -4,6 +4,9 @@
 ######################################
 ## source files
 ######################################
+mpu2.v
+#esm.v
+rs_core.v
 reset_conditioner.sv
 async_fifo.sv
 ft.sv
@@ -31,7 +34,7 @@ tick_gen.v
 ## Top
 #################################################
 # will compile into library shure by default
-alchitry_top.v
+alchitry_top.sv
 
 
 

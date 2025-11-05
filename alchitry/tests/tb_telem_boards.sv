@@ -207,11 +207,13 @@ module tb_telem_boards;
                  .GTREFCLK1N_I(GTREFCLK1N_I),
                  .REC_CLOCK_P(REC_CLOCK_P),
                  .REC_CLOCK_N(REC_CLOCK_N),
-                 .BOT_B30(),
-                 .BOT_B28(),
-                 .BOT_B5(),
-                 .BOT_B3(),
-                 .BOT_C_L()
+    .BOT_B30(),
+    .BOT_B28(),
+    .BOT_B5(),
+    .BOT_B3(),
+    .BOT_B6(),
+    .BOT_B4(),
+    .BOT_C_L()
                );
 
 

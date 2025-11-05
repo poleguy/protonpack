@@ -61,7 +61,7 @@ def main(
         typer.Option(help="Force deploy to the developer repo. Otherwise use CI repo."),
     ] = False,
 ):
-    rtl_version_file="rtl/version_pkg.v"
+    rtl_version_file="rtl/version_pkg.sv"
     ## instantiate the helper build scripts
     ## This reads the current revision from the rtl version package file
     build = fpga_build.fpga_build(rtl_version_file=rtl_version_file)

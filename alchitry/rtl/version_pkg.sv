@@ -1,8 +1,7 @@
-package version_pkg_v;
+package version_pkg;
   // Other declarations can go here...
 
-  // BEGIN_VERSION_BLOCK
-  // Auto-generated version block
+  // Auto-updated version and date constants
   localparam logic [7:0]  C_VERSION_MAJOR  = 8'd0;
   localparam logic [7:0]  C_VERSION_MINOR  = 8'd0;
   localparam logic [7:0]  C_VERSION_PATCH  = 8'd0;
@@ -14,6 +13,5 @@ package version_pkg_v;
   localparam logic [7:0]  C_VERSION_HOUR   = 8'h17;
   localparam logic [7:0]  C_VERSION_MINUTE = 8'h54;
   localparam logic [7:0]  C_VERSION_SECOND = 8'h28;
-  // END_VERSION_BLOCK
 
-endpackage : version_pkg_v
+endpackage : version_pkg

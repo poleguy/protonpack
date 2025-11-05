@@ -2,7 +2,7 @@
 ## Helper scripts for 1647 FPGA Design Builds
 ## Includes svn checkout of workspace, SVN revision control check in, and Artifactory commits
 ##
-##  A. Stezskal, N. Dietz
+##  A. Stezskal, N. Dietz, C. Zebedee
 ##
 ###############################################################
 
@@ -174,12 +174,12 @@ def read_version_constants(file_path: str) -> Optional[Dict[str, int]]:
 class fpga_build(object):
     # no default for rtl_version_file, so it's easy to understand where the source is when this object is used in a script
     # the default use should be:
-    # build=fpga_build(rtl_version_file="rtl/version_pkg.v")
+    # build=fpga_build(rtl_version_file="rtl/version_pkg.sv")
     def __init__(self, rtl_version_file): 
         # todo: version shouldn't be allowed to be uninitialized like this:
         # this should probably not be a class at all, or if it is it should be initialized with a file name
         self.rtl_version_file=rtl_version_file
-        self.template_path: str = "scripts/fpgabuild/version_pkg_v.template"
+        self.template_path: str = "scripts/fpgabuild/version_pkg_sv.template"
 
         ensure_file_from_template(rtl_version_file, self.template_path)
         self.version = self.read_pkg_version(rtl_version_file=rtl_version_file)

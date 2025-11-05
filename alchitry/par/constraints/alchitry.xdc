@@ -127,6 +127,9 @@ set_property IOSTANDARD LVCMOS33 [get_ports {ft_data[15]}]
 # GTP: no I/O Std needed:
 # GTP was allowed to route and then pins were grabbed from post_route.dcp
 
+
+# F6 MGT_CLK1_P B54
+# D9 MGT_RX2_P B72
 # Route back in 128MHz from REC_CLOCK_P (looped back on board)
 set_property PACKAGE_PIN F6 [get_ports {GTREFCLK1P_I[0]}]
 #set_property PACKAGE_PIN AB11 [get_ports {GTREFCLK1N_I[0]}]
@@ -134,7 +137,10 @@ set_property PACKAGE_PIN D9 [get_ports {RXP_I}]
 #set_property PACKAGE_PIN AF11 [get_ports {RXN_I}]
 
 # Route out 128MHz to drive GTREFCLK1P_I[0]
-set_property PACKAGE_PIN  U6      [get_ports {REC_CLOCK_P}]
+# Warning, Bank B connector J7 has some very funky pin numbering weirdness on pins 33,34,35,36
+# V5 34_L16_N B34
+# U6 34_L16_P B36
+set_property PACKAGE_PIN  U6      [get_ports {REC_CLOCK_P}] 
 set_property IOSTANDARD LVCMOS33 [get_ports {REC_CLOCK_P}]
 set_property PACKAGE_PIN  V5      [get_ports {REC_CLOCK_N}]
 set_property IOSTANDARD LVCMOS33      [get_ports {REC_CLOCK_N}]
@@ -144,20 +150,28 @@ set_property IOSTANDARD LVCMOS33      [get_ports {REC_CLOCK_N}]
 #set_property PACKAGE_PIN   H23     [get_ports {USER_SMA_CLK_N}]
 #set_property IOSTANDARD LVDS_25      [get_ports {USER_SMA_CLK_N}]
 
-#V7 34_L19_P 30
-#W7 34_L19_N 28
-// labeled to match top side pin numbers and Br Breakout board silk screen
+#V7 34_L19_P B30
+#W7 34_L19_N B28
+# labeled to match top side pin numbers and Br Breakout board silk screen
 set_property PACKAGE_PIN V7 [get_ports {BOT_B30}]
 set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B30}]
 set_property PACKAGE_PIN W7 [get_ports {BOT_B28}]
 set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B28}]
 
 # toggle pin inputs
+# Y2 
 set_property PACKAGE_PIN Y2 [get_ports {BOT_B3}]
 set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B3}]
 set_property PULLTYPE PULLUP [get_ports {BOT_B3}]
 set_property PACKAGE_PIN W2 [get_ports {BOT_B5}]
 set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B5}]
+set_property PULLTYPE PULLUP [get_ports {BOT_B5}]
+
+set_property PACKAGE_PIN AB6 [get_ports {BOT_B4}]
+set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B4}]
+set_property PULLTYPE PULLUP [get_ports {BOT_B4}]
+set_property PACKAGE_PIN AB7 [get_ports {BOT_B6}]
+set_property IOSTANDARD LVCMOS33 [get_ports {BOT_B6}]
 set_property PULLTYPE PULLUP [get_ports {BOT_B5}]
 
 # led outputs mimicked on connector C bottom side

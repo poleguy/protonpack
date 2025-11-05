@@ -7,7 +7,7 @@ import os
 from fpgabuild import fpga_build
 
 def update_to(version="0.0.0.0"):
-    rtl_version_file="rtl/version_pkg.v"
+    rtl_version_file="rtl/version_pkg.sv"
     
     
     version_bin_filename = "par/version.bin"

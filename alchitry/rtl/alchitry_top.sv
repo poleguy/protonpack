@@ -1,5 +1,8 @@
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
+
+import version_pkg::*;
+
 module alchitry_top (
         input wire clk,
         input wire rst_n,
@@ -28,6 +31,8 @@ module alchitry_top (
         output wire BOT_B28,
         input wire BOT_B3,
         input wire BOT_B5,
+        input wire BOT_B4,
+        output wire BOT_B6,
         // led outputs mimicked on connector C bottom side.
         output wire [7:0] BOT_C_L
 
@@ -103,6 +108,37 @@ module alchitry_top (
     wire sample_tick;
     wire ft_loopback_mode;
     reg r_sticky_overflow = 1'b0;
+
+
+    // esm io
+    // i/O
+
+    reg  [7:0]  r_databusin = 8'h00;
+    wire [7:0]  databusout;
+    wire [7:0]  addrbus;
+    wire [15:0] addr4to16;
+    wire        rs_wr;
+    wire        rs_re;
+
+    // Additional signals used below (declare/size appropriately in your design)
+    wire               UART_TX;
+    wire               UART_RX;
+
+    // reg         r_wr_sys;
+    // reg         r1_wr_sys;
+    // reg         wr_sys;
+
+    reg  [31:0] addr;
+    reg  [31:0] data_in;
+    reg  [31:0] data;
+
+    wire [31:0] VERSION;
+    wire [63:0] r_memdatain;
+
+    reg         rd32;
+    reg         wr32;
+    wire [7:0]  r_addr10to1F;
+
 
     initial begin
         //$dumpfile();                // default "dump.vcd"
@@ -376,7 +412,10 @@ module alchitry_top (
     // handle switch inputs
 
     assign btn_raw = {BOT_B5, BOT_B3};
-    assign ft_loopback_mode = btn_state[0];
+
+    // bypassing debounce to see if it is at least hooked up right
+    //assign ft_loopback_mode = btn_state[0];
+    assign ft_loopback_mode = btn_raw[0];
 
     // Debouncer instance
     toggle_debounce #(
@@ -394,6 +433,176 @@ module alchitry_top (
                  .clk(clk_128M),     // input clock
                  .prescaler (sample_tick) // to use a shared external prescaler counter
              );
+
+    // esm with serial port for control
+
+
+
+    // --------------------------------------------------------------------------------
+    // clock domain crossing
+    // --------------------------------------------------------------------------------
+    //  shrink re and wr to sys clock length
+    // reclock at higher rate
+    // always @(posedge clk_sys) begin
+    //   r_wr_sys  <= rs_wr;
+    //   r1_wr_sys <= r_wr_sys;
+    //   // rising edge detect
+    //   wr_sys    <= (~r1_wr_sys) & (r_wr_sys);
+    // end
+
+    rs_core #(
+                .prog_path ("./esm_dir/rs232io_32bit_dump.hex"),
+                .prog_depth(10),
+                .clk_freq  (128000000),
+                .baud_rate (115200)
+            ) rs_core_0 (
+                .serial_out(UART_TX),
+                .serial_in (UART_RX),
+                .clk       (clk_128M),
+                .RESET     (1'b0),
+                .databusin (r_databusin),
+                .databusout(databusout),
+                .addrbus   (addrbus),
+                .addr4to16 (addr4to16),
+                .wr        (rs_wr),
+                .re        (rs_re),
+                .extint    (1'b0),
+                .dms       (3'b110)
+            );
+
+
+    assign UART_RX = BOT_B4;
+    assign BOT_B6 = UART_TX;
+
+    // Readback MUX, 8 bit
+    always @(posedge clk_128M) begin
+        case ({4'h0, addrbus[7:0]})
+            12'h010: begin
+                r_databusin <= addr[31:24];
+            end
+            12'h011: begin
+                r_databusin <= addr[23:16];
+            end
+            12'h012: begin
+                r_databusin <= addr[15:8];
+            end
+            12'h013: begin
+                r_databusin <= addr[7:0];
+            end
+            12'h014: begin
+                r_databusin <= data_in[31:24];
+            end
+            12'h015: begin
+                r_databusin <= data_in[23:16];
+            end
+            12'h016: begin
+                r_databusin <= data_in[15:8];
+            end
+            12'h017: begin
+                r_databusin <= data_in[7:0];
+            end
+            12'h018: begin
+                // bus width
+                r_databusin <= 8'h02;
+            end
+            default: begin
+                r_databusin <= 8'h00;
+            end
+        endcase
+    end
+
+    // Readback MUX 32 bit
+    always @(posedge clk_128M) begin
+        // clear on read
+        data_in                <= {24'h000000, 8'h00}; // default to prevent accidental registers
+
+        case ({4'h0, addr[7:0]})
+            12'h000: begin
+                // version
+                data_in <= {version_pkg::C_VERSION_MAJOR, version_pkg::C_VERSION_MINOR, version_pkg::C_VERSION_PATCH, version_pkg::C_VERSION_BUILD}; //VERSION[31:0];
+
+            end
+            12'h013: begin
+                //if (g_fifo > 0) begin
+                data_in <= r_memdatain[31:0];
+                //end
+            end
+
+            12'h014: begin
+                // triggers read ahead for next set of data
+                //if (g_fifo > 0) begin
+                data_in <= r_memdatain[63:32];
+                //end
+            end
+
+            // 12'h017: begin
+            //   //if (g_fifo > 0) begin
+            //     // write causes memrst
+            //     data_in <= {1'b0, r_fifo_triggered, r_fifo_pre_triggered, r_fifo_trig_en,
+            //                 1'b0, r_fifo_trig_mode, r_fifo_preload_mode,
+            //                 16'h0000,
+            //                 2'b00, r_fifo_full, r_fifo_empty,
+            //                 4'b0000};
+            //   //end
+            // end
+
+
+            default: begin
+                data_in <= {24'h000000, 8'h00};
+            end
+        endcase
+    end
+
+    // generate 32bit register controls from 8 bit controls
+    always @(posedge clk_128M) begin
+        rd32 <= 1'b0;
+        wr32 <= 1'b0;
+
+        // version register
+        if (rs_wr == 1'b1 && r_addr10to1F[0] == 1'b1) begin
+            addr[31:24] <= databusout[7:0];
+        end
+
+        // type register
+        if (rs_wr == 1'b1 && r_addr10to1F[1] == 1'b1) begin
+            addr[23:16] <= databusout[7:0];
+        end
+
+        // test register
+        if (rs_wr == 1'b1 && r_addr10to1F[2] == 1'b1) begin
+            //       b_test(7 downto 0) <= databusout(7 downto 0);
+            addr[15:8] <= databusout[7:0];
+        end
+
+        if (rs_wr == 1'b1 && r_addr10to1F[3] == 1'b1) begin
+            // low byte
+            addr[7:0] <= databusout[7:0];
+            // rs_write causes 32 bit read to data(31 downto 0)
+            rd32       <= 1'b1;
+        end
+
+        if (rs_wr == 1'b1 && r_addr10to1F[4] == 1'b1) begin
+            // register high byte
+            data[31:24] <= databusout[7:0];
+        end
+
+        if (rs_wr == 1'b1 && r_addr10to1F[5] == 1'b1) begin
+            // register high byte
+            data[23:16] <= databusout[7:0];
+        end
+
+        if (rs_wr == 1'b1 && r_addr10to1F[6] == 1'b1) begin
+            // register high byte
+            data[15:8] <= databusout[7:0];
+        end
+
+        if (rs_wr == 1'b1 && r_addr10to1F[7] == 1'b1) begin
+            // register high byte
+            data[7:0] <= databusout[7:0];
+            // write causes 32 bit write to addr(31 downto 0) of data(31 downto 0)
+            wr32       <= 1'b1;
+        end
+    end
 
 
     wire _unused_ok = 1'b0 && &{1'b0,
