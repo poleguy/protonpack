@@ -42,7 +42,7 @@ module alchitry_top (
     localparam _MP_STAGES_1420874663 = 3'h4;
     wire M_reset_cond_in;
     wire M_reset_cond_out;
-    wire clk_100M; // to rename it
+    wire clk_100M; // to rename it post MMCM
     wire clk_128M;
     wire clk_wiz_locked;
     reg r_clk_wiz_locked_128M = 1'b0;
@@ -164,7 +164,7 @@ module alchitry_top (
            .ft_clk(ft_clk),
            .ft_data(ft_data),
            .ft_be(ft_be),
-           .clk(clk_128M),
+           .clk(clk_100M), // switch back to see if it will fix the drops/repeats at interface
            .rst(rst),
            .ft_rxf(M_ft_ft_rxf),
            .ft_txe(M_ft_ft_txe),
@@ -204,12 +204,13 @@ module alchitry_top (
     //assign M_ft_ui_din_be = M_ft_ui_dout_be;
     assign clk_wiz_reset = !rst_n;
 
-    assign clk_100M = clk;
+    //assign clk_100M = clk;
 
     clk_wiz_100M clk_wiz_100M_i(
-                     .clk_in1(clk_100M),
+                     .clk_in1(clk),
                      .reset(clk_wiz_reset),
                      .clk_out1(clk_128M),
+                     .clk_out2(clk_100M),
                      .locked(clk_wiz_locked)
                  );
 
@@ -308,7 +309,7 @@ module alchitry_top (
 
     // drive the serial data out of the FT interface for debug:
 
-    always @(posedge clk_128M) begin
+    always @(posedge clk_100M) begin
         if (r_cnt == 4'h0) begin
             r_serial_in <= packet_data[15:0];
             r_serial_in_valid <= 1'b1;
@@ -345,7 +346,7 @@ module alchitry_top (
 
 
     // count bytes
-    always @(posedge clk_128M) begin
+    always @(posedge clk_100M) begin
         if (r_packet_valid_128) begin
             // start count
             r_cnt <= 4'h0;
@@ -363,7 +364,7 @@ module alchitry_top (
 
 
     // count packets to see if FT600 is dropping words.
-    always @(posedge clk_128M) begin
+    always @(posedge clk_100M) begin
         if (r_packet_valid_128) begin
             r_packet_cnt <= r_packet_cnt + 16'h1;
         end
@@ -391,8 +392,10 @@ module alchitry_top (
     // 0 = loopback from pc
     // 1 = stream from telemetry
 
-    always @(posedge clk_128M) begin
+    always @(posedge clk_100M) begin
         if (ft_loopback_mode) begin
+            // todo: this won't work because the input serial is at 128MHz... we'll need to cross that boundary cleanly.
+            // but we're just testing loopback on this try.
             M_ft_ui_din <= r_serial_in;
             M_ft_ui_din_be <= 2'b11;
             M_ft_ui_din_valid <= r_serial_in_valid;

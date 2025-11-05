@@ -9,7 +9,8 @@
 module clk_wiz_100M 
  (
   // Clock out ports
-  output  reg      clk_out1,
+  output  reg      clk_out1, // 128
+  output  reg      clk_out2, // 100
   // Status and control signals
   output wire       locked,
   input wire reset,
@@ -43,6 +44,7 @@ module clk_wiz_100M
     end
   end
 
+  assign clk_out2 = clk_in1;
   assign locked = r_locked;
 
 endmodule
