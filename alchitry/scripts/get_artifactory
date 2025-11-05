@@ -12,5 +12,5 @@ else
     cd artifactory
     rm -f *.bin
     rm -f *.bit
-    wget $1 -r --no-parent -nH --cut-dirs=4 --proxy=off --reject html,md5,sha1 
+    wget $1 -r --no-parent -nH --cut-dirs=4 --proxy=off --reject html,md5,sha1 --accept bin
 fi

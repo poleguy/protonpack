@@ -250,10 +250,13 @@ static void *asyncWrite(void *arg) {
         for (size_t j = 0; j < initialized && !*fatalError && !*exitWriter; j++) {
             // printf's are probably going to slow this down insanely
             //printf("sending %x\n",(int)(0x55 + (j & 0xFF)));
-        memset(&buf[j * ulBytesToWrite], (int)(0x55 + (j & 0xFF)), ulBytesToWrite);
+            memset(&buf[j * ulBytesToWrite], (int)(0x55 + (j & 0xFF)), ulBytesToWrite);
+            for (int k = 0; k < ulBytesToWrite;k+=16) {
+                buf[j*ulBytesToWrite+k] = k & 0xff;
+            }
             ov[j].Internal = 0;
-            ov[j].InternalHigh = 0;
-        ulBytesWritten[j] = 0;
+            ov[j].InternalHigh = 0;        
+            ulBytesWritten[j] = 0;
 
             // https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
             struct timespec ts;
@@ -346,7 +349,7 @@ int main(void)
 
     /* Monitor loop: stop if fatalError set */
     // Alternate: Run for x seconds or until error
-    for (int i = 0; i < 10 && !fatalError; i++) {
+    for (int i = 0; i < 2 && !fatalError; i++) {
 
         // Alternate: run indefinitely
         // for (int i = 0; !fatalError; i++) {
