@@ -1,0 +1,4 @@
+# for test_top_level_verilator.py
+
+../compile.txt
+top_level_tb.sv
