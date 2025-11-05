@@ -4,13 +4,13 @@
 ## read package version and write it to version.bin file
 ##
 ## if you're pulling from artifactory you may want to do this:
-##  cp par/output/version_pkg.v rtl/version_pkg.v
+##  cp par/output/version_pkg.sv rtl/version_pkg.sv
 #################################################################################
 import os
 from fpgabuild import fpga_build
 
 def main():
-    rtl_version_file="rtl/version_pkg.v"
+    rtl_version_file="rtl/version_pkg.sv"
 
     version_bin_filename = "par/version.bin"
 
