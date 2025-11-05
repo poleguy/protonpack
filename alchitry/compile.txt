@@ -140,6 +140,5 @@ par/constraints/au_props.xdc
 `IF SIM
 verilator-unisims/OBUFDS.v
 verilator-unisims/BUFG.v
-#tests/top_level_tb.v
 `END
 

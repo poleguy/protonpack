@@ -1,8 +1,6 @@
 `timescale 1ns/1ps
 `default_nettype none
 
-is this used?
-
 module top_level_tb;
 
   // System clock and reset

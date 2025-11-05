@@ -1,4 +1,6 @@
 # for testing ADXR/ATLAS telemetry
+This test no longer works because CVC doesn't have good .sv support.
+Use the verilator based tests instead
 
 # open sim waveforms with:
 # gtkwave tests/sim_build/test_telemetry_serialize/test_main/verilog.dump

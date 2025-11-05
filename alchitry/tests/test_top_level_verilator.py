@@ -37,7 +37,7 @@ def test_main(no_compile, waves):
     verilator.run_rtl_sim_verilator(
         compile_txt_files_list=[  # root_dir+"/modules/telemetry/compile.txt",
             # root_dir+"/rtl/xapp523/compile.txt",
-            os.path.join(root_dir, "compile.txt")
+            os.path.join(root_dir, "tests/compile_top_level_tb.txt")
             #root_dir + "/rtl/xapp523/glbl.v",
             # root_dir+"/tests/compile_unisim_lib.txt"
         ],
