@@ -186,7 +186,7 @@ module alchitry_top (
     //always @(*) begin
     assign M_reset_cond_in = !rst_n;
     assign rst = M_reset_cond_out;
-    assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,clk_wiz_locked,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
     assign M_ft_ft_rxf = ft_rxf;
@@ -196,12 +196,14 @@ module alchitry_top (
     assign ft_oe = M_ft_ft_oe;
     assign ft_wakeup = 1'h1;
     assign ft_reset = !rst;
-    //assign M_ft_ui_dout_get = !M_ft_ui_din_full;
-    //assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
 
-    //assign M_ft_ui_din = M_ft_ui_dout;
+// back to direct loopback as in original to try to see if it fixes the drops
+    assign M_ft_ui_dout_get = !M_ft_ui_din_full;
+    assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
 
-    //assign M_ft_ui_din_be = M_ft_ui_dout_be;
+    assign M_ft_ui_din = M_ft_ui_dout;
+
+    assign M_ft_ui_din_be = M_ft_ui_dout_be;
     assign clk_wiz_reset = !rst_n;
 
     //assign clk_100M = clk;
@@ -396,19 +398,19 @@ module alchitry_top (
         if (ft_loopback_mode) begin
             // todo: this won't work because the input serial is at 128MHz... we'll need to cross that boundary cleanly.
             // but we're just testing loopback on this try.
-            M_ft_ui_din <= r_serial_in;
-            M_ft_ui_din_be <= 2'b11;
-            M_ft_ui_din_valid <= r_serial_in_valid;
+       //     M_ft_ui_din <= r_serial_in;
+       //     M_ft_ui_din_be <= 2'b11;
+       //     M_ft_ui_din_valid <= r_serial_in_valid;
             if (r_serial_in_valid & M_ft_ui_din_full) begin
                 r_sticky_overflow <= 1'b1;
             end
         end
-        else begin
-            M_ft_ui_din <= M_ft_ui_dout;
-            M_ft_ui_din_be <= M_ft_ui_dout_be;
-            M_ft_ui_din_valid <= ~M_ft_ui_dout_empty;
-            M_ft_ui_dout_get <= !M_ft_ui_din_full;
-        end
+        //else begin
+        //    M_ft_ui_din <= M_ft_ui_dout;
+        //    M_ft_ui_din_be <= M_ft_ui_dout_be;
+        //    M_ft_ui_din_valid <= ~M_ft_ui_dout_empty;
+        //    M_ft_ui_dout_get <= !M_ft_ui_din_full;
+        //end
     end
 
 
