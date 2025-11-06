@@ -18,7 +18,7 @@ def check_pattern(filename: str, block_size: int = 32768, async_size: int = 32):
 
     total_blocks = (len(data) + block_size - 1) // block_size
 
-    starting_data = data[0]
+    starting_data = data[1]
     
     for block_index in range(total_blocks):
         start = block_index * block_size
@@ -26,14 +26,20 @@ def check_pattern(filename: str, block_size: int = 32768, async_size: int = 32):
         block = data[start:end]
 
         expected_value = (block_index % async_size + starting_data) % 256  # wrap around at 255 -> 0
-        if all(byte == expected_value for byte in block):
-            continue
-        else:
-            # Find first mismatch
-            for i, byte in enumerate(block):
-                if byte != expected_value:
-                    typer.echo(f"Mismatch at byte 0x{start + i:x}: expected 0x{expected_value:x}, got 0x{byte:x}")
-                    raise typer.Exit(code=1)
+
+        for i, byte in enumerate(block):
+            #print(f"i: {i} byte {byte} expected {expected_value:x}")
+            if i % 16 == 0:
+                if byte == i & 0xff:
+                    #print(byte)
+                    continue
+            elif byte == expected_value:
+                #print(f"found expected")
+                continue
+            else:
+                print(start, i)
+                typer.echo(f"Mismatch at byte 0x{start + i:x}: expected 0x{expected_value:x}, got 0x{byte:x}")
+                raise typer.Exit(code=1)
 
     typer.echo("File matches the expected pattern!")
 

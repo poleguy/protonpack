@@ -2,7 +2,7 @@
 `default_nettype none //do not use implicit wire for port connections
 
 import version_pkg::*;
-
+    /* verilator lint_off UNOPTFLAT */
 module alchitry_top (
         input wire clk,
         input wire rst_n,
@@ -84,7 +84,6 @@ module alchitry_top (
     reg [15:0] M_ft_ui_din;
     reg [1:0] M_ft_ui_din_be;
     reg M_ft_ui_din_valid;
-    /* verilator lint_off UNOPTFLAT */
     wire M_ft_ui_din_full;
 
     wire [15:0] M_ft_ui_dout;
@@ -181,7 +180,6 @@ module alchitry_top (
            .ui_dout_get(M_ft_ui_dout_get)
        );
 
-    /* verilator lint_on UNOPTFLAT */
 
     //always @(*) begin
     assign M_reset_cond_in = !rst_n;
@@ -623,6 +621,7 @@ module alchitry_top (
                                 gt_soft_reset,
                                 FREQ_CNT_VAL,
                                 1'b0};
+    /* verilator lint_on UNOPTFLAT */
 
 endmodule
 
