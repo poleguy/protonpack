@@ -39,7 +39,6 @@ module alchitry_top (
     );
     wire rst;
     wire clk_wiz_reset;
-    localparam _MP_STAGES_1420874663 = 3'h4;
     wire M_reset_cond_in;
     wire M_reset_cond_out;
     wire clk_100M; // to rename it post MMCM
@@ -70,11 +69,6 @@ module alchitry_top (
     //wire [47:0] tx_mac_dest;
     parameter FREQ_CNT_VAL = 16'h0800;
 
-    localparam _MP_BUS_WIDTH_528252186 = 5'h10;
-    localparam _MP_TX_BUFFER_528252186 = 12'h800;
-    localparam _MP_RX_BUFFER_528252186 = 12'h800;
-    localparam _MP_PRIORITY_528252186 = 16'h5258;
-    localparam _MP_PREEMPT_528252186 = 1'h0;
     wire M_ft_ft_rxf;
     wire M_ft_ft_txe;
     wire M_ft_ft_rd;
@@ -148,22 +142,22 @@ module alchitry_top (
         $dumpvars (0);        // Dumps all variables from all module instances
 
     end
-    reset_conditioner #(.STAGES(_MP_STAGES_1420874663)) reset_cond(
+    reset_conditioner #(.STAGES(3'h4)) reset_cond(
                           .clk(clk_128M),
                           .in(M_reset_cond_in),
                           .out(M_reset_cond_out)
                       );
     ft #(
-           .BUS_WIDTH(_MP_BUS_WIDTH_528252186),
-           .TX_BUFFER(_MP_TX_BUFFER_528252186),
-           .RX_BUFFER(_MP_RX_BUFFER_528252186),
-           .PRIORITY(_MP_PRIORITY_528252186),
-           .PREEMPT(_MP_PREEMPT_528252186)
+           .BUS_WIDTH(5'h10),
+           .TX_BUFFER(12'h800),
+           .RX_BUFFER(12'h800),
+           .PRIORITY(16'h5258),
+           .PREEMPT(1'h0)
        ) ft(
            .ft_clk(ft_clk),
            .ft_data(ft_data),
            .ft_be(ft_be),
-           .clk(clk_100M), // switch back to see if it will fix the drops/repeats at interface
+           .clk(clk_128M), // switch back to see if it will fix the drops/repeats at interface
            .rst(rst),
            .ft_rxf(M_ft_ft_rxf),
            .ft_txe(M_ft_ft_txe),

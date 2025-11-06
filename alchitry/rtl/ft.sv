@@ -6,8 +6,8 @@
 
 module ft #(
         parameter BUS_WIDTH = 5'h10,
-        parameter TX_BUFFER = 7'h40,
-        parameter RX_BUFFER = 7'h40,
+        parameter TX_BUFFER = 12'h800,
+        parameter RX_BUFFER = 12'h800,
         parameter PRIORITY = {{8'h52, 8'h58}},
         parameter PREEMPT = 1'h0
     ) (
