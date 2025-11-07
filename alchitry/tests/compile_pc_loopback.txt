@@ -1,0 +1,21 @@
+# for tests/test_pc_loopback.py and tests/tb_pc_loopback.sv
+#
+
+../compile.txt
+tb_pc_loopback.sv
+
+
+
+../rtl/serial_link/oserdes8x_dummy.v
+../rtl/serial_link/buffer_10bit_to_8bit.v
+../rtl/serial_link/pack_10x_11byte.v
+
+../rtl/serial_link/encode.v
+../rtl/serial_link/enc_8b10b.v
+
+#../rtl/serial_link/unpack_telemetry.v
+
+../rtl/serial_link/telemetry_serialize.v
+
+../rtl/telemetry_test_counter.v
+../rtl/ft600_fifo_bfm.sv

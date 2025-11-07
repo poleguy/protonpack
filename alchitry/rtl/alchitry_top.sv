@@ -181,18 +181,12 @@ module alchitry_top (
     assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
-    // assign M_ft_ft_rxf = ft_rxf;
-    // assign M_ft_ft_txe = ft_txe;
-    // //assign ft_rd = M_ft_ft_rd;
-    // assign ft_wr = M_ft_ft_wr;
-    // assign ft_oe = M_ft_ft_oe;
     assign ft_wakeup = 1'h1;
     assign ft_reset = !rst;
 
     assign clk_wiz_reset = !rst_n;
 
-    //assign clk_100M = clk;
-
+    
     clk_wiz_100M clk_wiz_100M_i(
                      .clk_in1(clk),
                      .reset(clk_wiz_reset),
@@ -217,19 +211,6 @@ module alchitry_top (
     //     else
     //       r_rst_256M <= 0;
     //   end
-
-    //   BUFG bufg_clk(
-    //          .O(clk_100M),
-    //          .I(clk)
-    //        );
-    //   OBUFDS #(
-    //            .IOSTANDARD("DEFAULT"),
-    //            .SLEW("FAST")
-    //          ) OBUFDS_REC_CLOCK(
-    //            .O(REC_CLOCK_P),
-    //            .OB(REC_CLOCK_N),
-    //            .I(clk_128M)
-    //          );
 
     // it seems this stupid board doesn't have any non 3.3V banks. ugh.
     // try to fake differential for the clock:
@@ -288,15 +269,11 @@ module alchitry_top (
 
     assign BOT_B30 = gt_clk;
     assign BOT_B28 = gt_data_is_k[0];
-    //  blink_led blink_led_100M(
-    //              .clk_128M(clk_100M),
-    //              .led(blinky_led_100M)
-    //            );
 
 
     // drive the serial data out of the FT interface for debug:
 
-    always @(posedge clk_100M) begin
+    always @(posedge clk_128M) begin
         if (r_cnt == 4'h0) begin
             r_serial_in <= packet_data[15:0];
             r_serial_in_valid <= 1'b1;
@@ -333,7 +310,7 @@ module alchitry_top (
 
 
     // count bytes
-    always @(posedge clk_100M) begin
+    always @(posedge clk_128M) begin
         if (r_packet_valid_128) begin
             // start count
             r_cnt <= 4'h0;
@@ -351,7 +328,7 @@ module alchitry_top (
 
 
     // count packets to see if FT600 is dropping words.
-    always @(posedge clk_100M) begin
+    always @(posedge clk_128M) begin
         if (r_packet_valid_128) begin
             r_packet_cnt <= r_packet_cnt + 16'h1;
         end
