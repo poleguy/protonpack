@@ -34,6 +34,11 @@ Pairing (telemetry pack to a portable)
 
 The post processing software takes the captured telemetry and prepares it for analysis in python and for rapid visualization of a given time period of the capture. It converts the format to hdf5 and is in charge of aligning all of the data from multiple DUT's capturing simultaneous telemetry.
 
+# It works on my machine
+
+run 
+```scripts/test_install.sh
+
 # Design Notes
 
 design notes are left out of this document to avoid [clutter](doc/design_notes.md)
