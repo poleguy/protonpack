@@ -1,3 +1,4 @@
+# L12P_T2_MRCC_14 (100 MHz oscillator on Pt board)
 set_property PACKAGE_PIN W19 [get_ports {clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {clk}]
 # clk => 100000000Hz
@@ -38,6 +39,7 @@ set_property IOSTANDARD LVCMOS33 [get_ports {usb_rx}]
 set_property PACKAGE_PIN AA21 [get_ports {usb_tx}]
 set_property IOSTANDARD LVCMOS33 [get_ports {usb_tx}]
 
+# 35_L12_MRCC_P input from Ft board sourced from FT600 chip
 set_property PACKAGE_PIN H4 [get_ports {ft_clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ft_clk}]
 # ft_clk => 100000000Hz

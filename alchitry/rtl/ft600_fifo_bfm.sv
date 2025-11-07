@@ -139,7 +139,7 @@ module ft600_fifo_bfm #(
                 .clk        (clk),
                 .rst_n      (rst_n),
                 .push       (tx_push[ch]),
-                .din        ( pack_word(data_in_reg, be_in_reg) ), // captured bus inputs
+                .din        ( pack_word(data, be_sample) ), // captured bus inputs
                 .pop        (tx_pop[ch]),
                 .dout       (tx_dout[ch]),
                 .dout_valid (tx_dout_valid[ch]),
@@ -213,19 +213,19 @@ module ft600_fifo_bfm #(
     // Write path (unchanged): sample incoming data/BE during WR and push into TX FIFO
     wire wr_active = (wr_n == 1'b0) && (txe_n[wr_ch_sel] == 1'b0);
 
-    reg [DATA_WIDTH-1:0]     data_in_reg;
-    reg [BE_WIDTH-1:0]       be_in_reg;
+//    reg [DATA_WIDTH-1:0]     data_in_reg;
+//    reg [BE_WIDTH-1:0]       be_in_reg;
     wire [BE_WIDTH-1:0]      be_sample = USE_BE ? be : {BE_WIDTH{1'b1}};
 
-    always @(posedge clk or negedge rst_n) begin
-        if (!rst_n) begin
-            data_in_reg <= {DATA_WIDTH{1'b0}};
-            be_in_reg   <= {BE_WIDTH{1'b1}};
-        end else if (wr_active) begin
-            data_in_reg <= data;
-            be_in_reg   <= be_sample;
-        end
-    end
+//    always @(posedge clk or negedge rst_n) begin
+//        if (!rst_n) begin
+//            data_in_reg <= {DATA_WIDTH{1'b0}};
+//            be_in_reg   <= {BE_WIDTH{1'b1}};
+//        end else if (wr_active) begin
+//            data_in_reg <= data;
+//            be_in_reg   <= be_sample;
+//        end
+//    end
 
     // Capture write data and push into selected TX FIFO
     // Sample bus on rising edge while WR is active
@@ -245,6 +245,10 @@ endmodule
 // dout_valid=1 when dout holds a word ready to be read this cycle.
 // Capacity = DEPTH; occupancy = count + out_valid.
 // ------------------------------
+// Corrected First-Word Fall-Through (FWFT) FIFO
+// - Bypasses din directly to dout when output is empty and MEM has no data
+// - Refills dout from MEM when pre-existing data is available (count > 0)
+// - Prevents read-before-write and wrong-word issues on first push/pop
 module fwft_fifo #(
     parameter integer WIDTH = 32,
     parameter integer DEPTH = 1024
@@ -259,6 +263,7 @@ module fwft_fifo #(
     output wire             empty,
     output wire             full
 );
+    // clog2 helper
     function integer clog2;
         input integer value;
         integer v;
@@ -274,50 +279,72 @@ module fwft_fifo #(
 
     localparam AW = clog2(DEPTH);
 
+    // Storage and pointers
     reg [WIDTH-1:0] mem [0:DEPTH-1];
     reg [AW-1:0]    wptr, rptr;
-    reg [AW:0]      count;       // words in MEM (not including dout)
+    reg [AW:0]      count;        // number of words in MEM (not including dout)
 
+    // Occupancy includes the output register when valid
     wire [AW:0]     occupancy = count + dout_valid;
 
     assign empty = (occupancy == 0);
     assign full  = (occupancy == DEPTH);
 
-    // Next-state registers
-    reg [WIDTH-1:0] dout_n;
-    reg             dout_valid_n;
-    reg [AW-1:0]    wptr_n, rptr_n;
-    reg [AW:0]      count_n;
+    // Handshake decisions based on current state (pre-update)
+    wire pop_accept   = pop  && dout_valid;
+    wire push_accept  = push && (occupancy < DEPTH);
+
+    // If output becomes (or is) empty, decide how to fill it:
+    // - refill_mem: take a word from MEM (count > 0)
+    // - bypass_fill: take the current DIN directly (count == 0 and we accept a push)
+    wire need_refill  = (!dout_valid) || pop_accept;
+    wire refill_mem   = need_refill && (count > 0);
+    wire bypass_fill  = need_refill && (count == 0) && push_accept;
+
+    // Write to memory only if we are not bypassing into dout
+    wire mem_write    = push_accept && !bypass_fill;
+
+    // Next-state signals
+    reg              dout_valid_n;
+    reg [WIDTH-1:0]  dout_n;
+    reg [AW-1:0]     wptr_n, rptr_n;
+    reg [AW:0]       count_n;
 
     always @(*) begin
-        // Hold current by default
+        // Default: hold state
         dout_n       = dout;
         dout_valid_n = dout_valid;
         wptr_n       = wptr;
         rptr_n       = rptr;
         count_n      = count;
 
-        // Push if space available
-        if (push && !full) begin
-            // mem write occurs in sequential block; pointers advance here
+        // Bookkeeping for memory write (advance wptr/count if we will write to MEM)
+        if (mem_write) begin
             wptr_n  = wptr + 1'b1;
             count_n = count + 1'b1;
         end
 
-        // Consume output if requested
-        if (pop && dout_valid) begin
+        // If we consumed the output, mark it empty
+        if (pop_accept) begin
             dout_valid_n = 1'b0;
         end
 
-        // Prefetch into output register whenever it's empty and MEM has data
-        if (!dout_valid_n && (count_n > 0)) begin
-            // Move one word from MEM to output register
+        // Refill the output when needed
+        if (refill_mem) begin
+            // Take a word from MEM (pre-existing data)
             dout_n       = mem[rptr];
             dout_valid_n = 1'b1;
             rptr_n       = rptr + 1'b1;
             count_n      = count_n - 1'b1;
+        end else if (bypass_fill) begin
+            // First push case: bypass din directly to dout
+            dout_n       = din;
+            dout_valid_n = 1'b1;
+            // No MEM read or pointer changes here; mem_write was suppressed
         end
     end
+
+    // Sequential updates and actual MEM write
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             wptr       <= {AW{1'b0}};
@@ -326,10 +353,11 @@ module fwft_fifo #(
             dout       <= {WIDTH{1'b0}};
             dout_valid <= 1'b0;
         end else begin
-            // Perform memory write on push
-            if (push && !full) begin
+            // Perform memory write at current wptr if requested
+            if (mem_write) begin
                 mem[wptr] <= din;
             end
+
             // Commit next-state
             wptr       <= wptr_n;
             rptr       <= rptr_n;
@@ -338,8 +366,16 @@ module fwft_fifo #(
             dout_valid <= dout_valid_n;
         end
     end
-
 endmodule
+
+
+// Notes:
+
+// On the very first push (with an empty FIFO), the word is driven directly to dout in the same cycle and is not written to memory, avoiding pointer ambiguity.
+// When both pop and push occur on the same cycle:
+// If there’s pre-existing data (count > 0), the output refills from memory and the pushed word is written into memory.
+// If there’s no pre-existing data (count == 0), the output refills via bypass from din and the pushed word is not written to memory (no duplication).
+
 
 // --------------------------------------
 // Simple synchronous FIFO (registered output)

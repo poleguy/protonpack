@@ -69,11 +69,11 @@ module alchitry_top (
     //wire [47:0] tx_mac_dest;
     parameter FREQ_CNT_VAL = 16'h0800;
 
-    wire M_ft_ft_rxf;
-    wire M_ft_ft_txe;
-    wire M_ft_ft_rd;
-    wire M_ft_ft_wr;
-    wire M_ft_ft_oe;
+    //wire M_ft_ft_rxf;
+    //wire M_ft_ft_txe;
+    //wire M_ft_ft_rd;
+    //wire M_ft_ft_wr;
+    //wire M_ft_ft_oe;
 
     reg [15:0] M_ft_ui_din;
     reg [1:0] M_ft_ui_din_be;
@@ -149,9 +149,9 @@ module alchitry_top (
                       );
     ft #(
            .BUS_WIDTH(5'h10),
-           .TX_BUFFER(12'h800),
-           .RX_BUFFER(12'h800),
-           .PRIORITY(16'h5258),
+           .TX_BUFFER(2048),
+           .RX_BUFFER(2048),
+           .PRIORITY_TX(0),
            .PREEMPT(1'h0)
        ) ft(
            .ft_clk(ft_clk),
@@ -159,11 +159,11 @@ module alchitry_top (
            .ft_be(ft_be),
            .clk(clk_128M), // switch back to see if it will fix the drops/repeats at interface
            .rst(rst),
-           .ft_rxf(M_ft_ft_rxf),
-           .ft_txe(M_ft_ft_txe),
-           .ft_rd(M_ft_ft_rd),
-           .ft_wr(M_ft_ft_wr),
-           .ft_oe(M_ft_ft_oe),
+           .ft_rxf(ft_rxf),
+           .ft_txe(ft_txe),
+           .ft_rd(ft_rd),
+           .ft_wr(ft_wr),
+           .ft_oe(ft_oe),
            .ui_din(M_ft_ui_din),
            .ui_din_be(M_ft_ui_din_be),
            .ui_din_valid(M_ft_ui_din_valid),
@@ -181,21 +181,14 @@ module alchitry_top (
     assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
-    assign M_ft_ft_rxf = ft_rxf;
-    assign M_ft_ft_txe = ft_txe;
-    assign ft_rd = M_ft_ft_rd;
-    assign ft_wr = M_ft_ft_wr;
-    assign ft_oe = M_ft_ft_oe;
+    // assign M_ft_ft_rxf = ft_rxf;
+    // assign M_ft_ft_txe = ft_txe;
+    // //assign ft_rd = M_ft_ft_rd;
+    // assign ft_wr = M_ft_ft_wr;
+    // assign ft_oe = M_ft_ft_oe;
     assign ft_wakeup = 1'h1;
     assign ft_reset = !rst;
 
-// back to direct loopback as in original to try to see if it fixes the drops
-    assign M_ft_ui_dout_get = !M_ft_ui_din_full;
-    assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
-
-    assign M_ft_ui_din = M_ft_ui_dout;
-
-    assign M_ft_ui_din_be = M_ft_ui_dout_be;
     assign clk_wiz_reset = !rst_n;
 
     //assign clk_100M = clk;
@@ -386,8 +379,20 @@ module alchitry_top (
     // 0 = loopback from pc
     // 1 = stream from telemetry
 
+    // back to direct loopback as in original to try to see if it fixes the drops
+    assign M_ft_ui_dout_get = !M_ft_ui_din_full;
+    assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
+    assign M_ft_ui_din = M_ft_ui_dout;
+    assign M_ft_ui_din_be = M_ft_ui_dout_be;
+
     always @(posedge clk_100M) begin
         if (ft_loopback_mode) begin
+            // M_ft_ui_din <= M_ft_ui_dout;
+            // M_ft_ui_din_be <= M_ft_ui_dout_be;
+            // M_ft_ui_din_valid <= ~M_ft_ui_dout_empty;
+            // M_ft_ui_dout_get <= !M_ft_ui_din_full;        
+        end
+        else begin
             // todo: this won't work because the input serial is at 128MHz... we'll need to cross that boundary cleanly.
             // but we're just testing loopback on this try.
        //     M_ft_ui_din <= r_serial_in;
@@ -397,12 +402,6 @@ module alchitry_top (
                 r_sticky_overflow <= 1'b1;
             end
         end
-        //else begin
-        //    M_ft_ui_din <= M_ft_ui_dout;
-        //    M_ft_ui_din_be <= M_ft_ui_dout_be;
-        //    M_ft_ui_din_valid <= ~M_ft_ui_dout_empty;
-        //    M_ft_ui_dout_get <= !M_ft_ui_din_full;
-        //end
     end
 
 

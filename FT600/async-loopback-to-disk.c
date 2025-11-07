@@ -349,7 +349,7 @@ int main(void)
 
     /* Monitor loop: stop if fatalError set */
     // Alternate: Run for x seconds or until error
-    for (int i = 0; i < 2 && !fatalError; i++) {
+    for (int i = 0; i < 5 && !fatalError; i++) {
 
         // Alternate: run indefinitely
         // for (int i = 0; !fatalError; i++) {

@@ -90,7 +90,7 @@ module async_fifo #(
             M_ram_write_enable = 1'h1;
         end
         if (rget && rrdy) begin
-            D_raddr_d = (($bits(D_raddr_q) > $bits(1'h1) ? $bits(D_raddr_q) : $bits(1'h1)) + 1)'(D_raddr_q + 1'h1);
+            D_raddr_d =   (($bits(D_raddr_q) > $bits(1'h1) ? $bits(D_raddr_q) : $bits(1'h1)) + 1)'(D_raddr_q + 1'h1);
             M_ram_raddr = (($bits(D_raddr_q) > $bits(1'h1) ? $bits(D_raddr_q) : $bits(1'h1)) + 1)'(D_raddr_q + 1'h1);
         end
         dout = M_ram_read_data;
