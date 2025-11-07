@@ -115,8 +115,8 @@ module ft600_fifo_bfm #(
     genvar ch;
     generate
         for (ch = 0; ch < NUM_CH; ch = ch + 1) begin : CHANS
-            // RX FIFO: host pushes, external logic pops (reads)
-            sync_fifo #(
+            // RX FIFO: host pushes, external logic pops (reads) (FWFT)
+            fwft_fifo #(
                 .WIDTH(FIFO_W),
                 .DEPTH(FIFO_DEPTH)
             ) rx_fifo_i (
@@ -152,7 +152,6 @@ module ft600_fifo_bfm #(
     // Host pushes into selected RX channel
     // Demux rx_host_wr_en to rx_push for chosen channel
     reg [NUM_CH-1:0] rx_push_r;
-    integer i;
     always @(*) begin
         rx_push_r = {NUM_CH{1'b0}};
         if (rx_host_wr_en) begin
@@ -183,54 +182,49 @@ module ft600_fifo_bfm #(
     // Flags: active-low
     // RXF# low when RX FIFO (for channel) has data (not empty)
     // TXE# low when TX FIFO (for channel) has space (not full)
+    // RXF# reflects immediate availability (FWFT dout_valid)
     generate
         for (ch = 0; ch < NUM_CH; ch = ch + 1) begin : FLAGS
-            assign rxf_n[ch] = rx_empty[ch] ? 1'b1 : 1'b0;
-            assign txe_n[ch] = tx_full[ch]  ? 1'b1 : 1'b0;
+            assign rxf_n[ch] = rx_dout_valid[ch] ? 1'b0 : 1'b1; // low when a word is ready now
+            assign txe_n[ch] = tx_full[ch]        ? 1'b1 : 1'b0; // low when space available
         end
     endgenerate
 
-    // Capture incoming data/BE on writes (bus driven by external logic)
-    // These regs hold sampled bus inputs
-    reg [DATA_WIDTH-1:0]     data_in_reg;
-    reg [BE_WIDTH-1:0]       be_in_reg;
+    // Read activity: same-cycle bus drive when OE#/RD# low and data ready on selected channel
+    wire rd_can_drive = (oe_n == 1'b0) && (rd_n == 1'b0) && rx_dout_valid[rd_ch_sel];
 
-    // Drive bus on reads (tri-state otherwise)
-    reg [DATA_WIDTH-1:0]     bus_out_data;
-    reg [BE_WIDTH-1:0]       bus_out_be;
-    reg                      bus_out_en; // controls tri-state
-
-    assign data = bus_out_en ? bus_out_data : {DATA_WIDTH{1'bz}};
-    assign be   = bus_out_en ? bus_out_be   : {BE_WIDTH{1'bz}};
-
-    // Determine per-cycle read/write activity
-    wire rd_active = (oe_n == 1'b0) && (rd_n == 1'b0) && (rxf_n[rd_ch_sel] == 1'b0);
-    wire wr_active = (wr_n == 1'b0) && (txe_n[wr_ch_sel] == 1'b0);
-
-    // Demux read pops and connect RX FIFO outputs to bus
+    // Pop current word on RD (consume FWFT output register)
     reg [NUM_CH-1:0] rx_pop_r;
     always @(*) begin
         rx_pop_r = {NUM_CH{1'b0}};
-        if (rd_active) begin
+        if (rd_can_drive) begin
             rx_pop_r[rd_ch_sel] = 1'b1;
         end
     end
     assign rx_pop = rx_pop_r;
 
-    // Registered bus driving on reads
-    // Pop from RX FIFO and present data same cycle (0-cycle latency)
-    always @(*) begin
-            // Default: disable driving unless valid data follows a pop
-            bus_out_en = 1'b0;
-            bus_out_data = 16'b0;
-            bus_out_be = 2'b0;
+    // Combinational bus drive for same-cycle data
+    wire [DATA_WIDTH-1:0] rx_bus_data = unpack_data(rx_dout[rd_ch_sel]);
+    wire [BE_WIDTH-1:0]   rx_bus_be   = unpack_be(rx_dout[rd_ch_sel]);
 
-            // When RX FIFO indicates valid data after a pop, drive the bus
-            if (rx_dout_valid[rd_ch_sel] && (oe_n == 1'b0) && (rd_n == 1'b0)) begin
-                bus_out_data = unpack_data(rx_dout[rd_ch_sel]);
-                bus_out_be   = unpack_be(rx_dout[rd_ch_sel]);
-                bus_out_en   = 1'b1;
-            end
+    assign data = rd_can_drive ? rx_bus_data : {DATA_WIDTH{1'bz}};
+    assign be   = rd_can_drive ? rx_bus_be   : {BE_WIDTH{1'bz}};
+
+    // Write path (unchanged): sample incoming data/BE during WR and push into TX FIFO
+    wire wr_active = (wr_n == 1'b0) && (txe_n[wr_ch_sel] == 1'b0);
+
+    reg [DATA_WIDTH-1:0]     data_in_reg;
+    reg [BE_WIDTH-1:0]       be_in_reg;
+    wire [BE_WIDTH-1:0]      be_sample = USE_BE ? be : {BE_WIDTH{1'b1}};
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            data_in_reg <= {DATA_WIDTH{1'b0}};
+            be_in_reg   <= {BE_WIDTH{1'b1}};
+        end else if (wr_active) begin
+            data_in_reg <= data;
+            be_in_reg   <= be_sample;
+        end
     end
 
     // Capture write data and push into selected TX FIFO
@@ -244,18 +238,104 @@ module ft600_fifo_bfm #(
     end
     assign tx_push = tx_push_r;
 
-    // Sample incoming data/BE during WR
-    // If USE_BE==0, we still sample be but ignore it internally
-    wire [BE_WIDTH-1:0] be_sample = USE_BE ? be : {BE_WIDTH{1'b1}};
+endmodule
+
+// ------------------------------
+// First-Word Fall-Through FIFO (FWFT) for RX
+// dout_valid=1 when dout holds a word ready to be read this cycle.
+// Capacity = DEPTH; occupancy = count + out_valid.
+// ------------------------------
+module fwft_fifo #(
+    parameter integer WIDTH = 32,
+    parameter integer DEPTH = 1024
+)(
+    input  wire             clk,
+    input  wire             rst_n,
+    input  wire             push,
+    input  wire [WIDTH-1:0] din,
+    input  wire             pop,
+    output reg  [WIDTH-1:0] dout,
+    output reg              dout_valid,
+    output wire             empty,
+    output wire             full
+);
+    function integer clog2;
+        input integer value;
+        integer v;
+        begin
+            v = value - 1;
+            clog2 = 0;
+            while (v > 0) begin
+                v = v >> 1;
+                clog2 = clog2 + 1;
+            end
+        end
+    endfunction
+
+    localparam AW = clog2(DEPTH);
+
+    reg [WIDTH-1:0] mem [0:DEPTH-1];
+    reg [AW-1:0]    wptr, rptr;
+    reg [AW:0]      count;       // words in MEM (not including dout)
+
+    wire [AW:0]     occupancy = count + dout_valid;
+
+    assign empty = (occupancy == 0);
+    assign full  = (occupancy == DEPTH);
+
+    // Next-state registers
+    reg [WIDTH-1:0] dout_n;
+    reg             dout_valid_n;
+    reg [AW-1:0]    wptr_n, rptr_n;
+    reg [AW:0]      count_n;
+
+    always @(*) begin
+        // Hold current by default
+        dout_n       = dout;
+        dout_valid_n = dout_valid;
+        wptr_n       = wptr;
+        rptr_n       = rptr;
+        count_n      = count;
+
+        // Push if space available
+        if (push && !full) begin
+            // mem write occurs in sequential block; pointers advance here
+            wptr_n  = wptr + 1'b1;
+            count_n = count + 1'b1;
+        end
+
+        // Consume output if requested
+        if (pop && dout_valid) begin
+            dout_valid_n = 1'b0;
+        end
+
+        // Prefetch into output register whenever it's empty and MEM has data
+        if (!dout_valid_n && (count_n > 0)) begin
+            // Move one word from MEM to output register
+            dout_n       = mem[rptr];
+            dout_valid_n = 1'b1;
+            rptr_n       = rptr + 1'b1;
+            count_n      = count_n - 1'b1;
+        end
+    end
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            data_in_reg <= {DATA_WIDTH{1'b0}};
-            be_in_reg   <= {BE_WIDTH{1'b1}};
+            wptr       <= {AW{1'b0}};
+            rptr       <= {AW{1'b0}};
+            count      <= {(AW+1){1'b0}};
+            dout       <= {WIDTH{1'b0}};
+            dout_valid <= 1'b0;
         end else begin
-            if (wr_active) begin
-                data_in_reg <= data;
-                be_in_reg   <= be_sample;
+            // Perform memory write on push
+            if (push && !full) begin
+                mem[wptr] <= din;
             end
+            // Commit next-state
+            wptr       <= wptr_n;
+            rptr       <= rptr_n;
+            count      <= count_n;
+            dout       <= dout_n;
+            dout_valid <= dout_valid_n;
         end
     end
 
@@ -333,4 +413,9 @@ module sync_fifo #(
         end
     end
 endmodule
+// Summary of the behavioral change:
+
+// When OE# and RD# are asserted low, the BFM now drives the data bus in the same cycle using the FWFT RX FIFO’s dout. The pop (consume) happens at 
+// the clock edge, and the next word is pre-fetched automatically so subsequent reads can continue back-to-back with one word per cycle. If you need 
+// this behavior for FT245 (single-channel) as well, the same FWFT approach applies.
 `resetall
