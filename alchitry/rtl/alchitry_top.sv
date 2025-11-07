@@ -380,30 +380,31 @@ module alchitry_top (
     // 1 = stream from telemetry
 
     // back to direct loopback as in original to try to see if it fixes the drops
-    assign M_ft_ui_dout_get = !M_ft_ui_din_full;
-    assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
-    assign M_ft_ui_din = M_ft_ui_dout;
-    assign M_ft_ui_din_be = M_ft_ui_dout_be;
+//    assign M_ft_ui_dout_get = !M_ft_ui_din_full;
+//    assign M_ft_ui_din_valid = !M_ft_ui_dout_empty;
+//    assign M_ft_ui_din = M_ft_ui_dout;
+//    assign M_ft_ui_din_be = M_ft_ui_dout_be;
 
-    always @(posedge clk_100M) begin
+    always @(*) begin
         if (ft_loopback_mode) begin
-            // M_ft_ui_din <= M_ft_ui_dout;
-            // M_ft_ui_din_be <= M_ft_ui_dout_be;
-            // M_ft_ui_din_valid <= ~M_ft_ui_dout_empty;
-            // M_ft_ui_dout_get <= !M_ft_ui_din_full;        
+            M_ft_ui_din = M_ft_ui_dout;
+            M_ft_ui_din_be = M_ft_ui_dout_be;
+            M_ft_ui_din_valid = !M_ft_ui_dout_empty;
+            M_ft_ui_dout_get = !M_ft_ui_din_full;
         end
         else begin
-            // todo: this won't work because the input serial is at 128MHz... we'll need to cross that boundary cleanly.
-            // but we're just testing loopback on this try.
-       //     M_ft_ui_din <= r_serial_in;
-       //     M_ft_ui_din_be <= 2'b11;
-       //     M_ft_ui_din_valid <= r_serial_in_valid;
-            if (r_serial_in_valid & M_ft_ui_din_full) begin
-                r_sticky_overflow <= 1'b1;
-            end
+            M_ft_ui_din = r_serial_in;
+            M_ft_ui_din_be = 2'b11;
+            M_ft_ui_din_valid = r_serial_in_valid;
+            M_ft_ui_dout_get = 1'b0;
         end
     end
 
+    always @(posedge clk_128M) begin
+       if (r_serial_in_valid & M_ft_ui_din_full) begin
+          r_sticky_overflow = 1'b1;
+       end
+    end
 
     // handle switch inputs
 
