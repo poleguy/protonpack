@@ -1,3 +1,4 @@
+
 // -----------------------------------------------------------------------------
 // MIT License (MIT)
 // Copyright (c) 2025 Alchitry
@@ -8,18 +9,21 @@
 // PRIORITY_TX: 0 = RX priority, 1 = TX priority.
 // PREEMPT: 1 enables preemption of ongoing non-priority transfers.
 //
-// Converted from Lucid to Verilog.
-// -----------------------------------------------------------------------------
+// Fixed for pure Verilog, registered control signals, and robust FIFO strobes.
+
 
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
 
+
+// -----------------------------------------------------------------------------
+/* verilator lint_off UNOPTFLAT */
 module ft #(
     parameter integer BUS_WIDTH   = 16,  // 16 = FT600, 32 = FT601
-    parameter integer TX_BUFFER   = 64,  // depth of TX FIFO (power of 2)
-    parameter integer RX_BUFFER   = 64,  // depth of RX FIFO (power of 2)
-    parameter bit     PRIORITY_TX = 1'b0,// 0 = RX priority, 1 = TX priority
-    parameter bit     PREEMPT     = 1'b0 // 0 = no preemption, 1 = allow
+    parameter integer TX_BUFFER   = 2048,  // depth of TX FIFO (power of 2)
+    parameter integer RX_BUFFER   = 2048,  // depth of RX FIFO (power of 2)
+    parameter integer PRIORITY_TX = 0,   // 0 = RX priority, 1 = TX priority
+    parameter integer PREEMPT     = 0    // 0 = no preemption, 1 = allow
 )(
     input  wire                         clk,        // system clock
     input  wire                         rst,        // async reset (active high)
@@ -48,6 +52,22 @@ module ft #(
 );
 
     // -------------------------------------------------------------------------
+    // Parameter validation (simulation-time)
+    // -------------------------------------------------------------------------
+    initial begin
+        if (BUS_WIDTH != 16 && BUS_WIDTH != 32)
+            $fatal(1, "BUS_WIDTH must be 16 or 32");
+        if ((TX_BUFFER & (TX_BUFFER-1)) != 0)
+            $fatal(1, "TX_BUFFER must be a power of 2");
+        if ((RX_BUFFER & (RX_BUFFER-1)) != 0)
+            $fatal(1, "RX_BUFFER must be a power of 2");
+        if (PRIORITY_TX != 0 && PRIORITY_TX != 1)
+            $fatal(1, "PRIORITY_TX must be 0 or 1");
+        if (PREEMPT != 0 && PREEMPT != 1)
+            $fatal(1, "PREEMPT must be 0 or 1");
+    end
+
+    // -------------------------------------------------------------------------
     // Local parameters and signals
     // -------------------------------------------------------------------------
     localparam integer BE_WIDTH   = (BUS_WIDTH/8);
@@ -65,7 +85,7 @@ module ft #(
     wire                    write_fifo_full;   // write-side (clk) full
     wire                    write_fifo_empty;  // read-side  (ft_clk) empty
     wire [FIFO_WIDTH-1:0]   write_fifo_dout;   // read-side data (ft_clk)
-    reg                     write_fifo_rget;   // read-side get (ft_clk)
+    reg                     write_fifo_rget;  // read-side get (ft_clk)
 
     // Read FIFO (FT clk -> UI clk)
     wire                    read_fifo_full;    // write-side (ft_clk) full
@@ -73,10 +93,11 @@ module ft #(
     wire [FIFO_WIDTH-1:0]   read_fifo_dout;    // read-side data (clk)
     reg                     read_fifo_wput;    // write-side put (ft_clk)
 
-    logic can_write;
-    logic can_read;
+
+    // Convenience: capability checks (ft_clk domain)
+    wire can_write = (~ft_txe) && (~write_fifo_empty);
+    wire can_read  = (~ft_rxf) && (~read_fifo_full);
     reg [1:0] preferred_state;
-    //logic [1:0] preferred_state;
 
     // -------------------------------------------------------------------------
     // Asynchronous FIFO instances
@@ -127,18 +148,16 @@ module ft #(
     assign ui_dout_empty = read_fifo_empty;
 
     // -------------------------------------------------------------------------
-    // FT data/BE tri-state control (I/O level)
-    // Release bus when reading (BUS_SWITCH or READ)
+    // FT data/BE tri-state control
+    // FPGA drives bus only when ft_oe == 1 (write mode or blocking reads)
     // -------------------------------------------------------------------------
-    wire reading_bus = (state == S_BUS_SWITCH) || (state == S_READ);
+    assign ft_data = ft_oe
+                   ? write_fifo_dout[BUS_WIDTH-1:0]
+                   : {BUS_WIDTH{1'bz}};
 
-    assign ft_data = reading_bus
-                   ? {BUS_WIDTH{1'bz}}
-                   : write_fifo_dout[BUS_WIDTH-1:0];
-
-    assign ft_be   = reading_bus
-                   ? {BE_WIDTH{1'bz}}
-                   : write_fifo_dout[FIFO_WIDTH-1:BUS_WIDTH];
+    assign ft_be   = ft_oe
+                   ? write_fifo_dout[FIFO_WIDTH-1:BUS_WIDTH]
+                   : {BE_WIDTH{1'bz}};
 
     // -------------------------------------------------------------------------
     // FSM and FT control logic (ft_clk domain)
@@ -152,22 +171,16 @@ module ft #(
     end
 
     always @* begin
-        // Defaults
-        ft_oe           = 1'b1; // 1 = FPGA drives, 0 = FTDI drives
-        ft_rd           = 1'b1; // 0 = reading
-        ft_wr           = 1'b1; // 0 = writing
-        write_fifo_rget = 1'b0;
-        read_fifo_wput  = 1'b0;
-        next_state      = state;
+        // Defaults (idle/disabled)
+        next_state           = state;
+        ft_oe              = 1'b1;  // 1 = FPGA drives, 0 = FTDI drives
+        ft_rd              = 1'b1;  // 0 = reading
+        ft_wr              = 1'b1;  // 0 = writing
+        write_fifo_rget    = 1'b0;
+        read_fifo_wput     = 1'b0;
 
-        // Capability checks (ft_clk domain flags)
-        // can_write: FT can accept data and we have TX data
-        // can_read:  FT has data and we have RX space
-        can_write = ((~ft_txe) && (~write_fifo_empty));
-        can_read  = ((~ft_rxf) && (~read_fifo_full));
+        // Preferred next state based on capability and priority
 
-        // Preferred next state based on priority
-        
         preferred_state = S_IDLE;
 
         if (can_write && (PRIORITY_TX || !can_read)) begin
@@ -185,16 +198,18 @@ module ft #(
             S_BUS_SWITCH: begin
                 // Per FTDI docs, drive OE low for a single cycle when switching to read
                 ft_oe      = 1'b0;
-                next_state = S_READ;
+                next_state   = S_READ;
             end
 
             S_READ: begin
                 // Use RX FIFO full flag to gate FT OE/RD (0 means we accept data)
-                ft_oe          = read_fifo_full;
-                ft_rd          = read_fifo_full;
-                read_fifo_wput = ~ft_rxf; // rxf=0 => valid data available
+                ft_oe          = read_fifo_full;             // 0 => FTDI drives bus
 
-                // Exit read if FTDI has no data, our RX FIFO is full,
+                // immediately stop read if no data is available (ft_rxf == 1)
+                ft_rd          = read_fifo_full || ft_rxf;             // 0 => read active
+                read_fifo_wput = (~ft_rxf) && (~read_fifo_full);
+
+                // Exit read if FTDI has no data, RX FIFO full,
                 // or preempt by TX if enabled and preferred is WRITE
                 if (ft_rxf || read_fifo_full ||
                     (PREEMPT && (preferred_state == S_WRITE))) begin
@@ -206,10 +221,10 @@ module ft #(
 
             S_WRITE: begin
                 // Use TX FIFO empty flag to gate FT WR (0 means we present valid data)
-                ft_wr           = write_fifo_empty;
-                write_fifo_rget = ~ft_txe; // txe=0 => FT can accept data
+                ft_wr           = write_fifo_empty;           // 0 => write active
+                write_fifo_rget = (~ft_txe) && (~write_fifo_empty);
 
-                // Exit write if FTDI can't accept, our TX FIFO empty,
+                // Exit write if FTDI can't accept, TX FIFO empty,
                 // or preempt by RX if enabled and preferred is BUS_SWITCH
                 if (ft_txe || write_fifo_empty ||
                     (PREEMPT && (preferred_state == S_BUS_SWITCH))) begin
@@ -226,5 +241,5 @@ module ft #(
     end
 
 endmodule
-
+/* verilator lint_on UNOPTFLAT */
 `resetall
