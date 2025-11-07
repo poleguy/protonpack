@@ -396,7 +396,7 @@ module alchitry_top (
             M_ft_ui_din = r_serial_in;
             M_ft_ui_din_be = 2'b11;
             M_ft_ui_din_valid = r_serial_in_valid;
-            M_ft_ui_dout_get = 1'b0;
+            M_ft_ui_dout_get = !M_ft_ui_din_full;
         end
     end
 

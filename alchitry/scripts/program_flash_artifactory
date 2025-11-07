@@ -10,6 +10,10 @@ cd $SCRIPT_DIR/..
 #source $SCRIPT_DIR/setup_vivado
 
 # todo: remove dependency on alchitry by spinning a custom board.
-alchitry load --flash --board "Alchitry Pt V2" --bin artifactory/alchitry_top_working.bin 
+if [[ "$1" == "--force" ]]; then
+  alchitry load --flash --board "Alchitry Pt V2" --bin artifactory/alchitry_top_working_FAILED.bin
+else
+  alchitry load --flash --board "Alchitry Pt V2" --bin artifactory/alchitry_top_working.bin
+fi
 
 
