@@ -350,15 +350,21 @@ module alchitry_top (
         r_packet_valid_128 <= r_packet_valid || r1_packet_valid;
     end
 
-   todo: add free running counter as a timer.
-     timestamp all packet_valid times.
-       send them along with the packet
-         maybe send a total of 32 bytes so that it's easy to decode in hexl-mode
-   then we can tell if any drop.
-
-     todo: hook up esm
-       todo: debug stoppage after first 4k after config
-
+//  todo: add free running counter as a timer.
+//    timestamp all packet_valid times.
+//      send them along with the packet
+//        maybe send a total of 32 bytes so that it's easy to decode in hexl-mode
+//  then we can tell if any drop.
+//
+//    todo: hook up esm
+//      todo: debug stoppage after first 4k after config
+//
+//  todo: debug with scope and leds/test points.
+//
+//    todo: test serial port (in sim?/on hardware?)
+//      todo: control loopback mode with esm/serial
+//        todo: use a timer starting at bootup to time events of the first 4096 captures.
+//          todo: esm readback of full/empty/etc.
 
     // two modes, here:
     // 0 = loopback from pc
