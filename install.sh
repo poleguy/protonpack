@@ -13,12 +13,15 @@ HOST_IP=192.168.1.162
 
 sudo apt update
 sudo apt install -y sshfs
-sudo mkdir /opt/Xilinx
-sudo chmod ugo+wx /opt/Xilinx
-sudo mkdir /data
-sudo mkdir /data/Xilinx
-sudo chmod ugo+wx /data/Xilinx
+sudo mkdir -p /opt/Xilinx
+sudo mkdir -p /data/Xilinx
+sudo mkdir -p /tools/Xilinx
+sudo chmod ugo+wx /opt/
 sudo chmod ugo+wx /data/
+sudo chmod ugo+wx /tools/
+sudo chmod ugo+wx /opt/Xilinx
+sudo chmod ugo+wx /data/Xilinx
+sudo chmod ugo+wx /tools/Xilinx
 sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/opt/Xilinx /opt/Xilinx
 sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/data/Xilinx /data/Xilinx
 sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/tools/Xilinx /tools/Xilinx
