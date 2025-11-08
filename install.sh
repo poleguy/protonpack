@@ -21,6 +21,7 @@ sudo chmod ugo+wx /data/Xilinx
 sudo chmod ugo+wx /data/
 sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/opt/Xilinx /opt/Xilinx
 sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/data/Xilinx /data/Xilinx
+sshfs -o StrictHostKeyChecking=no poleguy@$HOST_IP:/tools/Xilinx /tools/Xilinx
 
 # cvc from host as well
 rsync poleguy@$HOST_IP:/usr/local/bin/cvc64 cvc64
