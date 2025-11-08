@@ -151,7 +151,7 @@ module alchitry_top (
            .BUS_WIDTH(5'h10),
            .TX_BUFFER(2048),
            .RX_BUFFER(2048),
-           .PRIORITY_TX(0),
+           .PRIORITY_TX(1), // I want the host to always be able to read the data arriving from the FPGA
            .PREEMPT(1'h0)
        ) ft(
            .ft_clk(ft_clk),
@@ -164,10 +164,12 @@ module alchitry_top (
            .ft_rd(ft_rd),
            .ft_wr(ft_wr),
            .ft_oe(ft_oe),
+           // fpga to ftdi
            .ui_din(M_ft_ui_din),
            .ui_din_be(M_ft_ui_din_be),
            .ui_din_valid(M_ft_ui_din_valid),
            .ui_din_full(M_ft_ui_din_full),
+           // ftdi to fpga
            .ui_dout(M_ft_ui_dout),
            .ui_dout_be(M_ft_ui_dout_be),
            .ui_dout_empty(M_ft_ui_dout_empty),
