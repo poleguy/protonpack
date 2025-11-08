@@ -350,6 +350,14 @@ module alchitry_top (
         r_packet_valid_128 <= r_packet_valid || r1_packet_valid;
     end
 
+   todo: add free running counter as a timer.
+     timestamp all packet_valid times.
+       send them along with the packet
+         maybe send a total of 32 bytes so that it's easy to decode in hexl-mode
+   then we can tell if any drop.
+
+     todo: hook up esm
+       todo: debug stoppage after first 4k after config
 
 
     // two modes, here:
@@ -373,7 +381,7 @@ module alchitry_top (
             M_ft_ui_din = r_serial_in;
             M_ft_ui_din_be = 2'b11;
             M_ft_ui_din_valid = r_serial_in_valid;
-            M_ft_ui_dout_get = !M_ft_ui_din_full;
+            M_ft_ui_dout_get = 1'b1;
         end
     end
 

@@ -192,3 +192,18 @@ hardware/vivado_project
 ip_user_files
 
 \#*\#
+
+# generated IP files:
+blahblahblah.*
+rtl/clk_wiz_100M
+rtl/gt_support/ila_1
+rtl/gt_support/ila_gt_rx_0
+rtl/gt_support/vio_0
+rtl/debug/ila_0
+rtl/debug/ila_8x8
+rtl/debug/vio_eth
+rtl/gt_ip
+artifactory
+ft_demo
+junk
+tests/sim_build
