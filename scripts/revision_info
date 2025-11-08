@@ -13,7 +13,9 @@ def revision_info(rootdir):
             #print(svn_dir)
             svn_report(svn_dir)
     for subdir, dirs, files in os.walk(rootdir):
-        if ".git" in subdir: 
+        git_dir, tail = os.path.split(subdir)
+        if ".git" in tail: 
+            #print(f"subdir: {subdir}")
             #print("aha")
             git_dir,tail = os.path.split(subdir)
             print(git_dir)
