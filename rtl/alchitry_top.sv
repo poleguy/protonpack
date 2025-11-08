@@ -404,8 +404,8 @@ module alchitry_top (
     assign btn_raw = {BOT_B5, BOT_B3};
 
     // bypassing debounce to see if it is at least hooked up right
-    //assign ft_loopback_mode = btn_state[0];
-    assign ft_loopback_mode = btn_raw[0];
+    assign ft_loopback_mode = btn_state[0];
+    //assign ft_loopback_mode = btn_raw[0];
 
     // Debouncer instance
     toggle_debounce #(

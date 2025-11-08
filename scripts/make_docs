@@ -6,5 +6,5 @@
 xvfb-run -a drawio -x -f svg -s 10 doc/System_Block_Diagram.drawio -o doc/System_Block_Diagram.drawio.svg > out.txt
 if ! grep "doc/System_Block_Diagram.drawio.svg" out.txt; then echo "Failed to convert drawio"; cat out.txt; exit 1; fi
 
-xvfb-run -a drawio -x -f svg -s 10 ../doc/Proton_Pack_UI.drawio -o doc/Proton_Pack_UI.drawio.svg > out.txt
+xvfb-run -a drawio -x -f svg -s 10 doc/Proton_Pack_UI.drawio -o doc/Proton_Pack_UI.drawio.svg > out.txt
 if ! grep "doc/Proton_Pack_UI.drawio.svg" out.txt; then echo "Failed to convert drawio"; cat out.txt; exit 1; fi
