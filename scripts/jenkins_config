@@ -20,6 +20,4 @@ git checkout --no-progress $branch
 
 
 ## launch the build
-cd alchitry
 source ./build_fpga $branch
-

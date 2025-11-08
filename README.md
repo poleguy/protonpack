@@ -34,6 +34,30 @@ Pairing (telemetry pack to a portable)
 
 The post processing software takes the captured telemetry and prepares it for analysis in python and for rapid visualization of a given time period of the capture. It converts the format to hdf5 and is in charge of aligning all of the data from multiple DUT's capturing simultaneous telemetry.
 
+
+# FPGA Build
+
+# Proton Pack Telemetry Capture System
+
+## Alchitry Pt Design
+
+Build from https://fpga.jenkins-ecs.shure.com/job/DEVELOPMENT/job/TELEMETRY/job/protonpack/
+
+Setup:
+
+```
+git clone --filter=tree:0 --no-checkout --quiet ssh://git@bitbucket.shure.com:7999/dpsm_fpga/protonpack.git
+cd protonpack
+git checkout --no-progress $branch
+
+cd alchitry
+source ./build_fpga $branch
+```
+
+# Simulation
+
+./run_sim
+
 # It works on my machine
 
 run 
