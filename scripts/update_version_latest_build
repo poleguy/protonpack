@@ -12,7 +12,7 @@ from fpgabuild import fpga_build
 def main():
 
     # Replace with your Git repository path
-    repo_path = '..'
+    repo_path = '.'
     rtl_version_file="rtl/version_pkg.sv"
     ## instantiate the helper build scripts
     ## This reads the current revision from the rtl version package file

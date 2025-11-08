@@ -6,7 +6,7 @@ module tick_gen #(
         parameter COUNTER_SIZE = 22  // 22 -> ~100 ms at 32 MHz (2^22 / 32e6 ≈ 0.104 s)
     )(
         input  wire clk,     // input clock
-        output wire prescaler // to use a shared external prescaler counter
+        output reg prescaler // to use a shared external prescaler counter
     );
 
     // Counter to measure stable time; width is COUNTER_SIZE+1
@@ -18,6 +18,17 @@ module tick_gen #(
 
     always @(posedge clk) begin
         counter_out <= counter_out + 1'b1;
+    end
+
+    always @(posedge clk) begin
+
+        // version register
+        if (counter_out == 0) begin
+            prescaler = 1'b1;
+        end
+        else begin
+            prescaler = 1'b0;
+        end
     end
 
 endmodule
