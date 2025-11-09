@@ -159,11 +159,11 @@ module alchitry_top (
            .ft_be(ft_be),
            .clk(clk_128M), // switch back to see if it will fix the drops/repeats at interface
            .rst(rst),
-           .ft_rxf(ft_rxf),
-           .ft_txe(ft_txe),
-           .ft_rd(ft_rd),
-           .ft_wr(ft_wr),
-           .ft_oe(ft_oe),
+           .ft_rxf(ft_rxf), // active low "FTDI has data for us"
+           .ft_txe(ft_txe), // active low "FTDI can accept data"
+           .ft_rd(ft_rd),  // 0 = FPGA reads from FTDI
+           .ft_wr(ft_wr),  // 0 = FPGA writes in to FTDI
+           .ft_oe(ft_oe),  // 0 = FTDI drive bus, 1 = FPGA drives bus
            // fpga to ftdi
            .ui_din(M_ft_ui_din),
            .ui_din_be(M_ft_ui_din_be),
@@ -180,7 +180,8 @@ module alchitry_top (
     //always @(*) begin
     assign M_reset_cond_in = !rst_n;
     assign rst = M_reset_cond_out;
-    assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    assign led = {ft_loopback_mode,ft_wr, m_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
     assign ft_wakeup = 1'h1;
