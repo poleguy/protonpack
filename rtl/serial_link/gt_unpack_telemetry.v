@@ -37,7 +37,8 @@ module gt_unpack_telemetry #(
   output wire        okay_led_out,
   output wire        cnt_led_out,
   output wire [87:0] data_out,
-  output wire        valid_out
+  output wire        valid_out,
+  output wire        gt_clk_edge_128M // about once every ten clocks of clk_128M (synchronized to the DUT clock timebase)
 );
 
   // attribute ASYNC_REG : string;
@@ -72,14 +73,15 @@ module gt_unpack_telemetry #(
   //  signal r_byte_cnt : unsigned(1 downto 0) := (others => '0');
 
   wire clk_128M_buf;
-
+  reg r_gt_clk_edge_128M = 1'b0;
   
   (* ASYNC_REG = "TRUE" *) reg r_gt_clk        = 1'b0;
   (* ASYNC_REG = "TRUE" *) reg r1_gt_clk       = 1'b0;
-                           reg r2_gt_clk       = 1'b0;
+  reg r2_gt_clk       = 1'b0;
   (* ASYNC_REG = "TRUE" *) reg [31:0] r_gt_data       = 32'h0000_0000;
   (* ASYNC_REG = "TRUE" *) reg [3:0]  r_gt_data_is_k  = 4'b0000;
-                           reg        r_gt_data_valid = 1'b0;
+  reg        r_gt_data_valid = 1'b0;
+  reg        r1_gt_data_valid_128M = 1'b0;
 
 
   mmcm_128M_256M mmcm_128M_256M_1 (
@@ -147,6 +149,16 @@ module gt_unpack_telemetry #(
       r_data_is_k <= {1'b0, r_data_is_k[3:1]};
     end
   end
+
+  // generate DUT clock edge pulse to use for timestamping
+  always @(posedge clk_128M) begin
+    r1_gt_data_valid_128M <= r_gt_data_valid;
+
+    // rising edge detect
+    r_gt_clk_edge_128M <= r_gt_data_valid && ~r1_gt_data_valid_128M;
+  end
+
+  assign gt_clk_edge_128M = r_gt_clk_edge_128M;
 
   // proc_grab_byte : process(clk_256M)
 

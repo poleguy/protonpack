@@ -4,6 +4,7 @@
 ######################################
 ## source files
 ######################################
+timestamp.sv
 esm_dir/rs232io_32bit_dump.hex
 mpu2.v
 #esm.v

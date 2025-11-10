@@ -131,7 +131,13 @@ module alchitry_top (
     reg         rd32;
     reg         wr32;
     wire [7:0]  r_addr10to1F;
+    wire gt_clk_edge_128M;
 
+    wire timestamp_offset_adjust;
+    wire  [31:0] timestamp_count;    
+
+
+// todo: 
 
     initial begin
         //$dumpfile();                // default "dump.vcd"
@@ -181,7 +187,8 @@ module alchitry_top (
     assign M_reset_cond_in = !rst_n;
     assign rst = M_reset_cond_out;
     //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
-    assign led = {ft_loopback_mode,ft_wr, M_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
+    ///assign led = {ft_loopback_mode,ft_wr, M_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
+    assign led = {ft_loopback_mode,timestamp_offset_adjust, r_packet_valid_128,M_ft_ui_dout_get, timestamp_count[3:0]};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
     assign ft_wakeup = 1'h1;
@@ -246,7 +253,8 @@ module alchitry_top (
                             .okay_led_out(),
                             .cnt_led_out(),
                             .data_out(packet_data),
-                            .valid_out(packet_valid)
+                            .valid_out(packet_valid),
+                            .gt_clk_edge_128M(gt_clk_edge_128M)
                         );
     telemetry_check telemetry_check(
                         .clk_256M(clk_256M),
@@ -276,30 +284,39 @@ module alchitry_top (
 
     // drive the serial data out of the FT interface for debug:
 
+    // packet_data is held at the interface stable for at least ??? clocks, so we don't need to buffer it?
+
     always @(posedge clk_128M) begin
         if (r_cnt == 4'h0) begin
-            r_serial_in <= packet_data[15:0];
+            // insert "|" character to make it easier to debug.
+            // aligns bytes in 32bit words, and is easy to search for
+            // and see shift, etc.
+            r_serial_in <= {8'h7C, packet_data[87:80]};
             r_serial_in_valid <= 1'b1;
         end
         else if (r_cnt == 4'h1) begin
-            r_serial_in <= packet_data[31:16];
-        end
+            r_serial_in <= packet_data[79:64];
+        end        
         else if (r_cnt == 4'h2) begin
-            r_serial_in <= packet_data[47:32];
-        end
-        else if (r_cnt == 4'h3) begin
+            // data
             r_serial_in <= packet_data[63:48];
         end
+        else if (r_cnt == 4'h3) begin
+            // data
+            r_serial_in <= packet_data[47:32];
+        end
         else if (r_cnt == 4'h4) begin
-            r_serial_in <= packet_data[79:64];
+            // timestamp
+            r_serial_in <= packet_data[31:16];
         end
         else if (r_cnt == 4'h5) begin
-            // insert "|" character to make it easier to debug.
-            r_serial_in <= {8'h7C, packet_data[87:80]};
+            //timestamp
+            r_serial_in <= packet_data[15:0];
         end
         else if (r_cnt == 4'h6) begin
             // extra magic word for debug: "CODE"
-            r_serial_in <= {16'hDEC0};
+            r_serial_in <= 16'hC0DE;            
+
         end
         else if (r_cnt == 4'h7) begin
             r_serial_in <= r_packet_cnt;
@@ -339,6 +356,7 @@ module alchitry_top (
     end
 
 
+
     //stretch into 128MHz clock domain
 
     always @(posedge clk_256M) begin
@@ -352,6 +370,19 @@ module alchitry_top (
 
         r_packet_valid_128 <= r_packet_valid || r1_packet_valid;
     end
+
+
+timestamp timestamp(
+        .clk_128M(clk_128M),
+        .gt_clk_edge_128M(gt_clk_edge_128M),  // once per DUT recovered clock edge at 25.6 MHz
+        .timestamp_in(packet_data[7:0]),  // from serial stream
+        .timestamp_valid(r_packet_valid_128),  // from serial stream
+        .offset_adjust(timestamp_offset_adjust), // marks offset adjustment for debug
+        .timestamp_count(timestamp_count)
+    );
+
+
+// todo: 
 
 //  todo: add free running counter as a timer.
 //    timestamp all packet_valid times.
@@ -387,7 +418,8 @@ module alchitry_top (
             M_ft_ui_dout_get = !M_ft_ui_din_full;
         end
         else begin
-            M_ft_ui_din = r_serial_in;
+            // swap bytes so that we can read it out in a hex dumb with most significant byte first.
+            M_ft_ui_din = {r_serial_in[7:0],r_serial_in[15:8]};
             M_ft_ui_din_be = 2'b11;
             M_ft_ui_din_valid = r_serial_in_valid;
             M_ft_ui_dout_get = 1'b1;
