@@ -39,15 +39,16 @@ module timestamp (
     always @(posedge clk_128M) begin
         if (r_timestamp_count == 32'b0) begin
             // gradually and occasionally bump the offset back up so that it doesn't get stuck
-            r_timestamp_offset <= r_timestamp_counter[7:0] + 8'h01;
+            if (r_timestamp_offset == 8'hff) begin
+                r_timestamp_offset <= 8'hff;
+            end
+            else begin
+                r_timestamp_offset <= r_timestamp_offset + 8'h01;
+            end
         end
-        else if (r_timestamp_offset == 8'hff) begin
-            r_timestamp_offset <= 8'hff;
-        end
-    end
-
-    always @(posedge clk_128M) begin
         if (timestamp_valid == 1'b1) begin
+            // todo: debug edge cases where this breaks near a counter wrap-around point
+            // todo: test in sim to find the broken cases
             if (r_timestamp_offset < r_timestamp_counter[7:0] - timestamp_in) begin
                 r_timestamp_offset <= r_timestamp_counter[7:0] - timestamp_in;
                 r_offset_adjust <= 1'b1;
