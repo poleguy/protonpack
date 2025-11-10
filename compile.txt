@@ -138,7 +138,7 @@ par/constraints/au_props.xdc
 `END
 
 `IF SIM
-verilator-unisims/OBUFDS.v
-verilator-unisims/BUFG.v
+#verilator-unisims/OBUFDS.v
+#verilator-unisims/BUFG.v
 `END
 

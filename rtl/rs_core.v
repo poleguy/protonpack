@@ -1,110 +1,110 @@
 `timescale 1ns / 1ps
 // upper addresses are used for rs232 buffering... 0x80-0xff may not be used outside this module
-	module rs_core #(
-	
-		parameter						prog_path = "E:/HDL/memory_init/AVNETRS.HEX",
-		parameter						prog_depth = 10,
-		parameter						clk_freq = 50000000,
-		parameter						baud_rate = 115200
-	)
-	(
-		output							serial_out,
-		input							serial_in,
-		input							clk,
-		input							RESET,
-		input		[7:0]				databusin,
-		output		[7:0]				databusout,
-		output		[7:0]				addrbus,
-		output	reg	[15:0]				addr4to16,
-		output							wr,
-		output							re,
-		input							extint,
-		input		[prog_depth-7-1:0]	dms
-	);
+    module rs_core #(
+    
+        parameter                       prog_path = "E:/HDL/memory_init/AVNETRS.HEX",
+        parameter                       prog_depth = 10,
+        parameter                       clk_freq = 50000000,
+        parameter                       baud_rate = 115200
+    )
+    (
+        output                          serial_out,
+        input                           serial_in,
+        input                           clk,
+        input                           RESET,
+        input       [7:0]               databusin,
+        output      [7:0]               databusout,
+        output      [7:0]               addrbus,
+        output  reg [15:0]              addr4to16,
+        output                          wr,
+        output                          re,
+        input                           extint,
+        input       [prog_depth-7-1:0]  dms
+    );
 
 
 
 
 
 // I/O wire declarations
-// 	wire serial_in,serial_out;
-// 	wire clk,RESET;
-// 	wire extint;
+//  wire serial_in,serial_out;
+//  wire clk,RESET;
+//  wire extint;
 
 // wire/reg declarations for mpu2
-//	wire wr,re;
-	wire [7:0] inport,outport;
-//	wire [7:0] addrbus;
-//	wire [7:0] databusin,databusout;
-	reg [7:0] databusrs, databusrsp;
-	wire [9:0] progbus;
-	wire [17:0] instrbus;
+//  wire wr,re;
+    wire [7:0] inport,outport;
+//  wire [7:0] addrbus;
+//  wire [7:0] databusin,databusout;
+    reg [7:0] databusrs, databusrsp;
+    wire [9:0] progbus;
+    wire [17:0] instrbus;
 
 // wire declarations for UARTs
-//	reg en_16_x_baud;
-//	reg [9:0] baud_count;
-	wire [7:0] data_out;
-	reg [7:0] fifo_out;
-	wire [7:0] fifo_in;
-	wire rx_rdy,tx_done;
-	reg snd_tx;
+//  reg en_16_x_baud;
+//  reg [9:0] baud_count;
+    wire [7:0] data_out;
+    reg [7:0] fifo_out;
+    wire [7:0] fifo_in;
+    wire rx_rdy,tx_done;
+    reg snd_tx;
 
 // wire declarations for int
-	wire intr,interrupt_en,interrupt_rst;
-	reg [7:0] interrupt;
+    wire intr,interrupt_en,interrupt_rst;
+    reg [7:0] interrupt;
 
 //address decoding wire defs
-//	reg [15:0] addr4to16;
-	reg [15:0] addr00to0F;
-	reg sel00to07;
-//	reg sel10to17;
-	reg sel10to7F;
-	wire [7:0] rsI0,rsI1,rsI2,rsI3,rsI4,rsI5,rsI6,rsI7;
+//  reg [15:0] addr4to16;
+    reg [15:0] addr00to0F;
+    reg sel00to07;
+//  reg sel10to17;
+    reg sel10to7F;
+    wire [7:0] rsI0,rsI1,rsI2,rsI3,rsI4,rsI5,rsI6,rsI7;
 
 // Indirect addressing wire defs
-	wire offreg_en,offreg_rst,indirect_en;
-	wire [9:0] progbus_indr;
-	reg [7:0] offreg;
+    wire offreg_en,offreg_rst,indirect_en;
+    wire [9:0] progbus_indr;
+    reg [7:0] offreg;
 
 // esm program memory
-	(* rom_style = "block" *) reg [17:0] progrom [0:(2**prog_depth)-1];
-	//reg [17:0] progrom [0:(2**prog_depth)-1];
-	wire [17:0] dataram;
-	reg [prog_depth-1:0] data_addr;
-	reg [prog_depth-1:0] instr_addr;
+    (* rom_style = "block" *) reg [17:0] progrom [0:(2**prog_depth)-1];
+    //reg [17:0] progrom [0:(2**prog_depth)-1];
+    wire [17:0] dataram;
+    reg [prog_depth-1:0] data_addr;
+    reg [prog_depth-1:0] instr_addr;
 
 
 // --------------------------------------------------------------------------------------
 
 
 // program memory
-	 initial begin
-//	 	$readmemh("C:/Workfile/Xilinx/mpu/picoblaze_V2/CLPC.HEX", clpc_prog);
-//		$readmemh("../memory_init/AVNETRS.HEX", progrom, 0, 1023);
-//		$readmemh("E:/HDL/memory_init/AVNETRS.HEX", progrom, 0, 1023);
-		$readmemh(prog_path, progrom, 0, (2**prog_depth)-1);
-	 end
-		
-	assign instrbus = progrom[instr_addr];
-	assign dataram = progrom[data_addr];
-	
-	always @(posedge clk) begin
-		if (addrbus[7] == 1'b1 && wr == 1'b1) begin
-			progrom[{dms,addrbus[6:0]}] <= {10'd0,outport};
-		end
-		data_addr <= {dms,addrbus[6:0]}; // upper addresses used for rs232 ram buffer
-		instr_addr <= progbus_indr[prog_depth-1:0];
+     initial begin
+//      $readmemh("C:/Workfile/Xilinx/mpu/picoblaze_V2/CLPC.HEX", clpc_prog);
+//      $readmemh("../memory_init/AVNETRS.HEX", progrom, 0, 1023);
+//      $readmemh("E:/HDL/memory_init/AVNETRS.HEX", progrom, 0, 1023);
+        $readmemh(prog_path, progrom, 0, (2**prog_depth)-1);
+     end
+        
+    assign instrbus = progrom[instr_addr];
+    assign dataram = progrom[data_addr];
+    
+    always @(posedge clk) begin
+        if (addrbus[7] == 1'b1 && wr == 1'b1) begin
+            progrom[{dms,addrbus[6:0]}] <= {10'd0,outport};
+        end
+        data_addr <= {dms,addrbus[6:0]}; // upper addresses used for rs232 ram buffer
+        instr_addr <= progbus_indr[prog_depth-1:0];
 
-// 		instrbus <= progrom[progbus_indr[9:0]];
-// 		dataram <= progrom[{3'b110,addrbus[6:0]}];
+//      instrbus <= progrom[progbus_indr[9:0]];
+//      dataram <= progrom[{3'b110,addrbus[6:0]}];
 
-	end
+    end
 
 
 
-//	wire [23:0] tmpvar1;
-//	wire [15:0] tmpvar2;
-//	wire [1:0] tmpvar3;
+//  wire [23:0] tmpvar1;
+//  wire [15:0] tmpvar2;
+//  wire [1:0] tmpvar3;
 //   RAMB16 #(
 //      .DOA_REG(0),  // Optional output registers on A port (0 or 1)
 //      .DOB_REG(0),  // Optional output registers on B port (0 or 1)
@@ -155,38 +155,38 @@
 /*
 //rts Instantiate Altera Progrom
 wire dopa;
-alt_RAMB16_progrom	alt_RAMB16_progrom_inst (
-	.address_a ( {4'b1110,addrbus[6:0]} ),
-	.address_b ( progbus_indr ),
-	.clock ( clk ),
-	.data_a ( {1'b0, outport} ),
-	.data_b ( ),
-	.wren_a ( addrbus[7] & wr ),
-	.wren_b ( 1'b0 ),
-	.q_a ( {dopa, dataram} ),
-	.q_b ( instrbus[17:0]  )
-	);
+alt_RAMB16_progrom  alt_RAMB16_progrom_inst (
+    .address_a ( {4'b1110,addrbus[6:0]} ),
+    .address_b ( progbus_indr ),
+    .clock ( clk ),
+    .data_a ( {1'b0, outport} ),
+    .data_b ( ),
+    .wren_a ( addrbus[7] & wr ),
+    .wren_b ( 1'b0 ),
+    .q_a ( {dopa, dataram} ),
+    .q_b ( instrbus[17:0]  )
+    );
 // Memory for MPU and data
 */
 /*rts remove X RAM
 RAMB16_S9_S18 progrom (.DOA(dataram),
-								.DOB(instrbus[15:0]),
-								.DOPA(),
-								.DOPB(instrbus[17:16]),
-								.ADDRA({4'b1110,addrbus[6:0]}),
-								.ADDRB(progbus_indr),
-								.CLKA(clk),
-								.CLKB(clk),
-								.DIA(outport),
-								.DIB(),
-								.DIPA(1'b0),
-								.DIPB(),
-								.ENA(1'b1),
-								.ENB(1'b1),
-								.SSRA(1'b0),
-								.SSRB(1'b0),
-								.WEA(addrbus[7] & wr),
-								.WEB(1'b0));
+                                .DOB(instrbus[15:0]),
+                                .DOPA(),
+                                .DOPB(instrbus[17:16]),
+                                .ADDRA({4'b1110,addrbus[6:0]}),
+                                .ADDRB(progbus_indr),
+                                .CLKA(clk),
+                                .CLKB(clk),
+                                .DIA(outport),
+                                .DIB(),
+                                .DIPA(1'b0),
+                                .DIPB(),
+                                .ENA(1'b1),
+                                .ENB(1'b1),
+                                .SSRA(1'b0),
+                                .SSRB(1'b0),
+                                .WEA(addrbus[7] & wr),
+                                .WEB(1'b0));
 
 //Program ROM and descriptor table
 
@@ -338,452 +338,452 @@ defparam progrom.INITP_07 = 256'hC0000000000000000000000000000000000000000000000
 */
 
 // MPU
-	mpu2 esm1 (
-		.addr(progbus),
-		.i(instrbus),
-		.inport(inport),
-		.outport(outport),
-		.port_id(addrbus),
-		.read_strobe(re),
-		.write_strobe(wr),
-		.interrupt(intr),
-		.clk(clk)
-	);
+    mpu2 esm1 (
+        .addr(progbus),
+        .i(instrbus),
+        .inport(inport),
+        .outport(outport),
+        .port_id(addrbus),
+        .read_strobe(re),
+        .write_strobe(wr),
+        .interrupt(intr),
+        .clk(clk)
+    );
 
 
 // rx and tx UARTs from Xilinx
-//	kcuart_rx rx1 (
-//		.serial_in(serial_in),
-//		.data_out(data_out),
-//		.data_strobe(rx_rdy),
-//		.en_16_x_baud(en_16_x_baud),
-//		.clk(clk)
-//	);
+//  kcuart_rx rx1 (
+//      .serial_in(serial_in),
+//      .data_out(data_out),
+//      .data_strobe(rx_rdy),
+//      .en_16_x_baud(en_16_x_baud),
+//      .clk(clk)
+//  );
 
-	rs232_rx 
-	#(
-		.clk_freq(clk_freq),
-		.baud_rate(baud_rate)
-	) rx1 (
-		.rx(serial_in),
-		.clk(clk),
-		.data(data_out),
-		.enable(rx_rdy)
-	);
-	
-//	kcuart_tx tx1 (
-//		.data_in(data_in),
-//		.send_character(snd_tx),
-//		.en_16_x_baud(en_16_x_baud),
-//		.serial_out(serial_out),
-//		.Tx_complete(tx_done),
-//		.clk(clk)
-//	);
+    rs232_rx 
+    #(
+        .clk_freq(clk_freq),
+        .baud_rate(baud_rate)
+    ) rx1 (
+        .rx(serial_in),
+        .clk(clk),
+        .data(data_out),
+        .enable(rx_rdy)
+    );
+    
+//  kcuart_tx tx1 (
+//      .data_in(data_in),
+//      .send_character(snd_tx),
+//      .en_16_x_baud(en_16_x_baud),
+//      .serial_out(serial_out),
+//      .Tx_complete(tx_done),
+//      .clk(clk)
+//  );
 
-	rs232_tx
-	#(
-		.clk_freq(clk_freq),
-		.baud_rate(baud_rate)
-	) tx1 (
-		.tx(serial_out),
-		.clk(clk),
-		.data(fifo_in),
-		.enable(wr & addr00to0F[0]),
-		.tx_done(tx_done)
-	);
+    rs232_tx
+    #(
+        .clk_freq(clk_freq),
+        .baud_rate(baud_rate)
+    ) tx1 (
+        .tx(serial_out),
+        .clk(clk),
+        .data(fifo_in),
+        .enable(wr & addr00to0F[0]),
+        .tx_done(tx_done)
+    );
 
 
 // 1 byte fifos between MPU and UART
-	always @(posedge clk) begin
-		if (rx_rdy) begin
-			fifo_out <= data_out;
-		end
-		else begin
-			fifo_out <= fifo_out;
-		end
-	end
-	
+    always @(posedge clk) begin
+        if (rx_rdy) begin
+            fifo_out <= data_out;
+        end
+        else begin
+            fifo_out <= fifo_out;
+        end
+    end
+    
 /*
-	register #(8) f1 (
-		.d(data_out),
-		.q(fifo_out),
-		.en(rx_rdy),
-		.rst(1'b0),
-		.clk(clk)
-	);
+    register #(8) f1 (
+        .d(data_out),
+        .q(fifo_out),
+        .en(rx_rdy),
+        .rst(1'b0),
+        .clk(clk)
+    );
 */
 
-//	register #(8) f2 (
-//		.d(fifo_in),
-//		.q(data_in),
-//		.en(wr & addr00to0F[0]),
-//		.rst(1'b0),
-//		.clk(clk)
-//	);
+//  register #(8) f2 (
+//      .d(fifo_in),
+//      .q(data_in),
+//      .en(wr & addr00to0F[0]),
+//      .rst(1'b0),
+//      .clk(clk)
+//  );
 
-	always @(posedge clk) begin
-		if (tx_done == 1'b1) begin
-			snd_tx <= 1'b0;
-		end
-		else if (wr & addr00to0F[0]) begin
-			snd_tx <= 1'b1;
-		end
-		else begin
-			snd_tx <= snd_tx;
-		end
-	end
+    always @(posedge clk) begin
+        if (tx_done == 1'b1) begin
+            snd_tx <= 1'b0;
+        end
+        else if (wr & addr00to0F[0]) begin
+            snd_tx <= 1'b1;
+        end
+        else begin
+            snd_tx <= snd_tx;
+        end
+    end
 /*
-	register #(1) r1 (
-		.d(1'b1),
-		.q(snd_tx),
-		.en(wr & addr00to0F[0]),
-		.rst(tx_done),
-		.clk(clk)
-	);
+    register #(1) r1 (
+        .d(1'b1),
+        .q(snd_tx),
+        .en(wr & addr00to0F[0]),
+        .rst(tx_done),
+        .clk(clk)
+    );
 */
-	assign fifo_in = outport;
+    assign fifo_in = outport;
 
 
 // rx_rdy_latch for 2 cycle minimum interrupt
-	reg rx_rdy_latch;
-	always @(posedge clk)
-	  begin
-	    if ( rx_rdy )
-	      rx_rdy_latch  <= 1'b1;
-	    else if ( ( addrbus == 8'h00 ) && ( re ) )
-	      rx_rdy_latch  <= 1'b0;
-	    else
-	      rx_rdy_latch  <= rx_rdy_latch;
-	  end
+    reg rx_rdy_latch;
+    always @(posedge clk)
+      begin
+        if ( rx_rdy )
+          rx_rdy_latch  <= 1'b1;
+        else if ( ( addrbus == 8'h00 ) && ( re ) )
+          rx_rdy_latch  <= 1'b0;
+        else
+          rx_rdy_latch  <= rx_rdy_latch;
+      end
 
 // below baud gen not used with gleason UARTS
 /*
 // baud clock generator for above UART
-	initial baud_count = 10'h000;
-	always @(posedge clk) begin
-		if (baud_count == 10'd26) begin			// 115200
-//		if (baud_count == 325) begin		// 9600
-			baud_count <= 1'b0;
-			en_16_x_baud <= 1'b1;
-		end
-		else begin
-			baud_count <= baud_count + 1;
-			en_16_x_baud <= 1'b0;
-		end
-	end
+    initial baud_count = 10'h000;
+    always @(posedge clk) begin
+        if (baud_count == 10'd26) begin         // 115200
+//      if (baud_count == 325) begin        // 9600
+            baud_count <= 1'b0;
+            en_16_x_baud <= 1'b1;
+        end
+        else begin
+            baud_count <= baud_count + 1;
+            en_16_x_baud <= 1'b0;
+        end
+    end
 */
 
 
 // registers for MPU output
-	initial offreg = 8'h00;
-	assign indirect_en = ~(|progbus[7:5]);
-	assign offreg_en = (wr & addr00to0F[6]);
-	assign offreg_rst = RESET|indirect_en;
-	always @(posedge clk) begin
-		if (offreg_rst == 1) offreg <= 8'h00;
-		else if (offreg_en == 1) offreg <= outport;
-		else offreg <= offreg;
-	end
-	assign progbus_indr = (indirect_en == 1)?(progbus + offreg):progbus;
+    initial offreg = 8'h00;
+    assign indirect_en = ~(|progbus[7:5]);
+    assign offreg_en = (wr & addr00to0F[6]);
+    assign offreg_rst = RESET|indirect_en;
+    always @(posedge clk) begin
+        if (offreg_rst == 1) offreg <= 8'h00;
+        else if (offreg_en == 1) offreg <= outport;
+        else offreg <= offreg;
+    end
+    assign progbus_indr = (indirect_en == 1)?(progbus + offreg):progbus;
 
 
 // MPU input registers
-	initial interrupt = 8'h00;
-	assign intr = |interrupt[5:0];
-//	assign interrupt_en = 1'b0|1'b0|1'b0|1'b0|extint|1'b0|tx_done|rx_rdy;
-	assign interrupt_en = 1'b0|1'b0|1'b0|1'b0|extint|1'b0|tx_done|rx_rdy_latch;
-	assign interrupt_rst = (wr & addr00to0F[3]);
-	always @(posedge clk) begin
-		if (interrupt_rst == 1) interrupt <= 8'h00;
-//		else if (interrupt_en == 1) interrupt <= {1'b0,1'b0,1'b0,1'b0,extint,1'b0,tx_done,rx_rdy};
-		else if (interrupt_en == 1) interrupt <= {1'b0,1'b0,1'b0,1'b0,extint,1'b0,tx_done,rx_rdy_latch};
-		else interrupt <= interrupt;
-	end
+    initial interrupt = 8'h00;
+    assign intr = |interrupt[5:0];
+//  assign interrupt_en = 1'b0|1'b0|1'b0|1'b0|extint|1'b0|tx_done|rx_rdy;
+    assign interrupt_en = 1'b0|1'b0|1'b0|1'b0|extint|1'b0|tx_done|rx_rdy_latch;
+    assign interrupt_rst = (wr & addr00to0F[3]);
+    always @(posedge clk) begin
+        if (interrupt_rst == 1) interrupt <= 8'h00;
+//      else if (interrupt_en == 1) interrupt <= {1'b0,1'b0,1'b0,1'b0,extint,1'b0,tx_done,rx_rdy};
+        else if (interrupt_en == 1) interrupt <= {1'b0,1'b0,1'b0,1'b0,extint,1'b0,tx_done,rx_rdy_latch};
+        else interrupt <= interrupt;
+    end
 
-	assign databusout = outport;
+    assign databusout = outport;
 
 
 //multiplexor for usb databus, descriptor table, ext databus
-	assign inport = (sel00to07)?databusrsp:
-					(addrbus[7])?dataram[7:0]: // this selects a ram for buffering rs232
-					(sel10to7F)?databusin:8'hff;
+    assign inport = (sel00to07)?databusrsp:
+                    (addrbus[7])?dataram[7:0]: // this selects a ram for buffering rs232
+                    (sel10to7F)?databusin:8'hff;
 
 
 //multiplexer for USB signals
-	assign rsI0 = fifo_out;
-	assign rsI1 = 8'hff;
-	assign rsI2 = 8'hff;
-	assign rsI3 = interrupt;
-	assign rsI4 = 8'hff;
-	assign rsI5 = 8'hff;
-	assign rsI6 = 8'hff;
-	assign rsI7 = {7'h00,snd_tx};
-	always @(addrbus[2:0] or rsI0 or rsI1 or rsI2 or rsI3 or rsI4 or rsI5 or rsI6 or rsI7) begin
-		case (addrbus[2:0])
-			3'b000 : databusrs = rsI0;
-			3'b001 : databusrs = rsI1;
-			3'b010 : databusrs = rsI2;
-			3'b011 : databusrs = rsI3;
-			3'b100 : databusrs = rsI4;
-			3'b101 : databusrs = rsI5;
-			3'b110 : databusrs = rsI6;
-			3'b111 : databusrs = rsI7;
-		endcase
-	end
+    assign rsI0 = fifo_out;
+    assign rsI1 = 8'hff;
+    assign rsI2 = 8'hff;
+    assign rsI3 = interrupt;
+    assign rsI4 = 8'hff;
+    assign rsI5 = 8'hff;
+    assign rsI6 = 8'hff;
+    assign rsI7 = {7'h00,snd_tx};
+    always @(addrbus[2:0] or rsI0 or rsI1 or rsI2 or rsI3 or rsI4 or rsI5 or rsI6 or rsI7) begin
+        case (addrbus[2:0])
+            3'b000 : databusrs = rsI0;
+            3'b001 : databusrs = rsI1;
+            3'b010 : databusrs = rsI2;
+            3'b011 : databusrs = rsI3;
+            3'b100 : databusrs = rsI4;
+            3'b101 : databusrs = rsI5;
+            3'b110 : databusrs = rsI6;
+            3'b111 : databusrs = rsI7;
+        endcase
+    end
 
 
 //pipeline for databususb
-	always @(posedge clk) begin
-		databusrsp <= databusrs;
-	end
+    always @(posedge clk) begin
+        databusrsp <= databusrs;
+    end
 
 
 //logic for selecting USB databus or external databus
-	always @(posedge clk) begin
-		sel00to07 <= (addrbus[7:3] == 5'b00000)?1'b1:1'b0;
-//		sel10to17 <= (addrbus[7:3] == 5'b00010)?1'b1:1'b0;
-		sel10to7F <= (addrbus >= 8'h10 && addrbus <= 8'h7F)?1'b1:1'b0;
-	end
+    always @(posedge clk) begin
+        sel00to07 <= (addrbus[7:3] == 5'b00000)?1'b1:1'b0;
+//      sel10to17 <= (addrbus[7:3] == 5'b00010)?1'b1:1'b0;
+        sel10to7F <= (addrbus >= 8'h10 && addrbus <= 8'h7F)?1'b1:1'b0;
+    end
 
 
 //mpu2 address decoding
-//RS323 UART in/out											00
-//UNUSED													01
-//UNUSED													02
-//int reset/interrupt										03
-//UNUSED													04			
-//UNUSED													05							
-//offset for indirect program addressing					06
-//UNUSED													07
-//UNUSED													08
-//UNUSED													09
-//UNUSED													0A
-//UNUSED													0B
-//UNUSED													0C
-//UNUSED													0D
-//UNUSED													0E
-//UNUSED													0F
+//RS323 UART in/out                                         00
+//UNUSED                                                    01
+//UNUSED                                                    02
+//int reset/interrupt                                       03
+//UNUSED                                                    04          
+//UNUSED                                                    05                          
+//offset for indirect program addressing                    06
+//UNUSED                                                    07
+//UNUSED                                                    08
+//UNUSED                                                    09
+//UNUSED                                                    0A
+//UNUSED                                                    0B
+//UNUSED                                                    0C
+//UNUSED                                                    0D
+//UNUSED                                                    0E
+//UNUSED                                                    0F
 
 
 //4 to 16 address decoder
-	always @(addrbus[3:0] or addr4to16) begin
-		case (addrbus[3:0])
-			4'h0 : addr4to16 = 16'h0001;
-			4'h1 : addr4to16 = 16'h0002;
-			4'h2 : addr4to16 = 16'h0004;
-			4'h3 : addr4to16 = 16'h0008;
-			4'h4 : addr4to16 = 16'h0010;
-			4'h5 : addr4to16 = 16'h0020;
-			4'h6 : addr4to16 = 16'h0040;
-			4'h7 : addr4to16 = 16'h0080;
-			4'h8 : addr4to16 = 16'h0100;
-			4'h9 : addr4to16 = 16'h0200;
-			4'hA : addr4to16 = 16'h0400;
-			4'hB : addr4to16 = 16'h0800;
-			4'hC : addr4to16 = 16'h1000;
-			4'hD : addr4to16 = 16'h2000;
-			4'hE : addr4to16 = 16'h4000;
-			default : addr4to16 = 16'h8000;
-		endcase
-	end
+    always @(addrbus[3:0] or addr4to16) begin
+        case (addrbus[3:0])
+            4'h0 : addr4to16 = 16'h0001;
+            4'h1 : addr4to16 = 16'h0002;
+            4'h2 : addr4to16 = 16'h0004;
+            4'h3 : addr4to16 = 16'h0008;
+            4'h4 : addr4to16 = 16'h0010;
+            4'h5 : addr4to16 = 16'h0020;
+            4'h6 : addr4to16 = 16'h0040;
+            4'h7 : addr4to16 = 16'h0080;
+            4'h8 : addr4to16 = 16'h0100;
+            4'h9 : addr4to16 = 16'h0200;
+            4'hA : addr4to16 = 16'h0400;
+            4'hB : addr4to16 = 16'h0800;
+            4'hC : addr4to16 = 16'h1000;
+            4'hD : addr4to16 = 16'h2000;
+            4'hE : addr4to16 = 16'h4000;
+            default : addr4to16 = 16'h8000;
+        endcase
+    end
 
 
 // pipeline addrbus decoded outputs for speed
-	always @(posedge clk) begin
-		addr00to0F[15:0] = addr4to16[15:0] & {16{(~|addrbus[7:4])}};
-	end
+    always @(posedge clk) begin
+        addr00to0F[15:0] = addr4to16[15:0] & {16{(~|addrbus[7:4])}};
+    end
 
 
-	endmodule
+    endmodule
 
 
-	module rs232_rx
-	#(
-		parameter clk_freq = 50000000,
-		parameter baud_rate = 115200
-	)
-	(
-		input rx,
-		input clk,
-		output reg [7:0] data,
-		output reg enable
-	);	 
+    module rs232_rx
+    #(
+        parameter clk_freq = 50000000,
+        parameter baud_rate = 115200
+    )
+    (
+        input rx,
+        input clk,
+        output reg [7:0] data,
+        output reg enable
+    );   
 
-	reg [15:0] counter;
-	reg [3:0] bits;
-	reg [1:0] state;
-	reg rx1;
-	reg rx2;
-	reg rx3;
+    reg [15:0] counter;
+    reg [3:0] bits;
+    reg [1:0] state;
+    reg rx1;
+    reg rx2;
+    reg rx3;
 
-	initial begin
-		counter = 0;
-		bits = 0;
-		state = 0;
-		rx1 = 0;
-		rx2 = 0;
-		rx3 = 0;
-	end
+    initial begin
+        counter = 0;
+        bits = 0;
+        state = 0;
+        rx1 = 0;
+        rx2 = 0;
+        rx3 = 0;
+    end
 
-	always @ (posedge clk) begin
-		rx1 <= rx;
-		rx2 <= rx1;
-		rx3 <= rx2;
-	
-		case (state)
-			2'b00: begin
-//				counter <= 16'd213;   //  Change this count value to adjust for buad rate / system clock "1/2 a bit time"
-//				counter <= 16'd217;   //  Change this count value to adjust for buad rate / system clock "1/2 a bit time"
-//				counter <= 16'd52;    //  12 MHz clock, 115.2 Kbaud
-				counter <= clk_freq/(2*baud_rate);
-				data <= data;
-				bits <= 0;
-				enable <= 0;
-				if((rx2 == 0)&&(rx3 == 1))state <= 2'b1;
-				else state <= 2'b0;
-			end
-			
-			2'b01: begin
-				if ( 0 == counter)begin
-//					counter <= 16'd451;	//  Change this count value to adjust for buad rate / system clock "a bit time"
-//					counter <= 16'd434;	//  Change this count value to adjust for buad rate / system clock "a bit time"
-//					counter <= 16'd104;	//  12 MHz clock, 115.2 Kbaud
-					counter <= clk_freq/baud_rate;
-					data <= {rx3,data[7:1]};
-					bits <= bits + 4'd1;
-				end else counter <= counter - 16'd1;
-				enable <= 0;
-				if (bits == 4'h9)state <= 2'b10;
-				else state <= 2'b01;
-			end
-			
-			2'b10: begin
-				counter <= 16'd0;
-				enable <= 1;
-				data <= data;
-				bits <= bits;
-				state <= 2'b0;
-			end
-			
-			default:
-				state <= 2'b0;
-		
-		endcase
-	
-	end
+    always @ (posedge clk) begin
+        rx1 <= rx;
+        rx2 <= rx1;
+        rx3 <= rx2;
+    
+        case (state)
+            2'b00: begin
+//              counter <= 16'd213;   //  Change this count value to adjust for buad rate / system clock "1/2 a bit time"
+//              counter <= 16'd217;   //  Change this count value to adjust for buad rate / system clock "1/2 a bit time"
+//              counter <= 16'd52;    //  12 MHz clock, 115.2 Kbaud
+                counter <= clk_freq/(2*baud_rate);
+                data <= data;
+                bits <= 0;
+                enable <= 0;
+                if((rx2 == 0)&&(rx3 == 1))state <= 2'b1;
+                else state <= 2'b0;
+            end
+            
+            2'b01: begin
+                if ( 0 == counter)begin
+//                  counter <= 16'd451; //  Change this count value to adjust for buad rate / system clock "a bit time"
+//                  counter <= 16'd434; //  Change this count value to adjust for buad rate / system clock "a bit time"
+//                  counter <= 16'd104; //  12 MHz clock, 115.2 Kbaud
+                    counter <= clk_freq/baud_rate;
+                    data <= {rx3,data[7:1]};
+                    bits <= bits + 4'd1;
+                end else counter <= counter - 16'd1;
+                enable <= 0;
+                if (bits == 4'h9)state <= 2'b10;
+                else state <= 2'b01;
+            end
+            
+            2'b10: begin
+                counter <= 16'd0;
+                enable <= 1;
+                data <= data;
+                bits <= bits;
+                state <= 2'b0;
+            end
+            
+            default:
+                state <= 2'b0;
+        
+        endcase
+    
+    end
 
 
-	endmodule
+    endmodule
 
 
 //  This is just an accessory module to hold the enable bit high for two clocks for inteface with a esm
 
-	module hold_enable (
-		input clk,
-		input enable_in,
-		output reg enable_out
-	);
-							
-	reg hold=0;
-	
-	always@(posedge clk)
-	begin
-		if(enable_in)
-			begin
-				enable_out <= 1'b1;
-				hold <= 1'b1;
-				end
-			else
-				if(hold)
-				begin
-					enable_out <= 1'b1;
-					hold <= 1'b0;
-					end
-				else
-					enable_out <= 1'b0;
-		end
-	
-	endmodule
+//    module hold_enable (
+//        input clk,
+//        input enable_in,
+//        output reg enable_out
+//    );
+//                            
+//    reg hold=0;
+//    
+//    always@(posedge clk)
+//    begin
+//        if(enable_in)
+//            begin
+//                enable_out <= 1'b1;
+//                hold <= 1'b1;
+//                end
+//            else
+//                if(hold)
+//                begin
+//                    enable_out <= 1'b1;
+//                    hold <= 1'b0;
+//                    end
+//                else
+//                    enable_out <= 1'b0;
+//        end
+//    
+//    endmodule
 
 
-	module rs232_tx
-	#(
-		parameter clk_freq = 50000000,
-		parameter baud_rate = 115200
-	)
-	(
-		output reg tx,
-		input clk,
-		input [7:0] data,
-		input enable,
-		output reg tx_done = 1'b0
-	);	 
+    module rs232_tx
+    #(
+        parameter clk_freq = 50000000,
+        parameter baud_rate = 115200
+    )
+    (
+        output reg tx,
+        input clk,
+        input [7:0] data,
+        input enable,
+        output reg tx_done = 1'b0
+    );   
 
-	reg [15:0] counter;
-	reg [3:0] bits;
-	reg [1:0] state;
-	reg [9:0] data_int;
-	reg [1:0] past_state = 2'd0;
-	reg past_done = 1'b0;
-	reg done = 1'b0;
+    reg [15:0] counter;
+    reg [3:0] bits;
+    reg [1:0] state;
+    reg [9:0] data_int;
+    reg [1:0] past_state = 2'd0;
+    reg past_done = 1'b0;
+    reg done = 1'b0;
 
-	initial begin
-		counter = 0;
-		bits = 0;
-		state = 0;
-		data_int = 0;
-	end
+    initial begin
+        counter = 0;
+        bits = 0;
+        state = 0;
+        data_int = 0;
+    end
 
-	always @ (posedge clk) begin
-		
-		case (state)
-			2'b00: begin
-				counter <= 16'd0;
-				tx <= 1;
-				data_int <= {1'b1,data[7:0],1'b0};
-				bits <= 4'd11;
-				if( 1'b1 == enable )state <= 2'b01;
-				else state <= 2'b00;
-			end
-			
-			2'b01: begin
-				if ( 16'd0 == counter)begin
-//					counter <= 16'd427;		//  Change this count value to adjust for buad rate / system clock "a bit time"
-//					counter <= 16'd434;		//  50 MHz clock
-//					counter <= 16'd104;		//	12 MHz clock, 115.2 Kbaud
-					counter <= clk_freq/baud_rate;
-					tx <= data_int[0];
-					data_int <= {1'b1,data_int[9:1]};
-					bits <= bits - 4'd1;
-				end else begin
-					counter <= counter - 16'd1;
-					tx <= tx;
-					data_int <= data_int;
-					bits <= bits;
-				end
-				if (bits == 4'h0)state <= 2'b00;
-				else state <= 2'b01;
-			end
-			
-			default:
-				state <= 2'b00;
-		
-		endcase
-		
-	end
+    always @ (posedge clk) begin
+        
+        case (state)
+            2'b00: begin
+                counter <= 16'd0;
+                tx <= 1;
+                data_int <= {1'b1,data[7:0],1'b0};
+                bits <= 4'd11;
+                if( 1'b1 == enable )state <= 2'b01;
+                else state <= 2'b00;
+            end
+            
+            2'b01: begin
+                if ( 16'd0 == counter)begin
+//                  counter <= 16'd427;     //  Change this count value to adjust for buad rate / system clock "a bit time"
+//                  counter <= 16'd434;     //  50 MHz clock
+//                  counter <= 16'd104;     //  12 MHz clock, 115.2 Kbaud
+                    counter <= clk_freq/baud_rate;
+                    tx <= data_int[0];
+                    data_int <= {1'b1,data_int[9:1]};
+                    bits <= bits - 4'd1;
+                end else begin
+                    counter <= counter - 16'd1;
+                    tx <= tx;
+                    data_int <= data_int;
+                    bits <= bits;
+                end
+                if (bits == 4'h0)state <= 2'b00;
+                else state <= 2'b01;
+            end
+            
+            default:
+                state <= 2'b00;
+        
+        endcase
+        
+    end
 
 
-	always @(posedge clk) begin
-		past_state <= state;
-		past_done <= done;
-		tx_done <= past_done | done;
-		if((state == 2'b00) && (past_state == 2'b01)) begin
-			done <= 1'b1;
-		end
-		else begin
-			done <= 1'b0;
-		end
-	end
-	
+    always @(posedge clk) begin
+        past_state <= state;
+        past_done <= done;
+        tx_done <= past_done | done;
+        if((state == 2'b00) && (past_state == 2'b01)) begin
+            done <= 1'b1;
+        end
+        else begin
+            done <= 1'b0;
+        end
+    end
+    
 
 endmodule

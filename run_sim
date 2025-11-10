@@ -70,7 +70,7 @@ which vivado
 
 # this test crashes... using the test_iq_telemetry_system.py to test telemetry as best I can until we find the bug.
 # for now we'll keep this running just to check top level syntax, etc. It won't be self checking
-pytest --log-cli-level=WARNING tests/test_telemetry_serialize.py tests/test_top_level_verilator.py tests/test_telemetry_system.py
+pytest --log-cli-level=WARNING tests/test_telemetry_serialize.py tests/test_top_level_verilator.py tests/test_telemetry_system.py tests/test_pc_loopback.py tests/test_pc_stream_serial.py tests/test_telemetry_serialize_verilator.py
 
 
 

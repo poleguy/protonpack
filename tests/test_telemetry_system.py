@@ -1,4 +1,7 @@
 # for testing ADXR/ATLAS telemetry
+# Top level testbench instantiation file of dpsm_rx top and telem
+# mobile top to simulate the entire serial telemetry system.
+# checks to see a number of packets appear at the alchitry packet_valid signal.
 
 # open sim waveforms with:
 # gtkwave tests/sim_build/test_telemetry_serialize/test_main/verilog.dump

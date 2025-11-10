@@ -89,7 +89,7 @@ module alchitry_top (
     wire blinky_led_ft;
 
     reg [15:0] r_serial_in;
-    reg r_serial_in_valid;
+    reg r_serial_in_valid = 1'b0;
 
     reg [3:0] r_cnt = 4'hf;
     reg [15:0] r_packet_cnt = 16'h0;
@@ -181,7 +181,7 @@ module alchitry_top (
     assign M_reset_cond_in = !rst_n;
     assign rst = M_reset_cond_out;
     //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
-    assign led = {ft_loopback_mode,ft_wr, m_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
+    assign led = {ft_loopback_mode,ft_wr, M_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
     assign ft_wakeup = 1'h1;
