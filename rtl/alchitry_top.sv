@@ -37,7 +37,6 @@ module alchitry_top (
         output wire [7:0] BOT_C_L
 
     );
-    wire rst;
     wire mmcm_reset;
     wire M_reset_cond_in;
     wire M_reset_cond_out;
@@ -47,7 +46,7 @@ module alchitry_top (
     reg r_mmcm_locked_128M = 1'b0;
     reg r1_mmcm_locked_128M = 1'b0;
     reg r_rst_128M = 1'b0;
-    reg r_rst_256M = 1'b0;
+    
     wire clk_256M;
     wire [31:0] gt_data;
     wire [3:0] gt_data_is_k;
@@ -166,7 +165,6 @@ module alchitry_top (
            .ft_data(ft_data),
            .ft_be(ft_be),
            .clk(clk_128M), // switch back to see if it will fix the drops/repeats at interface
-           .rst(rst),
            .ft_rxf(ft_rxf), // active low "FTDI has data for us"
            .ft_txe(ft_txe), // active low "FTDI can accept data"
            .ft_rd(ft_rd),  // 0 = FPGA reads from FTDI
@@ -186,15 +184,14 @@ module alchitry_top (
 
 
     //always @(*) begin
-    assign M_reset_cond_in = !rst_n;
-    assign rst = M_reset_cond_out;
+    assign M_reset_cond_in = !rst_n;    
     //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,period_2ms,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     ///assign led = {ft_loopback_mode,ft_wr, M_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
     assign led = {ft_loopback_mode,timestamp_offset_adjust, r_packet_valid_128,M_ft_ui_dout_get, timestamp_count[3:0]};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
     assign ft_wakeup = 1'h1;
-    assign ft_reset = !rst;
+    assign ft_reset = !M_reset_cond_out;
 
     assign mmcm_reset = !rst_n;
 
@@ -648,13 +645,7 @@ timestamp timestamp(
 
 
     wire _unused_ok = 1'b0 && &{1'b0,
-                                r_rst_256M,
-                                // stream_clk0,
-                                // stream_valid0,
-                                // stream_enable0,
-                                // stream_data0,
-                                mismatch_packets,
-                                okay_led,
+                                mismatch_packets,                                
                                 total_packets,
                                 link_count_okay,
                                 gt_soft_reset,

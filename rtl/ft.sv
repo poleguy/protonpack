@@ -26,7 +26,6 @@ module ft #(
     parameter integer PREEMPT     = 0    // 0 = no preemption, 1 = allow
 )(
     input  wire                         clk,        // system clock
-    input  wire                         rst,        // async reset (active high)
 
     // FTDI
     input  wire                         ft_clk,     // FTDI clock
@@ -79,7 +78,8 @@ module ft #(
     localparam [1:0] S_READ       = 2'd2;
     localparam [1:0] S_WRITE      = 2'd3;
 
-    reg  [1:0] state, next_state;
+    reg  [1:0] state = S_IDLE;
+    reg  [1:0] next_state = S_IDLE;
 
     // Write FIFO (UI clk -> FT clk)
     wire                    write_fifo_full;   // write-side (clk) full
@@ -158,12 +158,8 @@ module ft #(
     // -------------------------------------------------------------------------
     // FSM and FT control logic (ft_clk domain)
     // -------------------------------------------------------------------------
-    always @(posedge ft_clk or posedge rst) begin
-        if (rst) begin
-            state <= S_IDLE;
-        end else begin
-            state <= next_state;
-        end
+    always @(posedge ft_clk) begin
+        state <= next_state;
     end
 
     always @* begin
