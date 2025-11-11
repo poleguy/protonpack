@@ -6,16 +6,16 @@
 `default_nettype none //do not use implicit wire for port connections
 
 /* verilator lint_off DECLFILENAME */
-module clk_wiz_100M 
+module mmcm 
  (
   // Clock out ports
-  output  reg      clk_out1, // 128
-  output  reg      clk_out2, // 100
+  output  reg      clk_128M, // 128
+  output  reg      clk_100M, // 100
   // Status and control signals
   output wire       locked,
   input wire reset,
  // Clock in ports
-  input  wire       clk_in1
+  input  wire       clk_in
  );
 
 
@@ -24,15 +24,15 @@ module clk_wiz_100M
 
   initial
   begin
-    clk_out1 = 0;
+    clk_128M = 0;
   end
 
   always
   begin
-    #3.906 clk_out1 = ~clk_out1;
+    #3.906 clk_128M = ~clk_128M;
   end
 
-  always @(posedge clk_in1)
+  always @(posedge clk_in)
   begin
     if (counter < 3'b101)
     begin // 5 in binary is '101'
@@ -44,7 +44,7 @@ module clk_wiz_100M
     end
   end
 
-  assign clk_out2 = clk_in1;
+  assign clk_100M = clk_in;
   assign locked = r_locked;
 
 endmodule

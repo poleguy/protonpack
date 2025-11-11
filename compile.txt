@@ -33,9 +33,9 @@ rtl/compile.txt
 # otherwise it defaults to unpack and generates source files and expects you to manually add the source
 
 `IF BUILD
-rtl/clk_wiz_100M/clk_wiz_100M.xci --dont_touch_xci
+rtl/mmcm/mmcm.xci --dont_touch_xci
 `IF SIM
-rtl/clk_wiz_100M/sim/clk_wiz_100M.v
+rtl/mmcm/sim/mmcm.v
 `END
 
 # debug comes first to avoid order dependence with telemetry and serial_link
@@ -118,23 +118,13 @@ rtl/telemetry_check.v
 #rtl/telem_mobile_ac701.v
 
 
-# xdc constraints
-#par/constraints/rgmii_timing.xdc
-#par/constraints/user.xdc
-
-
 ######################################
 ## CONSTRAINTS XDC 
 ######################################
 `IF BUILD
 par/constraints/alchitry.xdc
+par/constraints/cdc_waivers.xdc
 par/constraints/au_props.xdc
-#par/constraints/dpsm_pins.xdc
-#par/constraints/dpsm_timing.xdc
-#par/constraints/dpsm_timing_adc.xdc
-## this is for telemetry build only, and is included via compile_telemetry.txt
-##par/constraints/dpsm_rx_resource_opt.xdc
-##par/constraints/ila.xdc
 `END
 
 `IF SIM

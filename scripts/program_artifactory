@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+set -e
+
+scripts/get_artifactory "$1"
+# optional --force
+scripts/program_flash_artifactory $2

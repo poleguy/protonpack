@@ -107,14 +107,12 @@ module ft #(
         .WIDTH  (FIFO_WIDTH),
         .ENTRIES(TX_BUFFER)
     ) write_fifo (
-        .rclk   (ft_clk),
-        .rrst   (rst),
+        .rclk   (ft_clk),        
         .rget   (write_fifo_rget),
         .dout   (write_fifo_dout),
         .empty  (write_fifo_empty),
 
         .wclk   (clk),
-        .wrst   (rst),
         .wput   (ui_din_valid),
         .din    ({ui_din_be, ui_din}),
         .full   (write_fifo_full)
@@ -126,13 +124,11 @@ module ft #(
         .ENTRIES(RX_BUFFER)
     ) read_fifo (
         .rclk   (clk),
-        .rrst   (rst),
         .rget   (ui_dout_get),
         .dout   (read_fifo_dout),
         .empty  (read_fifo_empty),
 
         .wclk   (ft_clk),
-        .wrst   (rst),
         .wput   (read_fifo_wput),
         .din    ({ft_be, ft_data}),
         .full   (read_fifo_full)

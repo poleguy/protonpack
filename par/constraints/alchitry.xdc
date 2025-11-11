@@ -205,8 +205,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {BOT_C_L[7]}]
 ## to one another and can be treated as such.
 ##
 set_clock_groups -name async_groups -asynchronous \
-    -group [get_clocks {clkfbout_clk_wiz_100M clk_out2_clk_wiz_100M}] \
+    -group [get_clocks {clkfbout_mmcm clk_100M_mmcm}] \
     -group [get_clocks {clkfbout clkout0 clkout1}] \
     -group [get_clocks {clkfbout_1 clkout0_1 clkout1_1}] \
     -group [get_clocks ft_clk_100] \
-    -group [get_clocks {clk_out1_clk_wiz_100M clkfbout_mmcm_128M_256M clk_out2_mmcm_128M_256M}]
+    -group [get_clocks {clk_128M_mmcm clkfbout_mmcm_128M_256M clk_out2_mmcm_128M_256M}]
