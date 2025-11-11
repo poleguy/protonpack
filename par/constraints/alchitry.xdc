@@ -43,8 +43,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {usb_tx}]
 set_property PACKAGE_PIN H4 [get_ports {ft_clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ft_clk}]
 # ft_clk => 100000000Hz
-create_clock -period 10.0 -name ft_clk_12 -waveform {0.000 5.0} [get_ports ft_clk]
-set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks ft_clk_12]
+create_clock -period 10.0 -name ft_clk_100 -waveform {0.000 5.0} [get_ports ft_clk]
+set_clock_groups -asynchronous -group [get_clocks -include_generated_clocks ft_clk_100]
 
 set_property PACKAGE_PIN AB22 [get_ports {ft_wakeup}]
 set_property IOSTANDARD LVCMOS33 [get_ports {ft_wakeup}]
@@ -205,8 +205,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {BOT_C_L[7]}]
 ## to one another and can be treated as such.
 ##
 set_clock_groups -name async_groups -asynchronous \
-    -group [get_clocks {clkfbout_clk_wiz_100M clk_out1_clk_wiz_100M}] \
+    -group [get_clocks {clkfbout_clk_wiz_100M clk_out2_clk_wiz_100M}] \
     -group [get_clocks {clkfbout clkout0 clkout1}] \
     -group [get_clocks {clkfbout_1 clkout0_1 clkout1_1}] \
-    -group [get_clocks ft_clk_12] \
-    -group [get_clocks {clkfbout_mmcm_128M_256M clk_out2_mmcm_128M_256M}]
+    -group [get_clocks ft_clk_100] \
+    -group [get_clocks {clk_out1_clk_wiz_100M clkfbout_mmcm_128M_256M clk_out2_mmcm_128M_256M}]

@@ -396,7 +396,7 @@ timestamp timestamp(
 //  then we can tell if any drop.
 //
 //    todo: hook up esm
-//      todo: debug stoppage after first 4k after config
+//      done: debug stoppage after first 4k after config. Telemetry wasn't running.
 //
 //  todo: debug with scope and leds/test points.
 //
