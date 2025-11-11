@@ -4,7 +4,7 @@ set -e
 # https://riptutorial.com/bash/example/30284/change-to-the-directory-of-the-script
 cd "$(dirname "$(readlink -f "$0")")"
 
-gcc async-loopback-to-disk.c -o async-loopback-to-disk -lftd3xx -L/usr/local/lib -Ilinux-x86_64/
+gcc async-loopback-to-disk.c -o async-loopback-to-disk -lftd3xx -L/usr/local/lib -Ilinux-x86_64/ -I/usr/include/hdf5/serial -lhdf5_serial
 #gcc speed_test.c -o speed_test -lftd3xx -L/usr/local/lib -Ilinux-x86_64/
 #gcc async-loopback-clean.c -o async-loopback-clean -lftd3xx -L/usr/local/lib -Ilinux-x86_64/
 #gcc write_test.c -o write_test -lftd3xx -L/usr/local/lib -Ilinux-x86_64/

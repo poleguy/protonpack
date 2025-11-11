@@ -319,9 +319,9 @@ async def telem_bytes_inject(alchitry_top, fifo_list):
     cnt_show_first=0
     while(True):
         await FallingEdge(alchitry_top.gt_unpack_telemetry.gt_clk)
-        alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// trying')
+        #alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// trying')
         if(len(fifo_list)>=4):
-            alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// working')
+            #alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// working')
             # GT outputs 4 bytes at once on 128MHz gt clock
             data_4byte=0
             k_4byte=0
@@ -336,15 +336,15 @@ async def telem_bytes_inject(alchitry_top, fifo_list):
             ## Assign values at top level sim should instantiate empty GT
             #bv = BinaryValue(n_bits=32)
             #bv.integer =  data_4byte            
-            alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// gt_data {alchitry_top.gt_unpack_telemetry.gt_data.value}')
-            alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// data_4byte {data_4byte}')
+            #alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// gt_data {alchitry_top.gt_unpack_telemetry.gt_data.value}')
+            #alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// data_4byte {data_4byte}')
 
             # can only drive it where there are no other drivers in verilator
             alchitry_top.gt_serial_telem_rx_subsystem.gt_serial_telem_rx_i.gt0_rxdata_out.value = data_4byte
             alchitry_top.gt_serial_telem_rx_subsystem.gt_serial_telem_rx_i.gt0_rxcharisk_out.value = k_4byte
             #alchitry_top.gt_unpack_telemetry.gt_data.value = cocotb.handle.Force(data_4byte)  # BinaryValue was swapping stuff. uck.
             #alchitry_top.gt_unpack_telemetry.gt_data_is_k.value = cocotb.handle.Force(k_4byte)
-            alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// gt_data {alchitry_top.gt_unpack_telemetry.gt_data.value}')
+            #alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// gt_data {alchitry_top.gt_unpack_telemetry.gt_data.value}')
             if(cnt_show_first<600): # long enough to see actual iq data flowing
                 alchitry_top.gt_unpack_telemetry._log.info(f'//telem_bytes_inject// len(fifo_list)={len(fifo_list)} Injecting gt data:{hex(data_4byte)} data_is_k:{hex(k_4byte)}')
                 # Break into debugger for user control

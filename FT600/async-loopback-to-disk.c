@@ -11,6 +11,7 @@
  * - Main performs abort once after detecting fatalError
  * - Threads don't call abort_pipes() themselves
  * - ov arrays allocated on heap (avoid big stack frames)
+ * Writes to hdf5
  */
 
 #include <stdio.h>
@@ -19,6 +20,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <time.h>
+#include <hdf5.h>   // ADD THIS near top with other includes
 #include "ftd3xx.h"
 
 #define MULTI_ASYNC_BUFFER_SIZE    32768//16384 //32768 //1048576 //32768  // 8388608 //   
@@ -44,6 +46,84 @@ static void do_abort_pipes_once()
     FT_AbortPipe(ftHandle, writePipeId);
     FT_AbortPipe(ftHandle, readPipeId);
 }
+
+/* ---------- HDF5 helper code ---------- */
+
+typedef struct {
+    hid_t file_id;
+    hid_t dataset_id;
+    hid_t dataspace_id;
+    hsize_t current_size;
+    hsize_t chunk_size;
+    hsize_t dims[1];
+} HDF5Context;
+
+static HDF5Context* hdf5_init(const char *filename, size_t chunk_bytes)
+{
+    HDF5Context *ctx = calloc(1, sizeof(HDF5Context));
+    ctx->chunk_size = chunk_bytes;
+    ctx->current_size = 0;
+    ctx->dims[0] = 0;
+
+    // Create file (truncate if exists)
+    ctx->file_id = H5Fcreate(filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (ctx->file_id < 0) {
+        fprintf(stderr, "HDF5: failed to create file\n");
+        free(ctx);
+        return NULL;
+    }
+
+    // Create unlimited 1D dataset of bytes (uint8)
+    hsize_t maxdims[1] = { H5S_UNLIMITED };
+    hsize_t chunkdims[1] = { chunk_bytes };
+
+    ctx->dataspace_id = H5Screate_simple(1, ctx->dims, maxdims);
+    hid_t plist_id = H5Pcreate(H5P_DATASET_CREATE);
+    H5Pset_chunk(plist_id, 1, chunkdims);
+    ctx->dataset_id = H5Dcreate(ctx->file_id, "usb_data",
+                                H5T_NATIVE_UCHAR, ctx->dataspace_id,
+                                H5P_DEFAULT, plist_id, H5P_DEFAULT);
+    H5Pclose(plist_id);
+    return ctx;
+}
+
+static int hdf5_append_chunk(HDF5Context *ctx, const void *data, size_t nbytes)
+{
+    if (!ctx) return -1;
+    hsize_t new_size = ctx->current_size + nbytes;
+
+    // Extend dataset
+    H5Dset_extent(ctx->dataset_id, &new_size);
+
+    // Select hyperslab (append at end)
+    hid_t filespace = H5Dget_space(ctx->dataset_id);
+    hsize_t start[1] = { ctx->current_size };
+    hsize_t count[1] = { nbytes };
+    H5Sselect_hyperslab(filespace, H5S_SELECT_SET, start, NULL, count, NULL);
+
+    // Memory space
+    hid_t memspace = H5Screate_simple(1, count, NULL);
+
+    // Write
+    H5Dwrite(ctx->dataset_id, H5T_NATIVE_UCHAR, memspace, filespace,
+             H5P_DEFAULT, data);
+
+    H5Sclose(memspace);
+    H5Sclose(filespace);
+
+    ctx->current_size = new_size;
+    return 0;
+}
+
+static void hdf5_close(HDF5Context *ctx)
+{
+    if (!ctx) return;
+    H5Dclose(ctx->dataset_id);
+    H5Sclose(ctx->dataspace_id);
+    H5Fclose(ctx->file_id);
+    free(ctx);
+}
+/* ---------- end HDF5 helper code ---------- */
 
 static void* asyncRead(void *arg)
 {
@@ -127,69 +207,18 @@ static void* asyncRead(void *arg)
             } else {
                 received_ok+=ulBytesRead[j];
             }
-//        // Completion phase: poll all outstanding slots (non-blocking)
-//        for (size_t j = 0; j < MULTI_ASYNC_NUM && !*fatalError; j++) {
-//            ULONG bytes = 0;
-//
-//            ftStatus = FT_GetOverlappedResult(ft, &ov[j],
-//                                              &bytes, FALSE);
-//            if (ftStatus == FT_IO_INCOMPLETE || ftStatus == FT_IO_PENDING) {
-//                // not yet complete, check next slot
-//                continue;
-//            } else if (ftStatus == FT_TIMEOUT) {
-//                /* no data this time; try next */
-//                printf("[READ] Timeout waiting for data\n");
-//                continue;
-//            } else if (FT_FAILED(ftStatus)) {
-//                if (*exitReader) {
-//                    // this is an expected timeout if exit reader was set by the caller
-//                    printf("[READ] Ending due to exit request.\n");
-//                    break;
-//                }
-//                printf("[READ] GetOverlappedResult failed: %d\n", ftStatus);
-//                *fatalError = 1;
-//                break;
-//            }  else {
-//                //printf(".");
-//                received_ok+=bytes;//ulBytesRead[j];
-//            }
 
             /* Process data if needed (ulBytesRead[j]) */
 
 
-            //printf("              writing %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
-                if (fp) {
-                    size_t written = fwrite(&buf[j*MULTI_ASYNC_BUFFER_SIZE], 1, ulBytesRead[j], fp);
-                    if (written != ulBytesRead[j]) {
-                        fprintf(stderr, "Failed to write to disk\n");
-                        *fatalError = 1;
-                        break;
-                    }
+            if (fp) {
+                if (hdf5_append_chunk((HDF5Context*)fp, &buf[j * MULTI_ASYNC_BUFFER_SIZE], ulBytesRead[j]) < 0) {
+                    fprintf(stderr, "Failed to write to HDF5 dataset\n");
+                    *fatalError = 1;
+                    break;
                 }
+            }
 
-            
-//            int received_ok = 0;
-//            //
-//            // Compare bytes read with bytes written
-//            //
-//            if (memcmp(buf, expected, sizeof(buf))) {
-//                for (int k = 0; k < MULTI_ASYNC_BUFFER_SIZE+2;k++) {
-//                    //printf("no matchy %d: %x, %x\n",k, buf[j*MULTI_ASYNC_BUFFER_SIZE+k], expected[k]);
-//                    //printf("ugh...");
-//                }
-//            }
-//            if (ulBytesRead[j] != ulBytesToRead)
-//            {
-//                printf("FT_GetOverlappedResult failed! ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
-//                //*fatalError = 1;
-//                //break;
-//                printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
-//                printf("received ok = %d\n",received_ok);
-//            } else {
-//                //printf("Got expected: ulBytesRead[j=%zu]=%d != %d ulBytesToRead  \n",j,ulBytesRead[j],ulBytesToRead);
-//                received_ok++;
-//            }
-            //printf("received value = %x\n",buf[j*MULTI_ASYNC_BUFFER_SIZE]);
 
         }
     }
@@ -332,16 +361,16 @@ int main(void)
         return 1;
     }
 
-    FILE *fp = fopen("loopback_async.bin", "wb");
-    if (!fp) {
-        fprintf(stderr, "Failed to open output file\n");
+    HDF5Context *h5ctx = hdf5_init("loopback_async.h5", MULTI_ASYNC_BUFFER_SIZE);
+    if (!h5ctx) {
+        fprintf(stderr, "Failed to create HDF5 file\n");
         FT_Close(ftHandle);
         return 1;
     }
 
 
-    ThreadArgs readArgs = { ftHandle, readBuf, &exitReader, &fatalError, readPipeId, fp };
-    ThreadArgs writeArgs = { ftHandle, writeBuf, &exitWriter, &fatalError, writePipeId, fp };
+    ThreadArgs readArgs = { ftHandle, readBuf, &exitReader, &fatalError, readPipeId, (FILE *)h5ctx };
+    ThreadArgs writeArgs = { ftHandle, writeBuf, &exitWriter, &fatalError, writePipeId, (FILE *)h5ctx };
 
     pthread_t rthr, wthr;
     pthread_create(&rthr, NULL, asyncRead, &readArgs);
@@ -369,6 +398,8 @@ int main(void)
 
     pthread_join(rthr, NULL);
     pthread_join(wthr, NULL);
+
+    hdf5_close(h5ctx);
 
     FT_Close(ftHandle);
     free(readBuf);

@@ -67,7 +67,8 @@ module tb_telemetry_serialize;
     .data_in(),
     .valid_in(),
     .data_out(),
-    .valid_out()
+    .valid_out(),
+    .bad_packet()
   );
 
 endmodule

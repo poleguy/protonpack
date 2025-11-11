@@ -24,7 +24,8 @@ module unpack_telemetry #(
     input wire [7:0] data_in,
     input wire valid_in,
     output reg [(g_data_width*8)-1:0] data_out,
-    output reg valid_out
+    output reg valid_out,
+    output wire bad_packet
   );
 
   reg [7:0] r_data_in = 8'b0;
@@ -34,6 +35,7 @@ module unpack_telemetry #(
   // start at 0xE, which indicates a k character hasn't been seen yet, so we shouldn't start.
   // 0xE also can mean too many bytes were seen, which indicates an error, so don't start until a k character is seen
   reg [3:0] r_cnt = 4'he; 
+  reg r_bad_packet = 1'b0;
 
   // Ensure only 11 byte telemetry data is supported
   initial begin
@@ -110,7 +112,7 @@ module unpack_telemetry #(
 
   // count bytes while not k_in is low
   // can only handle length of 14, which is fine because this is hard coded for 11 byte packets
-  always @(posedge clk) begin
+  always @(posedge clk) begin    
     if (valid_in == 1) begin
       if (k_in == 0) begin
         // count bytes
@@ -122,13 +124,19 @@ module unpack_telemetry #(
         else begin
           r_cnt <= r_cnt + 1'b1;
         end
+        r_bad_packet <= 1'b0;
       end
       else begin
         // this will wrap on the next data byte (i.e. k_in = '0')
         r_cnt <= 4'hf;
+        if (! ((r_cnt == 4'ha) || (r_cnt == 4'hf))) begin
+            // too short? should be 11 bytes
+            r_bad_packet <= 1'b1;
+        end
       end
     end
   end
+  assign bad_packet = r_bad_packet;
 
   // outputs
   always @(posedge clk) begin

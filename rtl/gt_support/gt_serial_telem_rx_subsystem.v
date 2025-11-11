@@ -62,7 +62,9 @@ module gt_serial_telem_rx_subsystem #(
   output wire [3:0]  DATA_IS_K_OUT,   // decoded K-character flags
 
   // Status/control
-  output wire SOFT_RESET_OUT
+  output wire SOFT_RESET_OUT,
+
+  input wire POLARITY
 );
 
   // ---------------------------------------------------------------------------
@@ -349,7 +351,7 @@ module gt_serial_telem_rx_subsystem #(
     .gt0_pll1outrefclk_out       (/* open */),
 
     // RX polarity
-    .gt0_rxpolarity_in           (1'b0),
+    .gt0_rxpolarity_in           (POLARITY),
 
     // System clock
     .sysclk_in                   (clk_128M)

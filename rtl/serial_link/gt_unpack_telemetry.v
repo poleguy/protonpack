@@ -82,6 +82,7 @@ module gt_unpack_telemetry #(
   (* ASYNC_REG = "TRUE" *) reg [3:0]  r_gt_data_is_k  = 4'b0000;
   reg        r_gt_data_valid = 1'b0;
   reg        r1_gt_data_valid_128M = 1'b0;
+  wire bad_packet;
 
 
   mmcm_128M_256M mmcm_128M_256M_1 (
@@ -184,62 +185,67 @@ module gt_unpack_telemetry #(
     .data_in   (r_data_dec),
     .valid_in  (r_valid_dec),
     .data_out  (data_unpack_out),
-    .valid_out (valid_unpack_out)
+    .valid_out (valid_unpack_out),
+    .bad_packet (bad_packet)
   );
 
   // check result
+
+  // check if packets are exactly 11 bytes long
+  // if not, turn off okay_led flag.
 
   // grab the last data and increment it, to check next data
   // only checking class_id = E for now
   // only checking count
   // proc_data_sync_E : process(clk_256M)
 
-  always @(posedge clk_256M) begin
-    if (valid_unpack_out == 1'b1) begin
-      if (data_unpack_out[83:80] == 4'hE) begin
-        // counter is only for the lower 9 bits, and wraps
-        r_data_E[8:0] <= data_unpack_out[8:0] + 9'd1;
-      end
-    end
-  end
+//   always @(posedge clk_256M) begin
+//     if (valid_unpack_out == 1'b1) begin
+//       if (data_unpack_out[83:80] == 4'hE) begin
+//         // counter is only for the lower 9 bits, and wraps
+//         r_data_E[8:0] <= data_unpack_out[8:0] + 9'd1;
+//       end
+//     end
+//   end
 
-  // proc_data_sync_F : process(clk_256M)
-  always @(posedge clk_256M) begin
-    if (valid_unpack_out == 1'b1) begin
-      if (data_unpack_out[83:80] == 4'hF) begin
-        r_data_F[8:0] <= data_unpack_out[8:0] + 9'd1;
-      end
-    end
-  end
+//   // proc_data_sync_F : process(clk_256M)
+//   always @(posedge clk_256M) begin
+//     if (valid_unpack_out == 1'b1) begin
+//       if (data_unpack_out[83:80] == 4'hF) begin
+//         r_data_F[8:0] <= data_unpack_out[8:0] + 9'd1;
+//       end
+//     end
+//   end
 
-  // proc_data_check_E : process(clk_256M)
-  always @(posedge clk_256M) begin
-    if (valid_unpack_out == 1'b1) begin
-      if (data_unpack_out[83:80] == 4'hE) begin
-        if (data_unpack_out[31:0] == r_data_E) begin
-          // data arriving matches expected data
-          r_data_match <= 1'b1;
-        end else begin
-          r_data_match <= 1'b0;
-        end
-      end else if (data_unpack_out[83:80] == 4'hF) begin
-        if (data_unpack_out[31:0] == r_data_F) begin
-          // data arriving matches expected data
-          r_data_match <= 1'b1;
-        end else begin
-          r_data_match <= 1'b0;
-        end
-      end
-    end
-  end
+//   // proc_data_check_E : process(clk_256M)
+//   always @(posedge clk_256M) begin
+//     if (valid_unpack_out == 1'b1) begin
+//       if (data_unpack_out[83:80] == 4'hE) begin
+//         if (data_unpack_out[31:0] == r_data_E) begin
+//           // data arriving matches expected data
+//           r_data_match <= 1'b1;
+//         end else begin
+//           r_data_match <= 1'b0;
+//         end
+//       end else if (data_unpack_out[83:80] == 4'hF) begin
+//         if (data_unpack_out[31:0] == r_data_F) begin
+//           // data arriving matches expected data
+//           r_data_match <= 1'b1;
+//         end else begin
+//           r_data_match <= 1'b0;
+//         end
+//       end
+//     end
+//   end
 
-  initial r_okay_led_out = 1'b0;  
+
+//  initial r_okay_led_out = 1'b0;  
 
   // generate led that goes on if data is good for > 500 msec
   always @(posedge clk_256M) begin
     if (valid_unpack_out == 1'b1) begin
       r_timeout_cnt <= 16'h0000;
-      if (r_data_match == 1'b1) begin
+      if (bad_packet == 1'b1) begin
         // valid period of 1.6 usec means 500msec is about 4ffff
         // if (r_match_cnt >= x"4ffff") then
         if (r_match_cnt >= G_MATCH_CNT) begin

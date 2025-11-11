@@ -9,11 +9,11 @@ module tick_gen #(
         output reg prescaler // to use a shared external prescaler counter
     );
 
-    // Counter to measure stable time; width is COUNTER_SIZE+1
-    reg  [COUNTER_SIZE:0] counter_out;
+    // Counter to measure stable time; width is COUNTER_SIZE
+    reg  [COUNTER_SIZE-1:0] counter_out;
 
     initial begin
-        counter_out = { (COUNTER_SIZE+1){1'b0} };
+        counter_out = { (COUNTER_SIZE){1'b0} };
     end
 
     always @(posedge clk) begin

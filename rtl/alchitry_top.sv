@@ -98,9 +98,11 @@ module alchitry_top (
     reg r_packet_valid_128;
     wire [1:0] btn_state;
     wire [1:0] btn_raw;
-    wire sample_tick;
+    wire period_2ms;
     wire ft_loopback_mode;
     reg r_sticky_overflow = 1'b0;
+    reg r_period_131ms = 0;
+    reg [5:0] r_period_cnt = 0;
 
 
     // esm io
@@ -136,6 +138,8 @@ module alchitry_top (
     wire timestamp_offset_adjust;
     wire  [31:0] timestamp_count;    
 
+    reg polarity = 1'b0;
+    
 
 // todo: 
 
@@ -186,7 +190,7 @@ module alchitry_top (
     //always @(*) begin
     assign M_reset_cond_in = !rst_n;
     assign rst = M_reset_cond_out;
-    //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,sample_tick,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
+    //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,period_2ms,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     ///assign led = {ft_loopback_mode,ft_wr, M_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
     assign led = {ft_loopback_mode,timestamp_offset_adjust, r_packet_valid_128,M_ft_ui_dout_get, timestamp_count[3:0]};
     assign BOT_C_L = led;
@@ -240,7 +244,8 @@ module alchitry_top (
                                      .TXP_OUT(),
                                      .DATA_CLK_OUT(gt_clk), //RXUSRCLK2
                                      .DATA_OUT(gt_data),
-                                     .DATA_IS_K_OUT(gt_data_is_k)
+                                     .DATA_IS_K_OUT(gt_data_is_k),
+                                     .POLARITY(polarity)
                                  );
     gt_unpack_telemetry gt_unpack_telemetry(
                             .clk_128M(clk_128M),
@@ -250,7 +255,7 @@ module alchitry_top (
                             .gt_data_is_k(gt_data_is_k),
                             .clk_256M_out(clk_256M),
                             .pll_locked_out(),
-                            .okay_led_out(),
+                            .okay_led_out(okay_led), // just checks 11 byte length packets for determining polarity
                             .cnt_led_out(),
                             .data_out(packet_data),
                             .valid_out(packet_valid),
@@ -263,7 +268,7 @@ module alchitry_top (
                         .reset_counters(reset_counters),
                         .total_packets(total_packets),
                         .mismatch_packets(mismatch_packets),
-                        .okay_led(okay_led),
+                        .okay_led(), // for counter packets
                         .link_count_okay(link_count_okay)
                     );
 
@@ -445,7 +450,7 @@ timestamp timestamp(
                         .N(2)
                     ) toggle_debounce (
                         .clk   (clk_128M),
-                        .tick  (sample_tick),
+                        .tick  (period_2ms),
                         .raw_in(btn_raw),
                         .state (btn_state)
                     );
@@ -454,8 +459,32 @@ timestamp timestamp(
                  .COUNTER_SIZE(18) // target 2ms at 128MHz clock
              ) tick_gen (
                  .clk(clk_128M),     // input clock
-                 .prescaler (sample_tick) // to use a shared external prescaler counter
+                 .prescaler (period_2ms) // to use a shared external prescaler counter
              );
+
+
+    // handle auto polarity
+
+    always @(posedge clk_128M) begin
+        if (r_period_131ms == 1'b1) begin
+            if (!okay_led) begin
+                polarity = ~polarity;
+            end 
+        end
+    end
+
+    always @(posedge clk_128M) begin
+        if (period_2ms == 1'b1) begin
+            r_period_cnt <= r_period_cnt + 1'b1;
+        end
+        if (r_period_cnt == 0) begin
+            r_period_131ms <= 1'b1;                
+        end else begin
+            r_period_131ms <= 1'b0;
+        end
+    end
+
+
 
     // esm with serial port for control
 
