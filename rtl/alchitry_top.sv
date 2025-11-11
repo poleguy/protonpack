@@ -38,16 +38,14 @@ module alchitry_top (
 
     );
     wire rst;
-    wire clk_wiz_reset;
+    wire mmcm_reset;
     wire M_reset_cond_in;
     wire M_reset_cond_out;
     wire clk_100M; // to rename it post MMCM
     wire clk_128M;
-    wire clk_wiz_locked;
-    reg r_clk_wiz_locked_128M = 1'b0;
-    reg r1_clk_wiz_locked_128M = 1'b0;
-    //   reg r_clk_wiz_locked_256M = 1'b0;
-    //   reg r1_clk_wiz_locked_256M = 1'b0;
+    wire mmcm_locked;
+    reg r_mmcm_locked_128M = 1'b0;
+    reg r1_mmcm_locked_128M = 1'b0;
     reg r_rst_128M = 1'b0;
     reg r_rst_256M = 1'b0;
     wire clk_256M;
@@ -198,33 +196,25 @@ module alchitry_top (
     assign ft_wakeup = 1'h1;
     assign ft_reset = !rst;
 
-    assign clk_wiz_reset = !rst_n;
+    assign mmcm_reset = !rst_n;
 
     
-    clk_wiz_100M clk_wiz_100M_i(
-                     .clk_in1(clk),
-                     .reset(clk_wiz_reset),
-                     .clk_out1(clk_128M),
-                     .clk_out2(clk_100M),
-                     .locked(clk_wiz_locked)
+    mmcm mmcm(
+                     .clk_in(clk),
+                     .reset(mmcm_reset),
+                     .clk_128M(clk_128M),
+                     .clk_100M(clk_100M),
+                     .locked(mmcm_locked)
                  );
 
     always @(posedge clk_128M) begin
-        r_clk_wiz_locked_128M <= clk_wiz_locked;
-        r1_clk_wiz_locked_128M <= r_clk_wiz_locked_128M;
-        if (r1_clk_wiz_locked_128M == 0)
+        r_mmcm_locked_128M <= mmcm_locked;
+        r1_mmcm_locked_128M <= r_mmcm_locked_128M;
+        if (r1_mmcm_locked_128M == 0)
             r_rst_128M <= 1;
         else
             r_rst_128M <= 0;
     end
-    //   always @(posedge clk_256M) begin
-    //     r_clk_wiz_locked_256M <= clk_wiz_locked;
-    //     r1_clk_wiz_locked_256M <= r_clk_wiz_locked_256M;
-    //     if (r1_clk_wiz_locked_256M == 0)
-    //       r_rst_256M <= 1;
-    //     else
-    //       r_rst_256M <= 0;
-    //   end
 
     // it seems this stupid board doesn't have any non 3.3V banks. ugh.
     // try to fake differential for the clock:
