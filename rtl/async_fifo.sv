@@ -1,6 +1,9 @@
 `timescale 1ns/1ps
 `default_nettype none //do not use implicit wire for port connections
 /* verilator lint_off UNOPTFLAT */
+`timescale 1ns/1ps
+`default_nettype none
+
 /******************************************************************************
 
    The MIT License (MIT)
@@ -46,17 +49,15 @@ module async_fifo #(
     parameter ENTRIES     = 16, // Must be power of 2
     parameter SYNC_STAGES = 3   // Number of synchronizing stages (>=2)
 )(
-    input  wire                 wclk,   // write clock
-    input  wire                 wrst,   // write reset
-    input  wire [WIDTH-1:0]      din,    // write data
-    input  wire                 wput,   // write flag (1 = write)
-    output wire                 full,   // full flag (1 = full)
+    input  wire                wclk,   // write clock
+    input  wire [WIDTH-1:0]    din,    // write data
+    input  wire                wput,   // write flag (1 = write)
+    output wire                full,   // full flag (1 = full)
 
-    input  wire                 rclk,   // read clock
-    input  wire                 rrst,   // read reset
-    output wire [WIDTH-1:0]      dout,   // read data
-    input  wire                 rget,   // data read flag (1 = get next entry)
-    output wire                 empty   // empty flag (1 = empty)
+    input  wire                rclk,   // read clock
+    output wire [WIDTH-1:0]    dout,   // read data
+    input  wire                rget,   // data read flag (1 = get next entry)
+    output wire                empty   // empty flag (1 = empty)
 );
 
     localparam ADDR_SIZE = $clog2(ENTRIES);
@@ -64,90 +65,60 @@ module async_fifo #(
     // ------------------------------------------------------------------------
     // Internal signals
     // ------------------------------------------------------------------------
-    reg  [ADDR_SIZE:0] waddr_bin, raddr_bin;
-    reg  [ADDR_SIZE:0] waddr_bin_next, raddr_bin_next;
+    reg  [ADDR_SIZE:0] waddr_bin = 0;
+    reg  [ADDR_SIZE:0] raddr_bin = 0;
+    reg  [ADDR_SIZE:0] waddr_gray = 0;
+    reg  [ADDR_SIZE:0] raddr_gray = 0;
 
-    reg  [ADDR_SIZE:0] waddr_gray, raddr_gray;
-    reg  [ADDR_SIZE:0] wnext_gray, rnext_gray;
-
-    // Synchronizers for cross-domain pointers
-    (* ASYNC_REG = "TRUE" *) reg [ADDR_SIZE:0] wsync   [0:SYNC_STAGES-1];
-    (* ASYNC_REG = "TRUE" *) reg [ADDR_SIZE:0] rsync   [0:SYNC_STAGES-1];
-
-    // Dual-port memory
-    reg [WIDTH-1:0] mem [0:ENTRIES-1];
-
-    reg [WIDTH-1:0] dout_reg;
+    reg  [WIDTH-1:0] mem [0:ENTRIES-1];
+    reg  [WIDTH-1:0] dout_reg = 0;
     assign dout = dout_reg;
 
-    // Ready flags
-    wire wrdy, rrdy;
+    // Synchronizers for cross-domain pointers
+    (* ASYNC_REG = "TRUE" *) reg [ADDR_SIZE:0] wsync [0:SYNC_STAGES-1];
+    (* ASYNC_REG = "TRUE" *) reg [ADDR_SIZE:0] rsync [0:SYNC_STAGES-1];
+
+    wire [ADDR_SIZE:0] waddr_bin_next = waddr_bin + 1'b1;
+    wire [ADDR_SIZE:0] raddr_bin_next = raddr_bin + 1'b1;
+    wire [ADDR_SIZE:0] wnext_gray     = (waddr_bin_next >> 1) ^ waddr_bin_next;
+    wire [ADDR_SIZE:0] rnext_gray     = (raddr_bin_next >> 1) ^ raddr_bin_next;
+
+    integer i;
 
     // ------------------------------------------------------------------------
     // WRITE CLOCK DOMAIN
     // ------------------------------------------------------------------------
-    always @(posedge wclk or posedge wrst) begin
-        if (wrst) begin
-            waddr_bin  <= 0;
-            waddr_gray <= 0;
-        end else begin
-            if (wput && wrdy) begin
-                waddr_bin <= waddr_bin + 1;
-            end
-            waddr_gray <= (waddr_bin >> 1) ^ waddr_bin;
-        end
-    end
-
-    // Write memory
     always @(posedge wclk) begin
-        if (wput && wrdy)
+        // Synchronize read pointer into write clock domain
+        wsync[0] <= raddr_gray;
+        for (i = 1; i < SYNC_STAGES; i = i + 1)
+            wsync[i] <= wsync[i-1];
+
+        // Write operation
+        if (wput && wrdy) begin
+            waddr_bin <= waddr_bin_next;
             mem[waddr_bin[ADDR_SIZE-1:0]] <= din;
+        end
+
+        waddr_gray <= (waddr_bin >> 1) ^ waddr_bin;
     end
 
     // ------------------------------------------------------------------------
     // READ CLOCK DOMAIN
     // ------------------------------------------------------------------------
-    always @(posedge rclk or posedge rrst) begin
-        if (rrst) begin
-            raddr_bin  <= 0;
-            raddr_gray <= 0;
-        end else begin
-            if (rget && rrdy) begin
-                raddr_bin <= raddr_bin + 1;
-            end
-            raddr_gray <= (raddr_bin >> 1) ^ raddr_bin;
-        end
-    end
-
-    // Read data (first-word-fall-through)
     always @(posedge rclk) begin
+        // Synchronize write pointer into read clock domain
+        rsync[0] <= waddr_gray;
+        for (i = 1; i < SYNC_STAGES; i = i + 1)
+            rsync[i] <= rsync[i-1];
+
+        // Read operation (first-word-fall-through)
         dout_reg <= mem[raddr_bin[ADDR_SIZE-1:0]];
-    end
 
-    // ------------------------------------------------------------------------
-    // CROSS-DOMAIN SYNCHRONIZATION
-    // ------------------------------------------------------------------------
-    integer i;
-    always @(posedge wclk or posedge wrst) begin
-        if (wrst)
-            for (i = 0; i < SYNC_STAGES; i = i + 1)
-                wsync[i] <= 0;
-        else begin
-            wsync[0] <= raddr_gray;
-            for (i = 1; i < SYNC_STAGES; i = i + 1)
-                wsync[i] <= wsync[i-1];
-        end
-    end
+        if (rget && rrdy)
+            raddr_bin <= raddr_bin_next;
 
-    always @(posedge rclk or posedge rrst) begin
-        if (rrst)
-            for (i = 0; i < SYNC_STAGES; i = i + 1)
-                rsync[i] <= 0;
-        else begin
-            rsync[0] <= waddr_gray;
-            for (i = 1; i < SYNC_STAGES; i = i + 1)
-                rsync[i] <= rsync[i-1];
-        end
+        raddr_gray <= (raddr_bin >> 1) ^ raddr_bin;
     end
 
     // ------------------------------------------------------------------------
@@ -156,17 +127,12 @@ module async_fifo #(
     wire [ADDR_SIZE:0] wsync_rgray = wsync[SYNC_STAGES-1];
     wire [ADDR_SIZE:0] rsync_wgray = rsync[SYNC_STAGES-1];
 
-    // Next write and read gray pointers
-    assign waddr_bin_next = waddr_bin + 1;
-    assign wnext_gray     = (waddr_bin_next >> 1) ^ waddr_bin_next;
-    assign raddr_bin_next = raddr_bin + 1;
-    assign rnext_gray     = (raddr_bin_next >> 1) ^ raddr_bin_next;
-
     // Write ready unless next write equals synchronized read (full)
-    assign wrdy = (wnext_gray != {~wsync_rgray[ADDR_SIZE:ADDR_SIZE-1], wsync_rgray[ADDR_SIZE-2:0]});
+    wire wrdy = (wnext_gray != {~wsync_rgray[ADDR_SIZE:ADDR_SIZE-1],
+                                wsync_rgray[ADDR_SIZE-2:0]});
 
     // Read ready unless read == synchronized write (empty)
-    assign rrdy = (raddr_gray != rsync_wgray);
+    wire rrdy = (raddr_gray != rsync_wgray);
 
     assign full  = ~wrdy;
     assign empty = ~rrdy;
