@@ -178,7 +178,6 @@ COMMIT_SUFFIX="$BRANCH"
     if [[ "$(whoami)" != "secbuild" && "$(whoami)" != "jeeves" ]]; then
         time scripts/deploy_artifactory --developer
     else
-        # CI build uses simple version numbers
         # CI builds are committed to CI repo, but will fail if not run from jenkins
         # build from a branch if building locally
         time scripts/deploy_artifactory

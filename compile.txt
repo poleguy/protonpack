@@ -123,7 +123,9 @@ rtl/telemetry_check.v
 ######################################
 `IF BUILD
 par/constraints/alchitry.xdc
-par/constraints/cdc_waivers.xdc
+# waivers should not be included here to avoid "CRITICAL WARNING: [Designutils 20-970] Unrecognized or unsupported command 'create_waiver..."
+# It is included via par/build.tcl
+# par/constraints/cdc_waivers.xdc
 par/constraints/au_props.xdc
 `END
 

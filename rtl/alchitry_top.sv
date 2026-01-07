@@ -187,7 +187,7 @@ module alchitry_top (
     assign M_reset_cond_in = !rst_n;    
     //assign led = {blinky_led,blinky_led_ft, ft_loopback_mode,period_2ms,ft_txe, ft_rxf, M_ft_ui_dout_empty, M_ft_ui_din_full};
     ///assign led = {ft_loopback_mode,ft_wr, M_ft_ui_dout_be[0],M_ft_ui_dout_get,M_ft_ui_dout_empty, M_ft_ui_din_valid, M_ft_ui_din_be[0], M_ft_ui_din_full};
-    assign led = {ft_loopback_mode,timestamp_offset_adjust, r_packet_valid_128,M_ft_ui_dout_get, timestamp_count[3:0]};
+    assign led = {ft_loopback_mode,timestamp_offset_adjust, r_packet_valid_128,M_ft_ui_dout_get, polarity, timestamp_count[2:0]};
     assign BOT_C_L = led;
     assign usb_tx = usb_rx;
     assign ft_wakeup = 1'h1;

@@ -10,6 +10,10 @@ The system is composed of hardware and software components and a protocol for se
 
 The software is split between two components: live, real-time visualization software and post processing software.
 
+## Telemetry Struture
+
+https://bitbucket.shure.com/projects/DPSM_FPGA/repos/telemetry/browse/doc/portable_telemetry.ctd
+
 ## Block Diagram
 
 ![System Block Diagram](doc/System_Block_Diagram.drawio.svg)
@@ -18,7 +22,7 @@ The software is split between two components: live, real-time visualization soft
 
 ## Proton Pack Hardware
 
-Proton Pack hardware is described under the [hardware/REDAME.md](hardware/README.md) file
+Proton Pack hardware is described under the [hardware/REDAME.md](hardware/README.md) file.
 
 ## Live Visualization Software
 
@@ -54,13 +58,44 @@ cd alchitry
 source ./build_fpga $branch
 ```
 
+## Program
+
+See [hardware/REDAME.md](hardware/README.md) for instructions on connecting the board/cables/power/etc.
+
+```
+scripts/get_artifactory https://artifactory.shure.com/All_Shure_Components/ATLAS/protonpack/0.0.0.71/
+scripts/program_flash_artifactory
+
+```
+
+
+## Test
+
+run 
+```
+FT600/test_it
+```
+
+
 # Simulation
 
+```
 ./run_sim
+```
+
+Should report all PASSED
+
+## Check Sim Results
+
+```
+gtkwave tests/sim_build/tests.test_pc_loopback/test_main/wave1.fst 
+
+```
 
 # It works on my machine
 
 run 
+
 ```scripts/test_install.sh
 
 # Design Notes

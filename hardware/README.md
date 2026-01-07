@@ -5,6 +5,9 @@
 The hardware consists of a capture system that records a data stream provided from a device under test (DUT) via a pair of coaxial cables.
 
 # DUT hardware.
+![visual of proton pack system](image.png)
+
+See doc/visual.svg
 
 The signal from the DUT is sent from a standard FPGA GPIO pin to avoid requiring a transceiver. A transceiver would also work.
 The signalling is HSTL-II to provide a fast signal rate of 1GBps or higher.
@@ -55,6 +58,21 @@ Input SMA must go to:
 
 Bottom Side, Bank B, J7 71/69 for P/N respectively
 
+# Hardware Setup
+
+Set up a stack of boards:
+
+Alchitry Pt on top.
+
+Fan Board as a spacer
+
+Ft Board toward bottom.
+
+Break out Board with SMA's on bottom.
+
+## Breakout board design
+
+![pinout for Br V2 https://shop.alchitry.com/products/alchitry-br-v2](image-1.png)
 
 # Legacy
 
