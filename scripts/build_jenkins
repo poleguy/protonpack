@@ -12,12 +12,16 @@
 set -e
 
 # https://unix.stackexchange.com/questions/162165/check-that-a-bash-script-has-exactly-two-arguments-which-are-directories
-if [ $# -ne 1 ]; then
-  echo 1>&2 "Usage: $0 branch_name"
-  exit 3
-fi
+#if [ $# -ne 1 ]; then
+#  echo 1>&2 "Usage: $0 branch_name"
+#  exit 3
+#fi
 
-BRANCH=$1
+# the branch name is usually what we want. Just change branches locally and run this script.
+BRANCH=$(git branch --show-current)
+HASH=$(shuf -n 1 -i 1000000-9999999)
+# hash allows queuing identical builds
+
 # pull in API_TOKEN and API_USER, to avoid storing them in github
 source ~/.jenkins_token
 

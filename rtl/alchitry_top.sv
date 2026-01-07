@@ -464,7 +464,7 @@ timestamp timestamp(
         if (period_2ms == 1'b1) begin
             r_period_cnt <= r_period_cnt + 1'b1;
         end
-        if (r_period_cnt == 0) begin
+        if ((r_period_cnt == 0) and (period_2ms == 1'b1)) begin
             r_period_131ms <= 1'b1;                
         end else begin
             r_period_131ms <= 1'b0;
