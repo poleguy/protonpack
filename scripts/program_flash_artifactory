@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
 
 set -e
+if [ -z "$1" ]
+then
+    echo "Pass in full artifactory path, and this will get its contents into the ./artifactory directory and then program the board from it"
+    echo "Unsure? check here:"
+    echo "https://artifactory.shure.com/All_Shure_Components/ATLAS/protonpack"
+    exit 1
+fi
 
 # https://stackoverflow.com/questions/59895/how-can-i-get-the-source-directory-of-a-bash-script-from-within-the-script-itsel
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd $SCRIPT_DIR/..
 
+
+scripts/get_artifactory "$1"
+
 ## set vivado version for hw mgr
 #source $SCRIPT_DIR/setup_vivado
 
 # todo: remove dependency on alchitry by spinning a custom board.
-if [[ "$1" == "--force" ]]; then
+if [[ "$2" == "--force" ]]; then
   alchitry load --flash --board "Alchitry Pt V2" --bin artifactory/alchitry_top_working_FAILED.bin
 else
   alchitry load --flash --board "Alchitry Pt V2" --bin artifactory/alchitry_top_working.bin
