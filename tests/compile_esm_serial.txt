@@ -1,0 +1,5 @@
+# for tests/test_esm_serial.py and tests/tb_esm_serial.sv
+# Testing ESM serial interface
+
+../compile.txt
+tb_esm_serial.sv

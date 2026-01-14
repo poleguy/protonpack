@@ -83,6 +83,12 @@
 //      $readmemh("../memory_init/AVNETRS.HEX", progrom, 0, 1023);
 //      $readmemh("E:/HDL/memory_init/AVNETRS.HEX", progrom, 0, 1023);
         $readmemh(prog_path, progrom, 0, (2**prog_depth)-1);
+        $display("[rs_core] Loading program from: %s", prog_path);
+        $display("[rs_core] Program memory depth: %d words", 2**prog_depth);
+        // Display first few instructions for verification
+        $display("[rs_core] progrom[0] = 0x%h", progrom[0]);
+        $display("[rs_core] progrom[1] = 0x%h", progrom[1]);
+        $display("[rs_core] progrom[2] = 0x%h", progrom[2]);
      end
         
     assign instrbus = progrom[instr_addr];
