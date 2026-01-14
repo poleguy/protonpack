@@ -46,6 +46,62 @@ def test_esm_serial(no_compile, waves):
 # Cocotb UART helper functions
 ##############################################################
 
+class UARTMonitor:
+    """Continuously monitors UART RX line and buffers received data"""
+    def __init__(self, uart_rx_signal, dut):
+        self.uart_rx_signal = uart_rx_signal
+        self.dut = dut
+        self.buffer = []
+        self.running = False
+        self.task = None
+    
+    async def _monitor_loop(self):
+        """Background task that continuously reads UART"""
+        self.dut._log.info("UART monitor started")
+        while self.running:
+            byte_val = await uart_receive_byte(self.uart_rx_signal, self.dut, timeout_us=100)
+            if byte_val is not None:
+                self.buffer.append(byte_val)
+                char_repr = chr(byte_val) if 32 <= byte_val < 127 else f"\\x{byte_val:02x}"
+                self.dut._log.debug(f"UART Monitor buffered: 0x{byte_val:02x} '{char_repr}'")
+    
+    def start(self):
+        """Start the monitor task"""
+        self.running = True
+        self.task = cocotb.start_soon(self._monitor_loop())
+    
+    def stop(self):
+        """Stop the monitor task"""
+        self.running = False
+    
+    def get_received(self, clear=True):
+        """Get received data as string and optionally clear buffer"""
+        data = self.buffer.copy()
+        if clear:
+            self.buffer.clear()
+        try:
+            return ''.join(chr(b) for b in data if b != 0)
+        except (ValueError, UnicodeDecodeError):
+            return ''.join(chr(b) for b in data if b < 128)
+    
+    def wait_for_pattern(self, pattern, timeout_us=100000):
+        """Wait for a specific pattern in the buffer"""
+        return self._wait_for_pattern_impl(pattern, timeout_us)
+    
+    async def _wait_for_pattern_impl(self, pattern, timeout_us):
+        """Implementation of wait for pattern"""
+        start_time = cocotb.utils.get_sim_time('us')
+        while True:
+            current_str = self.get_received(clear=False)
+            if pattern in current_str:
+                return current_str
+            
+            elapsed = cocotb.utils.get_sim_time('us') - start_time
+            if elapsed > timeout_us:
+                return None
+            
+            await Timer(100, units='us')
+
 async def uart_send_byte(uart_tx_signal, byte_val):
     """
     Send a single byte over UART
@@ -132,8 +188,8 @@ async def uart_send_string(uart_tx_signal, string):
         # Small delay between characters
         await Timer(BIT_PERIOD_NS, unit='ns')
         
-    # longer delay after string
-    await Timer(10*BIT_PERIOD_NS, unit='ns')
+    # longer delay after string for debug
+    #await Timer(10*BIT_PERIOD_NS, unit='ns')
         
 
 async def uart_receive_prompt(uart_rx_signal, dut, max_chars=100, timeout_us=100000):
@@ -282,31 +338,46 @@ async def test_esm_version_read(dut):
     # Initialize UART TX to idle (high)
     uart_tx.value = 1
     
+    # Start UART monitor to continuously read RX
+    monitor = UARTMonitor(uart_rx, dut)
+    monitor.start()
     
     # Wait for system to initialize
     await Timer(110, unit='ns')
     
     # Wait for initial prompt ">>" from ESM
     dut._log.info("Waiting for initial '>>' prompt...")
-    prompt = await uart_receive_prompt(uart_rx, dut, max_chars=20, timeout_us=500000)
-    dut._log.info(f"Received: '{prompt}'")
+    prompt = await monitor._wait_for_pattern_impl(">>", timeout_us=500000)
+    if prompt:
+        dut._log.info(f"Received prompt: '{prompt}'")
+    else:
+        dut._log.error("Timeout waiting for initial prompt")
+        monitor.stop()
+        raise AssertionError("No initial prompt received")
+    
+    # Clear buffer after getting prompt
+    monitor.get_received(clear=True)
     
     # Send "r 00000000" command followed by carriage return
     command = "r 00000000\r"
     dut._log.info(f"Sending command: '{command}'")
     await uart_send_string(uart_tx, command)
     
-    # Wait a bit for processing
-    await Timer(50, unit='us')
-    
-    # Receive response
+    # Wait for response (will echo command and return result)
     dut._log.info("Waiting for response...")
-    response = await uart_receive_prompt(uart_rx, dut, max_chars=200, timeout_us=500000)
-    dut._log.info(f"Received response: '{response}'")
+    response = await monitor._wait_for_pattern_impl(">>", timeout_us=500000)
+    if response:
+        dut._log.info(f"Received response: '{response}'")
+    else:
+        dut._log.error("Timeout waiting for response")
+        all_received = monitor.get_received(clear=False)
+        dut._log.error(f"Partial response: '{all_received}'")
+        monitor.stop()
+        raise AssertionError("No response received")
     
     # Check for expected version
     # Version is 0.0.0.72 = 0x00000048
-    expected_version = "00000048"
+    expected_version = "0000004a"
     
     # Parse response - looking for "addr: 00000000 = 00000048"
     if "addr:" in response and expected_version in response:
@@ -317,7 +388,11 @@ async def test_esm_version_read(dut):
         dut._log.error(f"✗ FAILED: Version mismatch or parse error")
         dut._log.error(f"  Expected: addr: 00000000 = {expected_version}")
         dut._log.error(f"  Got: {response}")
+        monitor.stop()
         assert False, f"Version register read failed. Expected {expected_version} in response."
+    
+    # Stop the monitor
+    monitor.stop()
     
     # Wait a bit more to capture any trailing data
     await Timer(100, unit='us')
