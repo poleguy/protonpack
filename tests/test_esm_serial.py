@@ -8,6 +8,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, RisingEdge, Timer, ClockCycles, with_timeout
 import tests.verilator as verilator
 import os
+import re
 from tests.conftest import root_dir
 
 # UART parameters (from rs_core instantiation in alchitry_top.sv)
@@ -277,22 +278,56 @@ async def simulation_heartbeat(dut):
         
         await Timer(interval, unit='us')
 
+
+def get_expected_version():
+    """
+    Parse version_pkg.sv to get the expected version value
+    Returns the version as a hex string (e.g., "0000004a" for version 0.0.0.74)
+    """
+    version_file = os.path.join(root_dir, "rtl/version_pkg.sv")
+    
+    with open(version_file, 'r') as f:
+        content = f.read()
+    
+    # Extract version components using regex
+    major_match = re.search(r'C_VERSION_MAJOR\s*=\s*8\'d(\d+)', content)
+    minor_match = re.search(r'C_VERSION_MINOR\s*=\s*8\'d(\d+)', content)
+    patch_match = re.search(r'C_VERSION_PATCH\s*=\s*8\'d(\d+)', content)
+    build_match = re.search(r'C_VERSION_BUILD\s*=\s*8\'d(\d+)', content)
+    
+    if not all([major_match, minor_match, patch_match, build_match]):
+        raise ValueError("Could not parse version from version_pkg.sv")
+    
+    major = int(major_match.group(1))
+    minor = int(minor_match.group(1))
+    patch = int(patch_match.group(1))
+    build = int(build_match.group(1))
+    
+    # Pack as 32-bit value: [31:24]=major, [23:16]=minor, [15:8]=patch, [7:0]=build
+    version_value = (major << 24) | (minor << 16) | (patch << 8) | build
+    
+    return f"{version_value:08x}", f"{major}.{minor}.{patch}.{build}"
+
+
 @cocotb.test()
 async def test_esm_version_read(dut):
     """
-    Test ESM serial interface by reading version register
+    Test ESM serial interface by reading version register and testing r_test register
     
-    Expected sequence:
+    Test sequence:
     1. Wait for ">>" prompt from ESM
-    2. Send "r 00000000\r" command
-    3. Receive response "addr: 00000000 = 00000048" (version 0.0.0.72)
+    2. Send "r 00000000\r" command to read version register
+    3. Verify response contains version from version_pkg.sv
+    4. Send "r 00000012\r" to read r_test initial value (0xBEEFF00D)
+    5. Send "w 00000012 deadbeef\r" to write to r_test register
+    6. Send "r 00000012\r" to read back and verify write (0xDEADBEEF)
     """
-    # Enable debug logging
+    # Enable debug logging programmatically, 
     # or run with
     # COCOTB_LOG_LEVEL=DEBUG pytest tests/test_esm_serial.py --waves --log-cli-level=DEBUG
-    import logging
-    dut._log.setLevel(logging.DEBUG)
-    cocotb.log.setLevel(logging.DEBUG)
+    #import logging
+    #dut._log.setLevel(logging.DEBUG)
+    #cocotb.log.setLevel(logging.DEBUG)
     
     dut._log.info("="*80)
     dut._log.info("Starting ESM Serial Test")
@@ -376,13 +411,13 @@ async def test_esm_version_read(dut):
         raise AssertionError("No response received")
     
     # Check for expected version
-    # Version is 0.0.0.72 = 0x00000048
-    expected_version = "0000004a"
+    expected_version, version_str = get_expected_version()
+    dut._log.info(f"Expected version from version_pkg.sv: {version_str} (0x{expected_version})")
     
-    # Parse response - looking for "addr: 00000000 = 00000048"
+    # Parse response - looking for "addr: 00000000 = 0000004a"
     if "addr:" in response and expected_version in response:
         dut._log.info(f"✓ SUCCESS: Version register read correctly!")
-        dut._log.info(f"  Expected version: 0.0.0.72 (0x{expected_version})")
+        dut._log.info(f"  Expected version: {version_str} (0x{expected_version})")
         dut._log.info(f"  Response: {response}")
     else:
         dut._log.error(f"✗ FAILED: Version mismatch or parse error")
@@ -390,6 +425,107 @@ async def test_esm_version_read(dut):
         dut._log.error(f"  Got: {response}")
         monitor.stop()
         assert False, f"Version register read failed. Expected {expected_version} in response."
+    
+    # Clear buffer before next test
+    monitor.get_received(clear=True)
+    
+    # ========================================================================
+    # Test 2: Read r_test register (should have initial value 0xBEEFF00D)
+    # ========================================================================
+    dut._log.info("="*80)
+    dut._log.info("Test 2: Reading r_test register (addr 0x00000012)")
+    dut._log.info("="*80)
+    
+    command = "r 00000012\r"
+    dut._log.info(f"Sending command: '{command}'")
+    await uart_send_string(uart_tx, command)
+    
+    dut._log.info("Waiting for response...")
+    response = await monitor._wait_for_pattern_impl(">>", timeout_us=500000)
+    if response:
+        dut._log.info(f"Received response: '{response}'")
+    else:
+        dut._log.error("Timeout waiting for r_test read response")
+        all_received = monitor.get_received(clear=False)
+        dut._log.error(f"Partial response: '{all_received}'")
+        monitor.stop()
+        raise AssertionError("No response received for r_test read")
+    
+    # Check for initial value 0xBEEFF00D
+    expected_initial = "beeff00d"
+    if "addr:" in response and expected_initial in response.lower():
+        dut._log.info(f"✓ SUCCESS: r_test initial value read correctly!")
+        dut._log.info(f"  Expected: 0x{expected_initial.upper()}")
+        dut._log.info(f"  Response: {response}")
+    else:
+        dut._log.error(f"✗ FAILED: r_test initial value mismatch")
+        dut._log.error(f"  Expected: {expected_initial}")
+        dut._log.error(f"  Got: {response}")
+        monitor.stop()
+        assert False, f"r_test initial value read failed. Expected {expected_initial} in response."
+    
+    # Clear buffer before next test
+    monitor.get_received(clear=True)
+    
+    # ========================================================================
+    # Test 3: Write to r_test register
+    # ========================================================================
+    dut._log.info("="*80)
+    dut._log.info("Test 3: Writing 0xDEADBEEF to r_test register")
+    dut._log.info("="*80)
+    
+    test_value = "deadbeef"
+    command = f"w 00000012 {test_value}\r"
+    dut._log.info(f"Sending command: '{command}'")
+    await uart_send_string(uart_tx, command)
+    
+    dut._log.info("Waiting for write acknowledgment...")
+    response = await monitor._wait_for_pattern_impl(">>", timeout_us=500000)
+    if response:
+        dut._log.info(f"Received response: '{response}'")
+    else:
+        dut._log.error("Timeout waiting for write acknowledgment")
+        all_received = monitor.get_received(clear=False)
+        dut._log.error(f"Partial response: '{all_received}'")
+        monitor.stop()
+        raise AssertionError("No response received for r_test write")
+    
+    # Clear buffer before next test
+    monitor.get_received(clear=True)
+    
+    # ========================================================================
+    # Test 4: Read back r_test register to verify write
+    # ========================================================================
+    dut._log.info("="*80)
+    dut._log.info("Test 4: Reading back r_test register to verify write")
+    dut._log.info("="*80)
+    
+    command = "r 00000012\r"
+    dut._log.info(f"Sending command: '{command}'")
+    await uart_send_string(uart_tx, command)
+    
+    dut._log.info("Waiting for response...")
+    response = await monitor._wait_for_pattern_impl(">>", timeout_us=500000)
+    if response:
+        dut._log.info(f"Received response: '{response}'")
+    else:
+        dut._log.error("Timeout waiting for r_test readback response")
+        all_received = monitor.get_received(clear=False)
+        dut._log.error(f"Partial response: '{all_received}'")
+        monitor.stop()
+        raise AssertionError("No response received for r_test readback")
+    
+    # Check for written value 0xDEADBEEF
+    if "addr:" in response and test_value in response.lower():
+        dut._log.info(f"✓ SUCCESS: r_test write/read test passed!")
+        dut._log.info(f"  Written value: 0x{test_value.upper()}")
+        dut._log.info(f"  Read back: {response}")
+    else:
+        dut._log.error(f"✗ FAILED: r_test readback value mismatch")
+        dut._log.error(f"  Expected: {test_value}")
+        dut._log.error(f"  Got: {response}")
+        monitor.stop()
+        assert False, f"r_test write/read failed. Expected {test_value} in response."
     
     # Stop the monitor
     monitor.stop()
