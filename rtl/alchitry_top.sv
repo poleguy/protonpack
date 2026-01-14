@@ -138,7 +138,7 @@ module alchitry_top (
   wire [31:0] timestamp_count;
 
   reg         polarity = 1'b0;
-  reg  [ 7:0] r_test = 8'h00;
+  reg  [31:0] r_test = 32'hBEEFF00D;
 
 
   // todo: 
@@ -594,7 +594,7 @@ module alchitry_top (
 
       end
       12'h012: begin
-        r_databusin <= r_test;
+        data_in <= r_test;
       end
       12'h013: begin
         //if (g_fifo > 0) begin
@@ -692,7 +692,7 @@ module alchitry_top (
   
     // test register
     if (wr32 == 1'b1 && r_addr32_10to1F[2] == 1'b1) begin
-      r_test <= databusout[7:0];
+      r_test <= data[31:0];
     end
   
     if (wr32 == 1'b1 && r_addr32_10to1F[3] == 1'b1) begin
