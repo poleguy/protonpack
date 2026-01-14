@@ -246,78 +246,51 @@ def run_rtl_sim_cvc(
 
 
 def compile_and_run_cvc(compile_list, cocotb_lib_dir, command, frame):
-    module = inspect.getmodule(frame[0])
-    caller_filename = module.__file__
-    caller_module = module.__name__
-    caller_module_no_ext = caller_module.split(".py")[0]
-    module = caller_module_no_ext
-    caller_dir = os.path.dirname(caller_filename)
-    log.info(
-        "cocotb caller filename="
-        + caller_filename
-        + " \n"
-        + " caller_dir="
-        + caller_dir
-        + " \n"
-        + " caller_module="
-        + caller_module
-    )
-    os.environ["MODULE"] = caller_module  # point to this file as the cocotb module
-    os.environ["PYTHONPATH"] = (
-        caller_dir  # this is required so that the cocotb library can find this module
-    )
+    # Save original environment to restore later
+    original_env = {
+        "MODULE": os.environ.get("MODULE"),
+        "PYTHONPATH": os.environ.get("PYTHONPATH"),
+        "NO_COLOR": os.environ.get("NO_COLOR"),
+        "COCOTB_REDUCED_LOG_FMT": os.environ.get("COCOTB_REDUCED_LOG_FMT"),
+        "PYGPI_PYTHON_BIN": os.environ.get("PYGPI_PYTHON_BIN"),
+        "COCOTB_TEST_MODULES": os.environ.get("COCOTB_TEST_MODULES"),
+    }
+    
+    try:
+        module = inspect.getmodule(frame[0])
+        caller_filename = module.__file__
+        caller_module = module.__name__
+        caller_module_no_ext = caller_module.split(".py")[0]
+        module = caller_module_no_ext
+        caller_dir = os.path.dirname(caller_filename)
+        log.info(
+            "cocotb caller filename="
+            + caller_filename
+            + " \n"
+            + " caller_dir="
+            + caller_dir
+            + " \n"
+            + " caller_module="
+            + caller_module
+        )
+        os.environ["MODULE"] = caller_module  # point to this file as the cocotb module
+        os.environ["PYTHONPATH"] = (
+            caller_dir  # this is required so that the cocotb library can find this module
+        )
 
-    # os.environ['LIBPYTHON_LOC'] = '/home/fpga/workspace/telemetry/cenv/lib/libpython3.8.so.1.0'
-    os.environ["NO_COLOR"] = "1"
-    os.environ["COCOTB_REDUCED_LOG_FMT"] = "1"
-    os.environ["PYGPI_PYTHON_BIN"] = bash.bash('which python')
-    os.environ["COCOTB_TEST_MODULES"] = caller_module
-    vpi = (
-        "+loadvpi="
-        + cocotb_lib_dir
-        + "/libcocotbvpi_modelsim.so:vlog_startup_routines_bootstrap"
-    )
-    # vpi = '+loadvpi=$(shell cocotb-config --lib-name-path vpi cvc):vlog_startup_routines_bootstrap'
+        # os.environ['LIBPYTHON_LOC'] = '/home/fpga/workspace/telemetry/cenv/lib/libpython3.8.so.1.0'
+        os.environ["NO_COLOR"] = "1"
+        os.environ["COCOTB_REDUCED_LOG_FMT"] = "1"
+        os.environ["PYGPI_PYTHON_BIN"] = bash.bash('which python')
+        os.environ["COCOTB_TEST_MODULES"] = caller_module
+        
+        vpi = (
+            "+loadvpi="
+            + cocotb_lib_dir
+            + "/libcocotbvpi_modelsim.so:vlog_startup_routines_bootstrap"
+        )
+        # vpi = '+loadvpi=$(shell cocotb-config --lib-name-path vpi cvc):vlog_startup_routines_bootstrap'
 
-    if False:
-        # this is the old os.system way of doing it.
-        # the new way uses bash.bash()
-        # the old way is left as an alternative in case we need to debug this stuff
-
-        command = f"{command} {vpi} > tmp.txt"
-        # command = f"{command} {vpi}"
-
-        # compile AND run rtl simulation
-        # print(command)
-        cmd_rtn = os.system(command)
-        if cmd_rtn != 0:
-            if cmd_rtn != 256:
-                # todo: this needs a comment explaining why 256 is okay
-                raise Exception(f"Non 0, Non 256 return value: {cmd_rtn}")
-        # cmd_rtn = 0
-        # output = bash.bash(command)
-        # sys.exit(cmd_rtn)
-
-        # https://stackoverflow.com/questions/4760215/running-shell-command-and-capturing-the-output
-        passed = False
-        with open("tmp.txt", "r") as f:
-            results = f.read()
-            # print(results)
-        with open("tmp.txt", "r") as f:
-            for stdout_line in f.readlines():
-                if all(x in stdout_line for x in ["TESTS", "PASS", "FAIL", "SKIP"]):
-                    # grabbing the errors from this line:
-                    #   ** TESTS=1 PASS=1 FAIL=0 SKIP=0
-                    errors = int(stdout_line.split(" SKIP")[0].split("FAIL=")[-1])
-                    if errors == 0:
-                        passed = True
-        if not passed:
-            with open("tmp.txt", "r") as f:
-                results = f.read()
-            raise ValueError(
-                f"No TESTS, PASS, FAIL, SKIP line in results... assuming it didn't run right:\n{results}"
-            )
-    else:
         # command = f"{command} {vpi} > tmp.txt"
 
         command = f"{command} {vpi}"
@@ -353,6 +326,14 @@ def compile_and_run_cvc(compile_list, cocotb_lib_dir, command, frame):
             raise ValueError(
                 f"No TESTS, PASS, FAIL, SKIP line in results... assuming it didn't run right:\n{results}"
             )
+    
+    finally:
+        # Restore original environment variables to prevent pollution between tests
+        for key, value in original_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
 
 
 # helper functions
