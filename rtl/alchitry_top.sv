@@ -58,6 +58,11 @@ module alchitry_top (
   // wire [87:0] stream_data0;
   wire gt_clk;
   reg reset_counters = 0;
+  // ESM control: toggle-based CDC to generate a one-shot reset pulse in clk_256M domain
+  reg reset_counters_toggle_128M = 1'b0;
+  wire reset_counters_toggle_256M_sync;
+  reg reset_counters_toggle_256M_prev = 1'b0;
+  wire reset_counters_pulse_256M;
   wire [31:0] total_packets;
   wire [31:0] mismatch_packets;
   wire okay_led;
@@ -131,12 +136,15 @@ module alchitry_top (
   reg         wr32;
   logic [ 15:0] addr32_4to16;
   reg [ 15:0] r_addr_10to1F;
+  reg [ 15:0] r_addr32_00to0F;
   reg [ 15:0] r_addr32_10to1F;
   wire        gt_clk_edge_128M;
 
   wire        timestamp_offset_adjust;
   wire [31:0] timestamp_count;
 
+  reg r_polarity_force_mode = 1'b0;
+  reg r_polarity_force = 1'b0;  
   reg         polarity = 1'b0;
   reg  [31:0] r_test = 32'hBEEFF00D;
 
@@ -262,12 +270,28 @@ module alchitry_top (
       .clk_256M(clk_256M),
       .packet_data(packet_data),
       .packet_valid(packet_valid),
-      .reset_counters(reset_counters),
+      .reset_counters(reset_counters_pulse_256M),
       .total_packets(total_packets),
       .mismatch_packets(mismatch_packets),
       .okay_led(),  // for counter packets
       .link_count_okay(link_count_okay)
   );
+
+  // CDC: synchronize toggle from clk_128M to clk_256M domain
+  cdc #(
+      .FANOUT(0)  // direct output, no fanout flop needed
+  ) reset_counters_cdc (
+      .clk(clk_256M),
+      .signal_in(reset_counters_toggle_128M),
+      .signal_out(reset_counters_toggle_256M_sync)
+  );
+
+  // Edge detect to create 1-cycle pulse
+  always @(posedge clk_256M) begin
+    reset_counters_toggle_256M_prev <= reset_counters_toggle_256M_sync;
+  end
+
+  assign reset_counters_pulse_256M = reset_counters_toggle_256M_sync ^ reset_counters_toggle_256M_prev;
 
   blink_led blink_led (
       .clk_128M(clk_128M),
@@ -452,8 +476,13 @@ module alchitry_top (
 
   always @(posedge clk_128M) begin
     if (r_period_131ms == 1'b1) begin
-      if (!okay_led) begin
-        polarity = ~polarity;
+      if (r_polarity_force_mode) begin
+        polarity <= r_polarity_force;
+      end else begin
+        // auto toggle if not okay
+        if (!okay_led) begin
+          polarity = ~polarity;
+        end
       end
     end
   end
@@ -528,6 +557,7 @@ module alchitry_top (
   wire [3:0] addr_hi = addr[7:4];
 
   always @(posedge clk_128M) begin
+    r_addr32_00to0F <= (addr_hi == 4'h0) ? addr32_4to16 : 16'h0000;
     r_addr32_10to1F <= (addr_hi == 4'h1) ? addr32_4to16 : 16'h0000;
     //r_addr32_20to2F <= (addr_hi == 4'h2) ? addr32_4to16 : 16'h0000;
     //r_addr32_30to3F <= (addr_hi == 4'h3) ? addr32_4to16 : 16'h0000;
@@ -537,6 +567,34 @@ module alchitry_top (
     //r_addr32_70to7F <= (addr_hi == 4'h7) ? addr32_4to16 : 16'h0000;
     //r_addr32_80to8F <= (addr_hi == 4'h8) ? addr32_4to16 : 16'h0000;
   end
+
+
+  // -----------------------------------------------------------------------------
+  // 32-bit ESM register map (addr[7:0])
+  // -----------------------------------------------------------------------------
+  // ESM firmware writes the 32-bit address via ports 0x10..0x13 and reads back
+  // data via ports 0x14..0x17.
+  //
+  // Readback (r):
+  // 0x000 : VERSION[31:0]
+  // 0x006 : r_test
+  // 0x007 : {30'b0, polarity_force_mode, polarity_force}
+  // 0x008 : total_packets (telemetry_check)
+  // 0x009 : mismatch_packets (telemetry_check)
+  // 0x00A : status bits
+  //         bit0  okay_led
+  //         bit1  link_count_okay
+  //         bit2  gt_soft_reset
+  //         bit3  sticky_overflow
+  //         bit4  polarity (current)
+  // 0x00B : {16'h0000, FREQ_CNT_VAL}
+  // 0x013 : r_memdatain[31:0]
+  // 0x014 : r_memdatain[63:32] (also triggers read-ahead)
+  //
+  // Control (w):
+  // 0x00C : reset_counters control
+  //         write bit0=1 to generate a one-shot pulse that clears telemetry_check
+  //         packet counters (total_packets/mismatch_packets).
 
   // Readback MUX, 8 bit
   always @(posedge clk_128M) begin
@@ -577,59 +635,7 @@ module alchitry_top (
     endcase
   end
 
-  // Readback MUX 32 bit
-  always @(posedge clk_128M) begin
-    // clear on read
-    data_in <= {24'h000000, 8'h00};  // default to prevent accidental registers
-
-    case ({4'h0, addr[7:0]})
-      12'h000: begin
-        // version
-        data_in <= {
-          version_pkg::C_VERSION_MAJOR,
-          version_pkg::C_VERSION_MINOR,
-          version_pkg::C_VERSION_PATCH,
-          version_pkg::C_VERSION_BUILD
-        };  //VERSION[31:0];
-
-      end
-      12'h012: begin
-        data_in <= r_test;
-      end
-      12'h013: begin
-        //if (g_fifo > 0) begin
-        data_in <= r_memdatain[31:0];
-        //end
-      end
-
-      12'h014: begin
-        // triggers read ahead for next set of data
-        //if (g_fifo > 0) begin
-        data_in <= r_memdatain[63:32];
-        //end
-      end
-
-      // 12'h017: begin
-      //   //if (g_fifo > 0) begin
-      //     // write causes memrst
-      //     data_in <= {1'b0, r_fifo_triggered, r_fifo_pre_triggered, r_fifo_trig_en,
-      //                 1'b0, r_fifo_trig_mode, r_fifo_preload_mode,
-      //                 16'h0000,
-      //                 2'b00, r_fifo_full, r_fifo_empty,
-      //                 4'b0000};
-      //   //end
-      // end
-
-
-      default: begin
-        data_in <= {24'h000000, 8'h00};
-      end
-    endcase
-  end
-
-
-
-  // generate 32bit register controls from 8 bit controls
+    // generate 32bit register controls from 8 bit controls
   always @(posedge clk_128M) begin
     rd32 <= 1'b0;
     wr32 <= 1'b0;
@@ -680,19 +686,156 @@ module alchitry_top (
     end
   end
 
+
+  // Readback MUX 32 bit
+  always @(posedge clk_128M) begin
+    // clear on read
+    data_in <= {24'h000000, 8'h00};  // default to prevent accidental registers
+
+    case ({4'h0, addr[7:0]})
+      12'h000: begin
+        // version
+        data_in <= {
+          version_pkg::C_VERSION_MAJOR,
+          version_pkg::C_VERSION_MINOR,
+          version_pkg::C_VERSION_PATCH,
+          version_pkg::C_VERSION_BUILD
+        };  //VERSION[31:0];
+
+      end
+      12'h006: begin
+        data_in <= r_test;
+      end
+
+      12'h007: begin
+        data_in <= {30'h00000000, r_polarity_force_mode, r_polarity_force};
+      end
+
+      // Telemetry/status readback (read-only)
+      12'h008: begin
+        // total packet counter (telemetry_check)
+        data_in <= total_packets;
+      end
+
+      12'h009: begin
+        // mismatch packet counter (telemetry_check)
+        data_in <= mismatch_packets;
+      end
+
+      12'h00A: begin
+        // status bits
+        // [0]  okay_led (GT unpack packet-length check)
+        // [1]  link_count_okay (telemetry_check)
+        // [2]  gt_soft_reset
+        // [3]  r_sticky_overflow
+        // [4]  polarity (current)
+        data_in <= {
+          27'h0000000,
+          polarity,
+          r_sticky_overflow,
+          gt_soft_reset,
+          link_count_okay,
+          okay_led
+        };
+      end
+
+      12'h00B: begin
+        // constant used by frequency counter logic
+        data_in <= {16'h0000, FREQ_CNT_VAL};
+      end
+
+      12'h013: begin
+        //if (g_fifo > 0) begin
+        data_in <= r_memdatain[31:0];
+        //end
+      end
+
+      12'h014: begin
+        // triggers read ahead for next set of data
+        //if (g_fifo > 0) begin
+        data_in <= r_memdatain[63:32];
+        //end
+      end
+
+      default: begin
+        data_in <= {24'h000000, 8'h00};
+      end
+    endcase
+  end
+
+
   // 32 bit registers
   always @(posedge clk_128M) begin
     // version register
-    if (wr32 == 1'b1 && r_addr32_10to1F[0] == 1'b1) begin
+    if (wr32 == 1'b1 && r_addr32_00to0F[0] == 1'b1) begin
     end
   
     // type register
-    if (wr32 == 1'b1 && r_addr32_10to1F[1] == 1'b1) begin
+    if (wr32 == 1'b1 && r_addr32_00to0F[1] == 1'b1) begin
+    end
+  
+    
+    if (wr32 == 1'b1 && r_addr32_00to0F[2] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[3] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[4] == 1'b1) begin
+    end
+  
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[5] == 1'b1) begin
     end
   
     // test register
-    if (wr32 == 1'b1 && r_addr32_10to1F[2] == 1'b1) begin
+    if (wr32 == 1'b1 && r_addr32_00to0F[6] == 1'b1) begin
       r_test <= data[31:0];
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[7] == 1'b1) begin
+      r_polarity_force_mode <= data[1];
+      r_polarity_force <= data[0];
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[9] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[10] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[11] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[12] == 1'b1) begin
+      // control register @ 0x00C
+      // write bit0=1 to reset telemetry_check counters (one-shot pulse)
+      if (data[0] == 1'b1) begin
+        reset_counters_toggle_128M <= ~reset_counters_toggle_128M;
+      end
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[13] == 1'b1) begin
+
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[14] == 1'b1) begin
+      
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_00to0F[15] == 1'b1) begin      
+    end
+  end
+
+  // 32 bit registers
+  always @(posedge clk_128M) begin
+    if (wr32 == 1'b1 && r_addr32_10to1F[0] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_10to1F[1] == 1'b1) begin
+    end
+  
+    if (wr32 == 1'b1 && r_addr32_10to1F[2] == 1'b1) begin      
     end
   
     if (wr32 == 1'b1 && r_addr32_10to1F[3] == 1'b1) begin

@@ -12,6 +12,7 @@ rs_core.v
 reset_conditioner.sv
 async_fifo.sv
 ft.sv
+cdc.sv
 #lucid_globals.v
 simple_dual_port_ram.v
 blink_led.v
