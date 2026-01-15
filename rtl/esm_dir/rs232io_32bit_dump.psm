@@ -1,4 +1,40 @@
-	;USB control endpoint 0 code
+	;ESM rs232 32 bit register controller with dump capability
+	;
+	; Commands:
+	; r [addr32] -- read a 32 bit address
+	;               reads and displays the 32-bit value at the specified address
+	;               Example: r 00000100
+	;
+	; w [addr32] [data32] -- write data to a 32bit address
+	;                        writes a 32-bit data value to the specified address
+	;                        Example: w 00000100 DEADBEEF
+	;
+	; rd [addr8] -- read an 8 bit port/register address
+	;               reads and displays the 8-bit value from the specified port
+	;               Example: rd 1F
+	;
+	; wr [addr8] [data8] -- write data to an 8bit port/register address
+	;                       writes an 8-bit data value to the specified port
+	;                       Example: wr 1F A5
+	;
+	; d [start addr32] [end addr32] [repeat counter32] -- dump memory range in ASCII hex
+	;                                                     dumps memory from start to end address
+	;                                                     repeat counter specifies how many times to repeat the dump
+	;                                                     output format: CRLF + 2 hex digits per byte
+	;                                                     Example: d 00000000 000000FF 00000001
+	;
+	; b [start addr32] [end addr32] [repeat counter32] -- binary dump memory range
+	;                                                     same as 'd' but outputs raw binary data instead of ASCII hex
+	;                                                     no CRLF between words, just raw bytes
+	;                                                     Example: b 00000000 000000FF 00000001
+	;
+	; wf -- write file mode
+	;       enters mode to receive binary data and write to 32-bit FIFO
+	;       stays in mode until FIFO full flag is set
+	;
+	; rf -- read file mode
+	;       enters mode to read from 32-bit FIFO and transmit via UART
+	;       stays in mode until FIFO empty flag is set
 
 	;USB Core/MPU constant declarations
 	CONSTANT	UARTFIFO, 00		;output/input
@@ -76,48 +112,66 @@
 
 	;register s0 contains device state/status info.
 	;bit - function
-	;0 - data to send
-	;1 - write file flag
-	;2 - read file flag
+	;0 - data to send (reserved, not actively used)
+	;1 - write file flag (set when in 'wf' mode, receiving data to write to FIFO)
+	;2 - read file flag (set when in 'rf' mode, reading data from FIFO to transmit)
 
 	;register s1 contains input character counter
-	;
+	;tracks the number of characters received in the command buffer (max ~128)
 
-	;register s2 contains ?
-	;
+	;register s2 contains buffer pointer/index
+	;used to navigate through the command buffer (base address 0x80) during parsing
 
 	;register s3 contains ascii code of letter passed to 'send_letter'
-	;
+	;general purpose register for character transmission
 	
 	;register s4 contains 1st char from char buffer, passed to 'ishex2digit'
-	;is hex digit returns a true/false flag in s4 
+	;ishex2digit returns a true/false flag in s4 indicating if both digits are valid hex
 
 	;register s5 contains 2nd char from char buffer, passed to 'ishex2digit'
-	;is hex digit returns number value in s5 if successful
+	;ishex2digit returns the combined hex byte value in s5 if both digits are valid hex
 
 	;register s6 used by interrupt handlers
+	;specifically used in check_CRLF to track CR detection for CRLF handling
 
-	;register s7 used by uart
-	;register s8 used by uart
-	;register s9 used by uart (word counter)
+	;register s7 used by UART receive interrupt handler
+	;holds received character and various temporary values
 
-	;register s9 contains write to file counter 
+	;register s8 used by UART and general temporary storage
+	;holds status values and temporary calculations
 
+	;register s9 used by UART FIFO operations
+	;contains byte/word counter for FIFO read/write operations
 
-	;register sa,sb are used as general varibles in various
+	;registers sa, sb are used as general variables in various
 	;jumps/subroutines
 
-	;register sc is used in functions
+	;register sc is used in command parsing functions
+	;holds character comparisons and temporary values
 
-	;register sd is used in functions
-	;register se is used in functions
+	;register sd is used in hex digit parsing functions
+	;holds first hex digit value during conversion
 
+	;register se is used in hex digit parsing and UART functions
+	;holds second hex digit value and UART status checks
 
-    ;register sf contains 1 for binary mode for dump
-	;register s10-s13 contain dump start address
-	;register s14-s17 contain dump end address
-	;register s18-s1b contain dump length
-    ;register s1c-s1f contain address offset
+	;register sf contains binary mode flag for dump operations
+	;0 = ASCII hex dump mode (default), 1 = binary dump mode
+
+	;registers s10-s13 contain dump start address (32-bit)
+	;s10 = addr[31:24], s11 = addr[23:16], s12 = addr[15:8], s13 = addr[7:0]
+
+	;registers s14-s17 contain dump end address + 1 (32-bit)
+	;s14 = addr[31:24], s15 = addr[23:16], s16 = addr[15:8], s17 = addr[7:0]
+	;incremented by 1 to allow proper wrap detection
+
+	;registers s18-s1b contain dump repeat counter (32-bit)
+	;s18 = counter[31:24], s19 = counter[23:16], s1a = counter[15:8], s1b = counter[7:0]
+	;counts down number of words to dump
+
+	;registers s1c-s1f contain current dump address offset (32-bit)
+	;s1c = addr[31:24], s1d = addr[23:16], s1e = addr[15:8], s1f = addr[7:0]
+	;tracks current position during memory dump operation
 
 	ADDRESS 000
 	jump start
