@@ -1,32 +1,39 @@
 	;ESM rs232 32 bit register controller with dump capability
 	;
-	; Commands:
+	; Commands: (All hex parameters support variable length - leading zeros optional)
 	; r [addr32] -- read a 32 bit address
 	;               reads and displays the 32-bit value at the specified address
-	;               Example: r 00000100
+	;               address can be 1-8 hex digits, leading zeros optional
+	;               Example: r 100 (same as r 00000100)
 	;
 	; w [addr32] [data32] -- write data to a 32bit address
 	;                        writes a 32-bit data value to the specified address
-	;                        Example: w 00000100 DEADBEEF
+	;                        address and data can be 1-8 hex digits each, leading zeros optional
+	;                        Example: w 100 BEEF (same as w 00000100 0000BEEF)
 	;
 	; rd [addr8] -- read an 8 bit port/register address
 	;               reads and displays the 8-bit value from the specified port
-	;               Example: rd 1F
+	;               address can be 1-2 hex digits, leading zeros optional
+	;               Example: rd F (same as rd 0F)
 	;
 	; wr [addr8] [data8] -- write data to an 8bit port/register address
 	;                       writes an 8-bit data value to the specified port
-	;                       Example: wr 1F A5
+	;                       address and data can be 1-2 hex digits each, leading zeros optional
+	;                       Example: wr 1F A (same as wr 1F 0A)
 	;
 	; d [start addr32] [end addr32] [repeat counter32] -- dump memory range in ASCII hex
 	;                                                     dumps memory from start to end address
-	;                                                     repeat counter specifies how many times to repeat the dump
+	;                                                     repeat counter is optional (defaults to 1)
+	;                                                     all parameters can be 1-8 hex digits, leading zeros optional
 	;                                                     output format: CRLF + 2 hex digits per byte
-	;                                                     Example: d 00000000 000000FF 00000001
+	;                                                     Example: d 0 FF (same as d 00000000 000000FF 1)
 	;
 	; b [start addr32] [end addr32] [repeat counter32] -- binary dump memory range
 	;                                                     same as 'd' but outputs raw binary data instead of ASCII hex
 	;                                                     no CRLF between words, just raw bytes
-	;                                                     Example: b 00000000 000000FF 00000001
+	;                                                     repeat counter is optional (defaults to 1)
+	;                                                     all parameters can be 1-8 hex digits, leading zeros optional
+	;                                                     Example: b 0 1FF (same as b 00000000 000001FF 1)
 	;
 	; wf -- write file mode
 	;       enters mode to receive binary data and write to 32-bit FIFO
@@ -381,30 +388,30 @@ process_cmd:
 	input sc,(s02)
 	sub sc,20		;check for 'space'
 	jump nz,nowrdet
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;check if valid digits
+	add s2,01		;skip space
+
+	;parse 8-bit address (variable length, max 2 hex digits)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,nowrdet
-	load sa,s5		;store address value
-	add s2,01
+	load sa,s13		;store address value (LSB only)
+
+	;check for space separator
 	input sc,(s02)
 	sub sc,20		;check for 'space'
 	jump nz,nowrdet
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;dummy add, check if valid
+	add s2,01		;skip space
+
+	;parse 8-bit data (variable length, max 2 hex digits)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,nowrdet
-	add s2,01
+
+	;check for LF
 	input sc,(s02)
 	sub sc,0A      ;check for LF
 	jump nz,nowrdet
-	output s5,(s0a)		;write address/data out
+	output s13,(s0a)	;write data to port at address sa
 	return
 nowrdet:
 	load s2,80		;set s2 to first char in buffer
@@ -419,54 +426,46 @@ nowrdet:
 	input sc,(s02)
 	sub sc,20		;check for 'space'
 	jump nz,norddet
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;check if valid digits
+	add s2,01		;skip space
+
+	;save buffer position for display later
+	load sa,s2
+
+	;parse 8-bit address (variable length, max 2 hex digits)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,norddet
-	add s2,01
+
+	;check for LF
 	input sc,(s02)
 	sub sc,0A      ;check for LF
 	jump nz,norddet
+
+	;display result
 	call send_CRLF
 	call send_addr
-	sub s2,02		;go back to first hex char
-	input s3,(s02)		;get char from buffer
+	;display address from buffer
+	load s2,sa		;restore buffer position
+rd_addr_loop:
+	input s3,(s02)
+	load sb,s3
+	sub sb,20		;check for space
+	jump z,rd_addr_done
+	load sb,s3
+	sub sb,0A		;check for LF
+	jump z,rd_addr_done
 	call send_letter
 	add s2,01
-	input s3,(s02)
-	call send_letter
+	jump rd_addr_loop
+rd_addr_done:
 	load s3,20
 	call send_letter
 	load s3,3D
 	call send_letter
 	load s3,20
 	call send_letter
-	input s3,(s05)
-	load s4,s3		;store value
-	and s3,F0		;get rid of first 4 bits
-	sr0 s3
-	sr0 s3
-	sr0 s3
-	sr0 s3
-	load sc,s3
-	sub sc,0A		;check for alpha digit
-	jump c,decdigit1
-	add s3,27
-decdigit1:
-	add s3,30
-	call send_letter
-	load s3,s4		;restore
-	and s3,0F		;get rid of last 4 bits
-	load sc,s3
-	sub sc,0A		;check for alpha digit
-	jump c,decdigit2
-	add s3,27
-decdigit2:
-	add s3,30
-	call send_letter
+	input s3,(s13)		;read from port at address in s13
+	call send_s3		;send as hex
 	return
 norddet:
 	load s2,80		;set s2 to first char in buffer
@@ -512,139 +511,68 @@ norfdet:
 	jump nz,noddet
     load sf,1       ; binary mode
 dump_hex:
+	add s2,01		;skip command char
+	input sc,(s02)		;get next char
+	sub sc,20		;check for 'space'
+	jump nz,noddet
+	add s2,01		;skip space
 
-	add s2,01
-	input s5,(s02)   ; eat space
-
-	;get starting address
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (3)
-	add s4,00		;check if valid digits
+	;parse starting address (variable length)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,noddet
-	output s5,addr_3	;store address value
-    load s10,s5         ;track starting address
+	output s10,addr_3	;store address value
+	output s11,addr_2
+	output s12,addr_1
+	output s13,addr_0
+	;s10-s13 already contain start address for tracking
 
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (2)
-	add s4,00		;check if valid digits
-	jump z,noddet
-	output s5,addr_2	;store address value
-    load s11,s5         ;track starting address
-
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (1)
-	add s4,00		;check if valid digits
-	jump z,noddet
-	output s5,addr_1	;store address value
-    load s12,s5         ;track starting address
-
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (0)
-	add s4,00		;check if valid digits
-	jump z,noddet
-	output s5,addr_0	;store address value
-    load s13,s5         ;track starting address
-
-	add s2,01       ; get next char
+	;check for space separator
 	input sc,(s02)
 	sub sc,20		;check for 'space'
 	jump nz,noddet
+	add s2,01		;skip space
 
-	;get ending address
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (3)
-	add s4,00           ;check if valid digits
+	;parse ending address (variable length)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,noddet
-    load s14,s5         ;track ending address
+	load s14,s10		;track ending address
+	load s15,s11
+	load s16,s12
+	load s17,s13
 
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (2)
-	add s4,00		;check if valid digits
-	jump z,noddet
-    load s15,s5         ;track ending address
-
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (1)
-	add s4,00		;check if valid digits
-	jump z,noddet
-    load s16,s5         ;track ending address
-
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (0)
-	add s4,00		;check if valid digits
-	jump z,noddet
-    load s17,s5         ;track ending address
-
-	add s2,01       ; get next char
+	;check what comes next: space or LF
 	input sc,(s02)
-	sub sc,20		;check for 'space'
-	jump nz,noddet
+	sub sc,0A		;check for LF
+	jump z,dump_default_repeat	;use default repeat of 1
+	add sc,0A		;restore
+	sub sc,20		;check for space
+	jump nz,noddet		;neither space nor LF, error
+	add s2,01		;skip space
 
-	;get dump repeat counter
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (3)
-	add s4,00           ;check if valid digits
+	;parse repeat counter (variable length)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,noddet
-    load s18,s5         ;track repeat counter
+	load s18,s10		;track repeat counter
+	load s19,s11
+	load s1a,s12
+	load s1b,s13
 
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (2)
-	add s4,00		;check if valid digits
-	jump z,noddet
-    load s19,s5         ;track repeat counter
-
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (1)
-	add s4,00		;check if valid digits
-	jump z,noddet
-    load s1a,s5         ;track repeat counter
-
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (0)
-	add s4,00		;check if valid digits
-	jump z,noddet
-    load s1b,s5         ;track repeat counter
-
-	add s2,01       ; get next char
+	;check for LF at end
 	input sc,(s02)
-	sub sc,0A      ;check for LF
+	sub sc,0A		;check for LF
 	jump nz,noddet
+	jump dump_start_exec
+
+dump_default_repeat:
+	;set default repeat counter to 1
+	load s18,00
+	load s19,00
+	load s1a,00
+	load s1b,01
+dump_start_exec:
 
     ; add one to final address to wrap correctly
 	add s17,01            ; add one
@@ -756,82 +684,36 @@ noddet:
 	input sc,(s02)	        ;get character
 	sub sc,20		;check for 'space'
 	jump nz,nowdet
+	add s2,01		;skip space
 
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (3)
-	add s4,00		;check if valid digits
+	;parse address (variable length)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,nowdet
-	output s5,addr_3	;store address value
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (2)
-	add s4,00		;check if valid digits
-	jump z,nowdet
-	output s5,addr_2	;store address value
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (1)
-	add s4,00		;check if valid digits
-	jump z,nowdet
-	output s5,addr_1	;store address value
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (0)
-	add s4,00		;check if valid digits
-	jump z,nowdet
-	output s5,addr_0	;store address value
+	output s10,addr_3	;store address value
+	output s11,addr_2
+	output s12,addr_1
+	output s13,addr_0
 
-	add s2,01
+	;check for space separator
 	input sc,(s02)
 	sub sc,20		;check for 'space'
 	jump nz,nowdet
+	add s2,01		;skip space
 
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;dummy add, check if valid
+	;parse data (variable length)
+	call parse_hex_var
+	add s4,00		;check success
 	jump z,nowdet
-	output s5,data_3	;store data byte
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;dummy add, check if valid
-	jump z,nowdet
-	output s5,data_2	;store data byte
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;dummy add, check if valid
-	jump z,nowdet
-	output s5,data_1	;store data byte
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits
-	add s4,00		;dummy add, check if valid
-	jump z,nowdet
+	output s10,data_3	;store data bytes
+	output s11,data_2
+	output s12,data_1
 
-	add s2,01
+	;check for LF
 	input sc,(s02)
-	sub sc,0A      ;check for LF
+	sub sc,0A		;check for LF
 	jump nz,nowdet
-	output s5,data_0	;store data byte (triggering actual write)
+	output s13,data_0	;store last data byte (triggering actual write)
 	return
 
 nowdet:
@@ -843,72 +725,42 @@ nowdet:
 	input sc,(s02)
 	sub sc,20		;check for 'space'
 	jump nz,nordet
+	add s2,01		;skip space
 
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (3)
-	add s4,00		;check if valid digits
-	jump z,nordet
-	output s5,addr_3	;store address value
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (2)
-	add s4,00		;check if valid digits
-	jump z,nordet
-	output s5,addr_2	;store address value
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (1)
-	add s4,00		;check if valid digits
-	jump z,nordet
-	output s5,addr_1	;store address value
-	add s2,01
-	input s4,(s02)
-	add s2,01
-	input s5,(s02)
-	call ishex2digit	;check for 2 hex digits (0)
-	add s4,00		;check if valid digits
-	jump z,nordet
-	output s5,addr_0	;store address value (causes read)
+	;save buffer position for display later
+	load sa,s2
 
+	;parse address (variable length)
+	call parse_hex_var
+	add s4,00		;check success
+	jump z,nordet
+	output s10,addr_3	;store address value
+	output s11,addr_2
+	output s12,addr_1
+	output s13,addr_0	;triggers read
 
-	add s2,01
+	;check for LF
 	input sc,(s02)
-	sub sc,0A      ;check for LF
+	sub sc,0A		;check for LF
 	jump nz,nordet
+
+	;display result
 	call send_CRLF
 	call send_addr
-	sub s2,08		;go back to first hex char
-	input s3,(s02)		;get char from buffer
+	;display address from buffer
+	load s2,sa		;restore buffer position
+r_addr_loop:
+	input s3,(s02)
+	load sb,s3
+	sub sb,20		;check for space
+	jump z,r_addr_done
+	load sb,s3
+	sub sb,0A		;check for LF
+	jump z,r_addr_done
 	call send_letter
 	add s2,01
-	input s3,(s02)
-	call send_letter
-	add s2,01
-	input s3,(s02)
-	call send_letter
-	add s2,01
-	input s3,(s02)
-	call send_letter
-	add s2,01
-	input s3,(s02)
-	call send_letter
-	add s2,01
-	input s3,(s02)
-	call send_letter
-	add s2,01
-	input s3,(s02)
-	call send_letter
-	add s2,01
-	input s3,(s02)
-	call send_letter
-
+	jump r_addr_loop
+r_addr_done:
 	load s3,20              ; (space)
 	call send_letter
 	load s3,3D              ; =
@@ -1215,6 +1067,134 @@ fifonoread:
 	return
 	
 	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; parse_hex_var --- parses variable length hex string (1-8 hex chars)
+; Input: s2 = buffer pointer (will be advanced)
+; Output: s10-s13 = parsed 32-bit value (s10=MSB, s13=LSB)
+;         s4 = success flag (1=success, 0=fail)
+;         s2 = updated buffer pointer (after last hex digit)
+; Uses: s2, s4, s5, s10, s11, s12, s13, sa, sb
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+parse_hex_var:
+	load s10,00		;clear result registers
+	load s11,00
+	load s12,00
+	load s13,00
+	load sa,00		;digit counter
+phv_loop:
+	input s4,(s02)		;get character
+	;check if space or LF (terminators)
+	load sb,s4
+	sub sb,20		;check for space
+	jump z,phv_done
+	load sb,s4
+	sub sb,0A		;check for LF
+	jump z,phv_done
+	;check if valid hex digit
+	load s5,s4		;duplicate for ishex1digit
+	call ishex1digit	;check single hex digit
+	add s4,00		;test success flag
+	jump z,phv_fail		;not a hex digit, fail
+	;shift existing value left by 4 bits
+	load sb,s13		;get bits [3:0] of LSB
+	and sb,F0
+	sr0 sb
+	sr0 sb
+	sr0 sb
+	sr0 sb			;shift to [7:4]
+	sl0 s13			;shift s13 left
+	sl0 s13
+	sl0 s13
+	sl0 s13
+	or s12,sb		;move high bits into s12
+	load sb,s12
+	and sb,F0
+	sr0 sb
+	sr0 sb
+	sr0 sb
+	sr0 sb
+	sl0 s12
+	sl0 s12
+	sl0 s12
+	sl0 s12
+	or s11,sb
+	load sb,s11
+	and sb,F0
+	sr0 sb
+	sr0 sb
+	sr0 sb
+	sr0 sb
+	sl0 s11
+	sl0 s11
+	sl0 s11
+	sl0 s11
+	or s10,sb
+	load sb,s10		;handle overflow
+	sl0 sb
+	sl0 sb
+	sl0 sb
+	sl0 sb
+	;add new digit to LSB
+	or s13,s5		;add new hex digit value
+	add sa,01		;increment digit counter
+	add s2,01		;advance buffer pointer
+	load sb,sa
+	sub sb,08		;check if we've read 8 digits
+	jump z,phv_done		;max digits reached
+	jump phv_loop
+phv_done:
+	load s4,01		;success
+	return
+phv_fail:
+	load s4,00		;failure
+	return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ishex1digit --- checks if single character is valid hex digit
+; Input: s4 = character to check
+; Output: s4 = success flag (1=valid, 0=invalid)
+;         s5 = hex value (0-15) if valid
+; Uses: s4, s5, sb
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ishex1digit:
+	load s5,s4		;store char
+	sub s5,30		;check if >= '0'
+	jump c,ih1_notdigit
+	load s5,s4
+	sub s5,3A		;check if < ':'
+	jump nc,ih1_checkalpha	;not 0-9, check A-F
+	load s5,s4
+	sub s5,30		;convert '0'-'9' to 0-9
+	load s4,01		;success
+	return
+ih1_checkalpha:
+	load s5,s4
+	sub s5,41		;check if >= 'A'
+	jump c,ih1_checklower
+	load s5,s4
+	sub s5,47		;check if < 'G'
+	jump nc,ih1_checklower	;not A-F, check a-f
+	load s5,s4
+	sub s5,37		;convert 'A'-'F' to 10-15 (41-37=10)
+	load s4,01		;success
+	return
+ih1_checklower:
+	load s5,s4
+	sub s5,61		;check if >= 'a'
+	jump c,ih1_notdigit
+	load s5,s4
+	sub s5,67		;check if < 'g'
+	jump nc,ih1_notdigit	;not a-f
+	load s5,s4
+	sub s5,57		;convert 'a'-'f' to 10-15 (61-57=10)
+	load s4,01		;success
+	return
+ih1_notdigit:
+	load s4,00		;failure
+	return
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	ADDRESS 3FF
 	jump intrp
